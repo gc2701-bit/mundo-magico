@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disfraces en Tucumán · Mundo Mágico</title>
+<meta name="description" content="Entrá al mundo de los disfraces: paisanas, gauchos, damas antiguas y accesorios para el acto escolar, la fiesta o el día que quieras ser otro. En Tucumán.">
+<meta name="theme-color" content="#1c1a16">
+<link rel="icon" href="Logo/Mundo-Magico%20Logo.jpg">
+
+<meta property="og:title" content="Disfraces · Mundo Mágico Tucumán">
+<meta property="og:description" content="Personajes, máscaras y accesorios para transformarte en quien quieras.">
+<meta property="og:image" content="assets/mundos/disfraces.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+
+
+<link rel="preload" href="assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="Header%20categories/Disfraces%20-%20poster.jpg" as="image" fetchpriority="high">
+<link rel="stylesheet" href="assets/v2.css">
+<style>
+/* Mundo DISFRACES · acento azul del logo */
+:root{ --accent:#2f63cf; --accent-deep:#24509e }
+.scene .intro .btn{margin-top:var(--s3)}
+
+/* ===== Hero dividido · el video ocupa la mitad del hero (a sangre, altura
+   completa) y hace zoom (cover) para llenarla; la tipografía vive en la otra
+   mitad, sobre el gradiente de marca. ===== */
+.portal--split{ background:#141210 }
+.portal--split{
+  display:block; padding:0;
+  background:
+    radial-gradient(72% 60% at 22% 22%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 60%),
+    linear-gradient(150deg, color-mix(in srgb, var(--accent-deep) 48%, #141210) 0%, #141210 62%);
+  text-align:left;
+}
+.portal--split .portal-split{
+  position:relative; z-index:2;
+  min-height:100svh;
+  display:grid; grid-template-columns:1fr 1fr; align-items:stretch;
+}
+.portal--split .portal-copy{
+  min-width:0;
+  display:flex; flex-direction:column; justify-content:center; text-align:left;
+  padding:calc(var(--nav-h) + var(--s4)) clamp(var(--s4),4vw,var(--s7)) var(--s6) clamp(var(--s3),6vw,var(--s8));
+}
+.portal--split h1{ font-size:clamp(36px,4.6vw,64px); line-height:1.06; max-width:14ch; margin:0 0 var(--s3) }
+.portal--split .lead{ max-width:40ch; margin:0 }
+.portal--split .portal-media{
+  position:relative; overflow:hidden; background:#0d0b09;
+}
+.portal--split .portal-media::before{
+  content:''; position:absolute; top:0; bottom:0; left:0; width:130px; z-index:1; pointer-events:none;
+  background:linear-gradient(to right, rgba(20,18,16,.5), rgba(20,18,16,0));
+}
+.portal--split .portal-media video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block }
+
+/* Móvil · se apila: texto arriba, video (banda) debajo, siempre a sangre */
+@media (max-width:820px){
+  .portal--split{ text-align:center }
+  .portal--split .portal-split{ grid-template-columns:1fr; align-content:center }
+  .portal--split .portal-copy{
+    text-align:center; order:1;
+    padding:calc(var(--nav-h) + var(--s5)) var(--s3) var(--s4);
+  }
+  .portal--split h1{ margin-inline:auto }
+  .portal--split .lead{ margin-inline:auto }
+  .portal--split .portal-media{ order:2; height:46svh; min-height:300px }
+  .portal--split .portal-media::before{ display:none }
+}
+</style>
+<script>/* Producto: evita el salto a "#" si tocás antes de que cargue site.js (sobre todo en celular) */
+addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a.pcard,a.item"):null;if(a){var h=a.getAttribute("href");if(h==="#"||h===null)e.preventDefault();}},true);</script>
+</head>
+<body class="portal-page">
+
+<a class="skip-link" href="#catalogo">Saltar al contenido</a>
+
+<nav class="nav" id="nav">
+  <a class="corner-logo" href="index.html" aria-label="Inicio · Mundo Mágico">
+    <img src="Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width="44" height="44">
+    <span class="brand">Mundo Mágico</span>
+  </a>
+  <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="nav-links" id="nav-links">
+    <a href="index.html">Inicio</a>
+    <div class="nav-item has-dropdown">
+      <a href="index.html#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+      <div class="nav-dropdown" role="menu">
+        <a href="cotillon-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón y fiestas</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#ef5c4d"></span>Línea de cumpleaños</a>
+        <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
+        <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
+        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#7c4dd6"></span>Disfraces</a>
+        <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
+      </div>
+    </div>
+    <a href="index.html#visitanos">Visitanos</a>
+    <a href="index.html#contacto">Contacto</a>
+    <a class="wa" href="https://wa.me/5493813006343" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.13a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 1 1 6.97 3.86Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>Escribinos</a>
+  </div>
+</nav>
+
+<!-- ====== PORTAL ====== -->
+<header class="portal portal--split" id="inicio">
+  <div class="portal-split">
+    <div class="portal-copy">
+      <div class="eyebrow">Mundo disfraces</div>
+      <h1>Transformate en <em>quien quieras</em></h1>
+      <p class="lead">Paisanas, gauchos, damas antiguas y personajes para el acto escolar, la fiesta o el día que quieras ser otro.</p>
+    </div>
+    <div class="portal-media">
+      <video class="portal-vert" autoplay muted loop playsinline preload="none" poster="Header%20categories/Disfraces%20-%20poster.jpg" data-src="Header%20categories/hallowen.mp4"></video>
+    </div>
+  </div>
+  <a class="enter-cue" href="#catalogo" aria-label="Ver los disfraces">
+    Elegí tu disfraz
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </a>
+</header>
+
+<!-- ====== BARRA DE CATEGORÍAS (sticky) ====== -->
+<nav class="catbar" id="catalogo" aria-label="Categorías">
+  <div class="catbar-inner">
+    <a href="#disfraces">Los disfraces</a>
+    <a href="#acto-patrio">Acto patrio</a>
+    <a href="#para-la-fiesta">Para la fiesta</a>
+  </div>
+</nav>
+
+<main>
+<!-- ====== ESCENA 1 · LOS DISFRACES ====== -->
+<section class="catsec" id="disfraces">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Los disfraces</h2>
+      <p>Paisanas, gauchos, damas y caballeros antiguos — listos para el acto, la fiesta o el día que quieras ser otro.</p>
+      <a class="btn btn-primary" href="https://wa.me/5493813006343?text=%C2%A1Hola%20Mundo%20M%C3%A1gico!%20Quiero%20consultar%20talles%20y%20precios%20de%20disfraces." target="_blank" rel="noopener">Consultar talles y precios</a>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraces%20de%20dama%20antigua%20-%20vestidos%20largos%20(rosa%2C%20celeste%2C%20lila).jpeg" alt="Disfraces de dama antigua" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraces de dama antigua</h3><span class="sub">vestidos largos · rosa, celeste, lila</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraz%20de%20caballero%20antiguo%20-%20frac%20negro.jpeg" alt="Disfraz de caballero antiguo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraz de caballero antiguo</h3><span class="sub">frac negro</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraz%20de%20gaucho%20-%20poncho%20rojo%20con%20panuelo%20y%20bombacha.jpeg" alt="Disfraz de gaucho" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraz de gaucho</h3><span class="sub">poncho rojo con pañuelo y bombacha</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraz%20de%20paisana%20a%20lunares%20rojo%20(vestido%2C%20delantal%20y%20blusa).jpeg" alt="Disfraz de paisana a lunares rojo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraz de paisana a lunares rojo</h3><span class="sub">vestido, delantal y blusa</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraz%20de%20paisana%20rosa%20(vestido%2C%20delantal%20y%20blusa).jpeg" alt="Disfraz de paisana rosa" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraz de paisana rosa</h3><span class="sub">vestido, delantal y blusa</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Disfraz%20vestido%20fucsia%20con%20encaje%20negro.jpeg" alt="Disfraz vestido fucsia con encaje negro" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Disfraz vestido fucsia con encaje</h3><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ESCENA 2 · PARA EL ACTO PATRIO ====== -->
+<section class="catsec" id="acto-patrio">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Para el acto patrio</h2>
+      <p>Pañuelos, ponchos, peinetas, galeras y todos los detalles criollos para el 25 de Mayo y el 9 de Julio.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Abanicos%20espanoles%20de%20tela%20floral.jpeg" alt="Abanicos españoles de tela floral" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Abanicos españoles</h3><span class="sub">tela floral</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Bastones%20con%20puno%20dorado.jpeg" alt="Bastones con puño dorado" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Bastones con puño dorado</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Bastones%20negros%20con%20mango%20curvo.jpeg" alt="Bastones negros con mango curvo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Bastones negros</h3><span class="sub">mango curvo</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Boinas%20de%20gaucho%20negras.jpeg" alt="Boinas de gaucho negras" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Boinas de gaucho negras</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Cofias%20de%20paisana%20de%20pano%20(naranja%2C%20celeste%2C%20verde).jpeg" alt="Cofias de paisana de paño" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Cofias de paisana de paño</h3><span class="sub">naranja, celeste, verde</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Delantales%20blancos%20con%20puntilla%20(dama%20antigua).jpeg" alt="Delantales blancos con puntilla" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Delantales blancos con puntilla</h3><span class="sub">dama antigua</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Fajas%20con%20mono%20yabot%20de%20caballero.jpeg" alt="Fajas con moño yabot de caballero" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Fajas con moño yabot</h3><span class="sub">de caballero</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Galeras%20-%20sombreros%20de%20copa%20negros%20con%20cinta%20celeste.jpeg" alt="Galeras de copa negras con cinta celeste" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Galeras</h3><span class="sub">sombreros de copa con cinta celeste</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Guantes%20blancos%20de%20algodon.jpeg" alt="Guantes blancos de algodón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Guantes blancos de algodón</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Guantes%20de%20encaje%20(negro%20y%20blanco).jpeg" alt="Guantes de encaje" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Guantes de encaje</h3><span class="sub">negro y blanco</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Guantes%20largos%20de%20raso%20(marron%2C%20blanco%2C%20negro).jpeg" alt="Guantes largos de raso" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Guantes largos de raso</h3><span class="sub">marrón, blanco, negro</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Mantillas%20de%20dama%20antigua%20negras.jpeg" alt="Mantillas de dama antigua negras" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Mantillas de dama antigua</h3><span class="sub">negras</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20blancos%20(disfraz).jpeg" alt="Pañuelos blancos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos blancos</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20celestes%20(disfraz%20patrio).jpeg" alt="Pañuelos celestes patrios" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos celestes</h3><span class="sub">patrios</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20de%20paisana%20floreados.jpeg" alt="Pañuelos de paisana floreados" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos de paisana</h3><span class="sub">floreados</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Pechera%20yabot%20con%20faja%20y%20mono%20de%20caballero.jpeg" alt="Pechera yabot con faja y moño" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pechera yabot con faja y moño</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Peinetas%20-%20peinetones%20espanoles.jpeg" alt="Peinetas españolas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Peinetas</h3><span class="sub">peinetones españoles</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Poncho%20de%20gaucho%20marron%20con%20flecos.jpeg" alt="Poncho de gaucho marrón con flecos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Poncho de gaucho</h3><span class="sub">marrón con flecos</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Ponchos%20patrios%20(beige%2C%20rojo%2C%20blanco%20celeste).jpeg" alt="Ponchos patrios" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Ponchos patrios</h3><span class="sub">beige, rojo, blanco y celeste</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombrillas%20-%20parasoles%20de%20encaje%20blanco.jpeg" alt="Sombrillas de encaje blanco" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrillas</h3><span class="sub">parasoles de encaje blanco</span><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ESCENA 3 · PARA LA FIESTA ====== -->
+<section class="catsec" id="para-la-fiesta">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Para la fiesta</h2>
+      <p>Vinchas, sombreros, anteojos y accesorios fluo y brillantes para sumarle magia a cualquier festejo.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/_mejoradas/Vincha%20LED%20-%20Estudio%20blanco%20-%20e-commerce.png" alt="Vincha corona de flores con luces LED" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha corona de flores LED</h3><span class="sub">la más pedida</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Alas%20de%20hada%20con%20varita%20(rosa%2C%20celeste%2C%20fucsia).jpeg" alt="Alas de hada con varita" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Alas de hada con varita</h3><span class="sub">rosa, celeste, fucsia</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Collares%20y%20vinchas%20hawaianas%20de%20flores%20fluo.jpeg" alt="Collares y vinchas hawaianas fluo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Collares y vinchas hawaianas</h3><span class="sub">flores fluo</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Corbatas%20de%20lentejuelas%20(azul%2C%20verde%2C%20plata).jpeg" alt="Corbatas de lentejuelas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Corbatas de lentejuelas</h3><span class="sub">azul, verde, plata</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorras%20neon%20fluorescentes.jpeg" alt="Gorras neón fluorescentes" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorras neón fluorescentes</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Monos%20-%20corbatines%20de%20lunares.jpeg" alt="Moños corbatines de lunares" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Moños</h3><span class="sub">corbatines de lunares</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20bombin%20de%20colores%20(fucsia%2C%20naranja%2C%20amarillo).jpeg" alt="Sombreros bombín de colores" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros bombín de colores</h3><span class="sub">fucsia, naranja, amarillo</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20fedora%20neon%20con%20cinta%20a%20cuadros.jpeg" alt="Sombreros fedora neón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros fedora neón</h3><span class="sub">con cinta a cuadros</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20(blanco%2C%20rosa%2C%20plata%2C%20dorado).jpeg" alt="Sombreros vaqueros glitter" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros glitter</h3><span class="sub">blanco, rosa, plata, dorado</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20con%20cinta%20(rosa%2C%20blanco%2C%20azul%2C%20negro).jpeg" alt="Sombreros vaqueros glitter con cinta" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros con cinta</h3><span class="sub">rosa, blanco, azul, negro</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombrillas%20-%20parasoles%20de%20tul%20con%20lentejuelas%20(fucsia).jpeg" alt="Sombrillas de tul con lentejuelas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrillas de tul</h3><span class="sub">con lentejuelas · fucsia</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Stickers%20de%20strass%20autoadhesivos.jpeg" alt="Stickers de strass autoadhesivos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Stickers de strass</h3><span class="sub">autoadhesivos</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Vinchas%20de%20flores%20con%20tinsel.jpeg" alt="Vinchas de flores con tinsel" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vinchas de flores con tinsel</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Chalecos%20reflectivos%20de%20seguridad.jpeg" alt="Chalecos reflectivos de seguridad" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Chalecos reflectivos</h3><span class="sub">de seguridad</span><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== OTROS MUNDOS ====== -->
+<section class="otros">
+  <div class="wrap">
+    <h2 class="reveal">Seguí explorando otros mundos</h2>
+    <div class="otros-grid">
+      <a class="otros-card reveal" href="cotillon-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z"/><path d="M12 15l-1 2.5h2L12 21.5"/></svg>Cotillón</a>
+      <a class="otros-card reveal" data-delay="1" href="cumpleanos-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14v8H5zM5 15.5c1.2.9 2.3-.9 3.5 0s2.3.9 3.5 0 2.3-.9 3.5 0 2.3.9 3.5 0M12 8.5V12M12 4.2c-.8.9-.8 2 0 2.6.8-.6.8-1.7 0-2.6z"/></svg>Cumpleaños</a>
+      <a class="otros-card reveal" data-delay="2" href="reposteria-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0M5 10h14l-1.8 10H6.8zM9 14l.6 3M15 14l-.6 3"/></svg>Repostería</a>
+      <a class="otros-card reveal" data-delay="3" href="decoracion-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6.5 9.3V20h11V9.3M10 20v-5h4v5"/></svg>Decoración</a>
+      <a class="otros-card reveal" data-delay="4" href="combos-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8M3 8h18v4H3zM12 8v13M12 8s-1.5-4.5-4.5-4.5a2.25 2.25 0 0 0 0 4.5H12zM12 8s1.5-4.5 4.5-4.5a2.25 2.25 0 0 1 0 4.5H12z"/></svg>Combos</a>
+      <a class="otros-card reveal" data-delay="5" href="especiales-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Especiales</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <div class="fname">Mundo Mágico ✨</div>
+      <p>El cotillón de Tucumán desde 1994. La misma familia, el mismo mostrador, la misma alegría.</p>
+    </div>
+    <nav class="foot-col" aria-label="Mundos">
+      <b>Mundos</b>
+      <a href="cotillon-v2.html">Cotillón y fiestas</a>
+      <a href="cumpleanos-v2.html">Línea de cumpleaños</a>
+      <a href="reposteria-v2.html">Repostería</a>
+      <a href="decoracion-v2.html">Decoración del hogar</a>
+      <a href="disfraces-v2.html">Disfraces</a>
+      <a href="combos-v2.html">Combos</a>
+    </nav>
+    <nav class="foot-col" aria-label="La casa">
+      <b>La casa</b>
+      <a href="historia-v2.html">Nuestra historia</a>
+      <a href="especiales-v2.html">Especial Selección Argentina ⚽</a>
+      <a href="index.html#visitanos">Sucursales y horarios</a>
+    </nav>
+    <nav class="foot-col" aria-label="Hablemos">
+      <b>Hablemos</b>
+      <a href="https://wa.me/5493813006343" target="_blank" rel="noopener">WhatsApp: +54 9 381 300-6343</a>
+      <a href="https://www.instagram.com/mundo_magico_tuc/" target="_blank" rel="noopener">Instagram: @mundo_magico_tuc</a>
+      <a href="https://www.facebook.com/mundomagicotucuman/" target="_blank" rel="noopener">Facebook: Mundo Mágico Tucumán</a>
+      <a href="https://www.instagram.com/mundomagico.yb/" target="_blank" rel="noopener">Yerba Buena: @mundomagico.yb</a>
+    </nav>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© 1994–2026 Mundo Mágico · San Miguel de Tucumán, Argentina</span>
+    <span>Hecho con ❤️ y mucho cotillón</span>
+  </div>
+</footer>
+
+<script>window.addEventListener('load',function(){document.querySelectorAll('video[data-src]').forEach(function(v){v.src=v.getAttribute('data-src');if(v.play)v.play().catch(function(){});});});</script>
+<script src="assets/site.js"></script>
+<script>
+/* Barra de categorías: resalta la sección visible al hacer scroll */
+(function(){
+  var bar = document.querySelector('.catbar');
+  if(!bar) return;
+  var links = [].slice.call(bar.querySelectorAll('a[href^="#"]'));
+  var secs = links.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); });
+  var offset = 150;
+  function onScroll(){
+    var y = window.scrollY + offset, idx = 0;
+    secs.forEach(function(s, i){ if(s && s.offsetTop <= y) idx = i; });
+    links.forEach(function(a, i){ a.classList.toggle('is-active', i === idx); });
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onScroll, { passive:true });
+  onScroll();
+})();
+</script>
+</body>
+</html>

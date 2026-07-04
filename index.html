@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mundo Mágico · Cotillón, decoración y fiestas en Tucumán</title>
+<meta name="description" content="+30 años haciendo magia en Tucumán. Cotillón, decoración, línea de cumpleaños, repostería y disfraces — más de 1.000 productos en un solo lugar. Vos ponés la ocasión, nosotros todo lo demás.">
+<meta name="theme-color" content="#fdfbf5">
+<link rel="icon" href="Logo/Mundo-Magico%20Logo.jpg">
+
+<meta property="og:title" content="Mundo Mágico · todo para celebrar en Tucumán">
+<meta property="og:description" content="Cotillón, decoración, cumpleaños, repostería y disfraces. +30 años y más de 1.000 productos en un solo lugar.">
+<meta property="og:image" content="Logo/Mundo-Magico%20Logo.jpg">
+<meta property="og:locale" content="es_AR">
+<meta property="og:type" content="website">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Store",
+  "name": "Mundo Mágico",
+  "description": "Cotillón, decoración, línea de cumpleaños, repostería y disfraces en Tucumán. Más de 30 años de trayectoria.",
+  "image": "Logo/Mundo-Magico Logo.jpg",
+  "telephone": "+5493813006343",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Junín 351",
+    "addressLocality": "San Miguel de Tucumán",
+    "addressRegion": "Tucumán",
+    "addressCountry": "AR"
+  },
+  "openingHours": ["Mo-Fr 09:00-13:00", "Mo-Fr 17:00-21:00", "Sa 09:00-13:30"],
+  "priceRange": "$$",
+  "sameAs": [
+    "https://www.instagram.com/mundo_magico_tuc/",
+    "https://www.facebook.com/mundomagicotucuman/"
+  ]
+}
+</script>
+
+
+<link rel="preload" href="assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="Logo/Logo%20animado%20nuevo%20-%20poster.jpg" as="image" fetchpriority="high">
+<link rel="stylesheet" href="assets/v2.css">
+<style>
+/* ===================== HERO ===================== */
+/* El video del logo ES el fondo: sus bordes son los de la pantalla,
+   y su blanco se funde con el blanco de la página. */
+.hero{
+  position:relative; min-height:100svh; overflow:hidden;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  text-align:left; padding:calc(var(--nav-h) + var(--s4)) clamp(var(--s3), 6vw, var(--s10)) var(--s8);
+  background:#fff;
+}
+.hero > *{position:relative; z-index:2}
+/* velo inferior: transición suave del blanco del video al crema de la página */
+.hero::after{
+  content:''; position:absolute; inset:auto 0 0 0; height:120px; z-index:1; pointer-events:none;
+  background:linear-gradient(to bottom, rgba(253,251,245,0), var(--bg));
+}
+
+/* Campo de estrellas de la marca · 3 capas de profundidad con drift + twinkle */
+.starfield{position:absolute; inset:0; z-index:1; pointer-events:none}
+.star{position:absolute; opacity:0; will-change:transform;
+  animation:starIn .9s var(--ease) both, twinkle 5s var(--ease) 1s infinite}
+.star svg{display:block; filter:drop-shadow(0 4px 8px rgba(28,26,22,.10)); animation:drift 9s ease-in-out infinite}
+.star:nth-child(2n){animation-delay:.15s, 1.4s; animation-duration:.9s, 6.2s}
+.star:nth-child(2n) svg{animation-duration:11s; animation-delay:.8s}
+.star:nth-child(3n){animation-delay:.3s, 2.6s; animation-duration:.9s, 7.4s}
+.star:nth-child(3n) svg{animation-duration:13s; animation-delay:1.6s}
+.star:nth-child(5n){animation-delay:.45s, .7s}
+@keyframes starIn{from{opacity:0; transform:scale(0) rotate(-90deg)}to{opacity:.9; transform:scale(1) rotate(0)}}
+@keyframes twinkle{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){ .star{animation:none; opacity:.6} .star svg{animation:none} }
+
+/* Video del logo animado · ocupa la mitad derecha, contenido (sin recortes):
+   el blanco del video se funde con el blanco del hero, sin bordes visibles. */
+.hero-anim{position:absolute; top:0; bottom:0; left:34%; right:0; z-index:0; animation:animIn 1.4s var(--ease) both}
+.hero-anim video{
+  width:100%; height:100%; object-fit:contain; object-position:60% 50%;
+  display:block; border:0;
+  /* Difuminado en los bordes para que la animación se funda con el fondo
+     y no tenga una entrada dura (izquierda, arriba y abajo). */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+@keyframes animIn{from{opacity:0}to{opacity:1}}
+/* Fallback estático si el usuario prefiere menos movimiento */
+.hero-logo-static{display:none; width:152px; height:152px; border-radius:36px; background:#fff;
+  box-shadow:0 24px 48px -16px rgba(28,26,22,.22), 0 4px 12px rgba(28,26,22,.08);
+  place-items:center; margin-bottom:var(--s4)}
+.hero-logo-static img{width:128px; height:128px; object-fit:cover; border-radius:28px; display:block}
+@media(prefers-reduced-motion:reduce){
+  .hero-anim{display:none}
+  .hero-logo-static{display:grid}
+}
+
+.hero .eyebrow{margin-bottom:var(--s3); animation:riseIn .7s var(--ease) .25s both}
+.hero h1{
+  font-size:clamp(39px, 4.4vw, 61px); line-height:1.04; letter-spacing:-.015em;
+  max-width:13ch; margin:0 0 var(--s3);
+}
+.hero h1 em{font-style:italic; font-weight:500; color:var(--green-ink)}
+/* Palabras del título: entran en cascada · solo transform (no bloquea LCP) */
+.hero h1 .w{display:inline-block; animation:wordUp .7s var(--ease) both}
+.hero h1 .w:nth-child(1){animation-delay:.12s}
+.hero h1 .w:nth-child(2){animation-delay:.18s}
+.hero h1 .w:nth-child(3){animation-delay:.24s}
+.hero h1 .w:nth-child(4){animation-delay:.30s}
+.hero h1 .w:nth-child(5){animation-delay:.36s}
+.hero h1 .w:nth-child(6){animation-delay:.42s}
+.hero h1 .w:nth-child(7){animation-delay:.48s}
+.hero h1 .w:nth-child(8){animation-delay:.54s}
+@keyframes wordUp{from{transform:translateY(.45em) rotate(1.5deg)}to{transform:translateY(0) rotate(0)}}
+@keyframes riseIn{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+.hero-lead{color:var(--ink); opacity:.75; font-size:clamp(var(--fs0), 1.3vw, var(--fs1)); line-height:1.5; max-width:34ch; margin:0 0 var(--s5);
+  animation:riseIn .7s var(--ease) .5s both}
+.hero-cta{display:flex; flex-wrap:wrap; gap:var(--s2); justify-content:flex-start; animation:riseIn .7s var(--ease) .65s both}
+@media(prefers-reduced-motion:reduce){
+  .hero .eyebrow, .hero h1 .w, .hero-lead, .hero-cta{animation:none}
+}
+.hero-cue{
+  position:absolute; bottom:var(--s3); left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none;
+  color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  transition:color .2s var(--ease);
+}
+.hero-cue:hover{color:var(--green-ink)}
+.hero-cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
+
+@media(max-width:760px){
+  /* En vertical el video vuelve al flujo (arriba, sin recortes raros) */
+  .hero{align-items:center; text-align:center; padding-bottom:var(--s9)}
+  .hero-anim{position:relative; inset:auto; width:100vw; margin:0 0 var(--s2)}
+  .hero-anim video{aspect-ratio:4/3; object-fit:cover; object-position:50% 50%; transform:none}
+  /* fundido arriba y abajo para que el video se disuelva en el blanco */
+  .hero-anim::before, .hero-anim::after{content:''; position:absolute; left:0; right:0; height:56px; z-index:1; pointer-events:none}
+  .hero-anim::before{top:0; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0))}
+  .hero-anim::after{bottom:0; background:linear-gradient(to top, #fff, rgba(255,255,255,0))}
+  .hero h1{font-size:clamp(31px, 9.5vw, 39px); max-width:16ch}
+  .hero-lead{font-size:var(--fs1); margin-bottom:var(--s4); max-width:44ch}
+  .hero-cta{width:100%; flex-direction:column; align-items:stretch; max-width:360px; justify-content:center}
+}
+
+/* ===================== BANDA DE CONFIANZA ===================== */
+.trust{background:var(--green-ink); color:#fff}
+.trust .wrap{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
+  padding-top:var(--s5); padding-bottom:var(--s5);
+}
+.trust-item{display:flex; align-items:center; gap:var(--s2)}
+.trust-item .tic{
+  width:48px; height:48px; flex:none; border-radius:16px; display:grid; place-items:center;
+  background:rgba(255,255,255,.12);
+}
+.trust-item .tic .ic{width:26px; height:26px}
+.trust-item b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.2}
+.trust-item small{display:block; font-size:var(--fs-1); opacity:.85; line-height:1.35}
+@media(max-width:900px){ .trust .wrap{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:480px){ .trust .wrap{grid-template-columns:1fr; gap:var(--s2)} }
+
+/* ===================== HISTORIA ===================== */
+.historia{padding:var(--s10) 0; background:var(--bg)}
+.hist-head{text-align:center; max-width:720px; margin:0 auto var(--s7)}
+.hist-head p{font-size:var(--fs1); line-height:1.6; color:var(--muted); margin:0}
+.mantra{
+  font-family:var(--font-hand); font-weight:700; color:var(--green-ink);
+  font-size:clamp(var(--fs3), 4.4vw, var(--fs5)); line-height:1.15; margin:var(--s3) 0 0;
+}
+
+/* Polaroids */
+.hist-track{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); align-items:start}
+@media(max-width:900px){ .hist-track{grid-template-columns:repeat(2,1fr)} }
+.hist-frame{
+  margin:0; background:#fff; padding:var(--s1); padding-bottom:0;
+  border-radius:6px; box-shadow:0 16px 32px -14px rgba(28,26,22,.22), 0 2px 8px rgba(28,26,22,.06);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.hist-frame:nth-child(1){transform:rotate(-1.6deg)}
+.hist-frame:nth-child(2){transform:rotate(1.1deg) translateY(12px)}
+.hist-frame:nth-child(3){transform:rotate(-.8deg)}
+.hist-frame:nth-child(4){transform:rotate(1.8deg) translateY(10px)}
+.hist-frame:hover{transform:rotate(0) translateY(-6px); box-shadow:var(--shadow-lg)}
+.hist-frame img{width:100%; height:216px; object-fit:cover; display:block; border-radius:3px; background:#efece4}
+.hist-frame figcaption{
+  font-family:var(--font-hand); font-weight:600; font-size:var(--fs1); color:var(--ink);
+  padding:var(--s1) 4px 12px; line-height:1.2; text-align:center;
+}
+.hist-frame .hyr{
+  display:inline-block; font-family:var(--font-body); font-size:11px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--green-ink);
+  background:var(--green-soft); padding:3px 10px; border-radius:999px; margin-right:6px;
+}
+@media(prefers-reduced-motion:reduce){ .hist-frame, .hist-frame:hover{transform:none} }
+
+.hist-foot{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:var(--s2) var(--s4); margin-top:var(--s7)}
+.hist-chips{display:flex; gap:var(--s2); flex-wrap:wrap; justify-content:center}
+.hchip{background:#fff; border:1px solid var(--line); border-radius:999px; padding:10px 20px;
+  box-shadow:var(--shadow-sm); display:flex; align-items:baseline; gap:8px}
+.hchip b{font-family:var(--font-display); font-weight:600; font-size:var(--fs1); color:var(--green-ink); line-height:1}
+.hchip span{font-size:var(--fs-1); font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted)}
+
+/* ===================== MUNDOS ===================== */
+.mundos{padding:var(--s10) 0; background:#f6f2e8; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.mundos .head{text-align:center; margin-bottom:var(--s7)}
+.mundos .head .sub{margin:0 auto}
+.mundo-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s3); perspective:1200px}
+@media(max-width:900px){ .mundo-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media(max-width:560px){ .mundo-grid{grid-template-columns:1fr} }
+
+.mundo{
+  position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  border-radius:var(--radius); overflow:hidden; background:#fff;
+  border:1px solid rgba(28,26,22,.06);
+  box-shadow:0 16px 32px -18px rgba(28,26,22,.18), 0 4px 12px -8px rgba(28,26,22,.08);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  will-change:transform;
+}
+.mundo:hover{transform:translateY(-8px); box-shadow:0 32px 56px -24px rgba(28,26,22,.28), 0 12px 24px -16px rgba(28,26,22,.14)}
+
+.mundo .tile{height:216px; overflow:hidden; display:grid; place-items:center}
+.mundo .tile-img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s var(--ease)}
+.mundo:hover .tile-img{transform:scale(1.06)}
+
+.mundo .body{padding:var(--s3) var(--s3) var(--s4); display:flex; flex-direction:column; gap:4px; flex:1}
+.mundo h3{font-size:var(--fs2); margin:0}
+.mundo p{font-size:15px; color:var(--muted); margin:0 0 var(--s1); line-height:1.5}
+.mundo .go{font-size:14px; font-weight:800; display:inline-flex; align-items:center; gap:6px; margin-top:auto; transition:gap .2s var(--ease)}
+.mundo:hover .go{gap:12px}
+
+/* un color del logo por mundo */
+.mundo .body{border-top:5px solid var(--accent-line, #2f63cf)}
+.m-cotillon  .tile{background:#e9effc} .m-cotillon  .body{--accent-line:#2f63cf} .m-cotillon h3, .m-cotillon .go{color:#24509e}
+.m-cumple    .tile{background:#fdeae8} .m-cumple    .body{--accent-line:#ef5c4d} .m-cumple h3, .m-cumple .go{color:#b3271d}
+.m-reposteria .tile{background:#fdf3d5} .m-reposteria .body{--accent-line:#ec6a9c} .m-reposteria h3, .m-reposteria .go{color:#8a6300}
+.m-deco      .tile{background:var(--green-soft)} .m-deco      .body{--accent-line:#6f9e5b} .m-deco h3, .m-deco .go{color:var(--green-ink)}
+.m-disfraces .tile{background:#232f58} .m-disfraces .body{--accent-line:#7c4dd6} .m-disfraces h3, .m-disfraces .go{color:#24509e}
+.m-combos    .tile{background:#fdeeda} .m-combos    .body{--accent-line:#f0913a} .m-combos h3, .m-combos .go{color:#9a5303}
+
+@media(prefers-reduced-motion:reduce){
+  .mundo:hover{transform:translateY(-3px)}
+  .mundo .tile-img, .mundo:hover .tile-img{transition:none; transform:none}
+}
+
+/* ===================== VISITANOS ===================== */
+.visitanos{padding:90px 0; background:#f6f2e8; border-top:1px solid var(--line)}
+.visitanos .head{text-align:center; max-width:640px; margin:0 auto var(--s6)}
+.visitanos .head .sub{margin:0 auto}
+.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s4); align-items:stretch}
+.vis-panel{grid-column:1; min-width:0; display:flex; flex-direction:column; gap:var(--s2)}
+.vis-photo{grid-column:2; align-self:stretch; position:relative; overflow:hidden; aspect-ratio:1536/1024;
+  border-radius:var(--radius); border:1px solid var(--line);
+  background:#f3ecdf; box-shadow:var(--shadow-lg)}
+.vis-photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+@media(max-width:900px){
+  .vis-split{grid-template-columns:1fr}
+  .vis-photo{grid-column:1}
+}
+.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); flex:1 1 auto; grid-auto-rows:1fr}
+@media(max-width:900px){ .suc-grid{flex:0 1 auto; grid-auto-rows:auto} }
+@media(max-width:480px){ .suc-grid{grid-template-columns:1fr} }
+.suc-card{display:flex; flex-direction:column; gap:2px; padding:var(--s3); background:#fff;
+  border:1px solid var(--line); border-radius:20px; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow); border-color:transparent}
+.suc-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
+.suc-card small{color:var(--muted); font-size:14px}
+.suc-card .go{margin-top:var(--s1); font-size:13px; font-weight:700; color:var(--green-ink);
+  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
+.suc-card:hover .go{gap:9px}
+.hours-pill{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
+  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:14px;
+  padding:12px 22px; border-radius:999px}
+.hours-pill .ic{width:18px; height:18px}
+@media(prefers-reduced-motion:reduce){ .suc-card:hover{transform:none} }
+
+/* ===================== RESEÑAS DE GOOGLE ===================== */
+.resenas{padding:var(--s4) 0; background:var(--bg); border-top:1px solid var(--line)}
+.resenas .head{text-align:center; max-width:560px; margin:0 auto var(--s2)}
+.resenas .head h2{font-size:var(--fs1); margin-bottom:2px}
+.resenas .head .sub{margin:0 auto; font-size:13px}
+
+/* Resumen: la G de Google + puntaje + estrellas, en línea con el CTA */
+.gsum{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px var(--s2);
+  margin:0 auto var(--s2); padding:6px var(--s2); max-width:560px;
+  background:#fff; border:1px solid var(--line); border-radius:999px; box-shadow:var(--shadow-sm)}
+.gsum-logo{display:flex; align-items:center; gap:6px}
+.gsum-logo svg{width:16px; height:16px; flex:none}
+.gsum-logo b{font-family:var(--font-display); font-weight:600; font-size:13px; color:var(--ink)}
+.gsum-score{display:flex; align-items:baseline; gap:6px}
+.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:15px; line-height:1; color:var(--ink)}
+.gsum-score small{font-size:11px; color:var(--muted)}
+.stars{display:inline-flex; gap:1px}
+.stars svg{width:11px; height:11px; fill:#fbbc05}
+.gsum .btn{white-space:nowrap; padding:6px 14px; font-size:12px}
+
+/* Grilla de reseñas: compacta, una sola fila */
+.res-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+@media(max-width:900px){ .res-grid{grid-template-columns:1fr 1fr} }
+@media(max-width:600px){ .res-grid{grid-template-columns:1fr} }
+.res-card{display:flex; flex-direction:column; gap:6px; padding:12px 14px;
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm);
+  position:relative; transition:transform .25s var(--ease), box-shadow .25s var(--ease)}
+.res-card:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+.res-card .stars svg{width:11px; height:11px}
+.res-card .quote{font-size:12px; line-height:1.4; color:var(--ink); margin:0; flex:1;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.res-card .gmark{position:absolute; top:12px; right:14px; width:13px; height:13px; opacity:.9}
+.res-author{display:flex; align-items:center; gap:6px; margin-top:auto}
+.res-av{width:22px; height:22px; flex:none; border-radius:50%; display:grid; place-items:center;
+  color:#fff; font-weight:800; font-size:11px; font-family:var(--font-body)}
+.res-author b{display:block; font-weight:800; font-size:11px; line-height:1.2}
+.res-author small{display:block; font-size:10px; color:var(--muted)}
+@media(prefers-reduced-motion:reduce){ .res-card:hover{transform:none} }
+
+/* ===================== CONTACTO ===================== */
+.contacto{padding:58px 0; background:var(--bg); border-top:1px solid var(--line)}
+.contacto .head{text-align:center; max-width:640px; margin:0 auto 22px}
+.contacto .head h2{margin-bottom:6px}
+.contacto .head .sub{margin:0 auto; font-size:15px}
+.con-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+@media(max-width:900px){ .con-grid{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:560px){ .con-grid{grid-template-columns:1fr} }
+.con-card{display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px;
+  padding:14px 16px; background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.con-card:hover{transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent}
+.con-ic{width:34px; height:34px; border-radius:12px; display:grid; place-items:center; color:#fff}
+.con-ic svg{width:19px; height:19px; fill:currentColor}
+.con-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
+.con-card small{color:var(--muted); font-size:14px}
+.con-card .go{margin-top:2px; font-size:13px; font-weight:700; color:var(--green-ink);
+  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
+.con-card:hover .go{gap:9px}
+.con-wa{background:#25d366}
+.con-ig{background:linear-gradient(45deg,#f9ce34 0%,#ee2a7b 55%,#6228d7 100%)}
+.con-fb{background:#1877f2}
+@media(prefers-reduced-motion:reduce){ .con-card:hover{transform:none} }
+
+/* ===================== ESPECIAL DE TEMPORADA ===================== */
+.temporada{padding:var(--s4) 0; background:linear-gradient(100deg,#75aadb 0%,#a8cdee 26%,#f3f9ff 50%,#a8cdee 74%,#75aadb 100%); border-bottom:1px solid var(--line)}
+.temporada-inner{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.temp-ic{width:56px; height:56px; flex:none; border-radius:18px; background:#fff; display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.temp-ic svg{width:30px; height:30px; stroke:#d9a012; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.temp-txt{flex:1 1 320px; min-width:0}
+.temp-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:#123d5c}
+.temp-txt small{display:block; font-size:15px; color:#2a5578; margin-top:2px}
+.temp-btn{background:#123d5c; color:#fff; box-shadow:0 12px 24px -10px rgba(18,61,92,.5)}
+.temp-btn:hover{background:#1b6ca8; color:#fff; transform:translateY(-2px)}
+@media(max-width:640px){ .temporada-inner{flex-direction:column; align-items:flex-start} }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#inicio">Saltar al contenido</a>
+
+<!-- ====== NAV ====== -->
+<nav class="nav" id="nav">
+  <a class="corner-logo" href="#inicio" aria-label="Inicio · Mundo Mágico">
+    <img src="Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width="44" height="44">
+    <span class="brand">Mundo Mágico</span>
+  </a>
+  <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="nav-links" id="nav-links">
+    <a href="#historia">Historia</a>
+    <div class="nav-item has-dropdown">
+      <a href="#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+      <div class="nav-dropdown" role="menu">
+        <a href="cotillon-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón y fiestas</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#ef5c4d"></span>Línea de cumpleaños</a>
+        <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
+        <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
+        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#7c4dd6"></span>Disfraces</a>
+        <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
+      </div>
+    </div>
+    <a href="#visitanos">Visitanos</a>
+    <a href="#contacto">Contacto</a>
+    <a class="wa" href="https://wa.me/5493813006343" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.13a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 1 1 6.97 3.86Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>Escribinos</a>
+  </div>
+</nav>
+
+<!-- ====== HERO ====== -->
+<header class="hero" id="inicio">
+  <div class="starfield" id="starfield" aria-hidden="true"></div>
+
+  <div class="hero-anim" aria-hidden="true">
+    <video autoplay muted playsinline preload="none" poster="Logo/Logo%20animado%20nuevo%20-%20poster.jpg" data-src="Logo/Logo-Animacion-2.mp4"></video>
+  </div>
+  <div class="hero-logo-static" aria-hidden="true">
+    <img src="Logo/Mundo-Magico%20Logo.jpg" alt="" width="128" height="128">
+  </div>
+  <div class="eyebrow">Cotillón · Tucumán · desde 1994</div>
+  <h1><span class="w">Todo</span> <span class="w">para</span> <span class="w">tu</span> <span class="w"><em>fiesta</em>,</span> <span class="w">en</span> <span class="w">un</span> <span class="w">solo</span> <span class="w">lugar</span></h1>
+  <p class="hero-lead">Cotillón, decoración, cumpleaños, repostería y disfraces. Más de 1.000 productos y 30 años haciendo magia.</p>
+  <div class="hero-cta">
+    <a class="btn btn-primary" href="#mundos">Descubrí nuestros mundos</a>
+    <a class="btn btn-ghost" href="https://wa.me/5493813006343?text=%C2%A1Hola%20Mundo%20M%C3%A1gico!%20Quiero%20hacer%20una%20consulta." target="_blank" rel="noopener">Consultar por WhatsApp</a>
+  </div>
+
+  <a class="hero-cue" href="#historia">
+    <span>Conocé la historia</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+  </a>
+</header>
+
+<main>
+<!-- ====== BANDA DE CONFIANZA ====== -->
+<section class="trust" aria-label="Por qué elegirnos">
+  <div class="wrap">
+    <div class="trust-item">
+      <span class="tic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span>
+      <span><b>+30 años</b><small>Referentes en Tucumán</small></span>
+    </div>
+    <div class="trust-item">
+      <span class="tic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z"/><path d="M12 15l-1 2.5h2L12 21.5"/></svg></span>
+      <span><b>+1.000 productos</b><small>Todo para celebrar</small></span>
+    </div>
+    <div class="trust-item">
+      <span class="tic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9l-5 4V6z"/></svg></span>
+      <span><b>Atención personal</b><small>Te asesoramos por WhatsApp</small></span>
+    </div>
+    <div class="trust-item">
+      <span class="tic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6"/></svg></span>
+      <span><b>4 sucursales a la calle</b><small>Vení a verlo en persona</small></span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ESPECIAL DE TEMPORADA ====== -->
+<section class="temporada" aria-label="Especial de temporada">
+  <div class="wrap temporada-inner reveal">
+    <span class="temp-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg></span>
+    <div class="temp-txt">
+      <b>Mundial 2026 · llegó la temporada albiceleste</b>
+      <small>Galeras, bufandas, vuvuzelas y todo el cotillón para alentar a la Selección.</small>
+    </div>
+    <a class="btn temp-btn" href="especiales-v2.html">Ver los especiales →</a>
+  </div>
+</section>
+
+<!-- ====== HISTORIA ====== -->
+<section class="historia" id="historia">
+  <div class="wrap">
+    <div class="hist-head reveal">
+      <div class="eyebrow">Nuestra historia</div>
+      <h2>Más de 30 años haciendo magia en Tucumán</h2>
+      <p>Desde 1994, el cotillón de referencia. La misma familia de siempre, con las mismas ganas del primer día.</p>
+      <p class="mantra">Vos ponés la ocasión. Nosotros, todo lo demás.</p>
+    </div>
+
+    <div class="hist-track reveal" data-delay="1">
+      <figure class="hist-frame">
+        <picture><source srcset="assets/historia/mostrador-fundadora.webp" type="image/webp"><img src="assets/historia/mostrador-fundadora.jpg" alt="La fundadora atendiendo detrás del mostrador" width="1500" height="1030" loading="lazy"></picture>
+        <figcaption><span class="hyr">1998</span>Detrás del mostrador</figcaption>
+      </figure>
+      <figure class="hist-frame">
+        <picture><source srcset="assets/historia/nene-local.webp" type="image/webp"><img src="assets/historia/nene-local.jpg" alt="Un niño en la puerta del local con el cartel de cotillón" width="1500" height="1074" loading="lazy"></picture>
+        <figcaption>En la puerta del local</figcaption>
+      </figure>
+      <figure class="hist-frame">
+        <picture><source srcset="assets/historia/vitrina-navidad.webp" type="image/webp"><img src="assets/historia/vitrina-navidad.jpg" alt="Vidriera de Navidad con Papá Noel y árbol" width="1500" height="1022" loading="lazy"></picture>
+        <figcaption>Las vidrieras de siempre</figcaption>
+      </figure>
+      <figure class="hist-frame">
+        <picture><source srcset="assets/historia/nene-disfraz.webp" type="image/webp"><img src="assets/historia/nene-disfraz.jpg" alt="Un nene chiquito disfrazado entre las estanterías" width="1500" height="2265" loading="lazy"></picture>
+        <figcaption>Listos para disfrazarse</figcaption>
+      </figure>
+    </div>
+
+    <div class="hist-foot reveal" data-delay="2">
+      <div class="hist-chips">
+        <div class="hchip"><b>+30</b><span>Años</span></div>
+        <div class="hchip"><b>+1.000</b><span>Productos</span></div>
+        <div class="hchip"><b>Nº&nbsp;1</b><span>En cotillón</span></div>
+      </div>
+      <a class="btn btn-ghost" href="historia-v2.html">Ver toda nuestra historia →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== NUESTROS MUNDOS ====== -->
+<section class="mundos" id="mundos">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Nuestros mundos</div>
+      <h2>Seis mundos para celebrar</h2>
+      <p class="sub">Entrá a cada mundo y descubrí todo lo que tenemos para vos.</p>
+    </div>
+    <div class="mundo-grid">
+      <a class="mundo m-cotillon reveal" href="cotillon-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/cotillon-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Cotillón y fiestas</h3>
+          <p>Globos, guirnaldas y todo para que tu fiesta explote de color.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-cumple reveal" data-delay="1" href="cumpleanos-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/cumpleanos-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Línea de cumpleaños</h3>
+          <p>Líneas temáticas para que cada cumple infantil sea inolvidable.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-reposteria reveal" data-delay="2" href="reposteria-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/reposteria-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Repostería</h3>
+          <p>Velas, toppers y detalles dulces para tortas de revista.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-deco reveal" href="decoracion-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/decoracion-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Decoración del hogar</h3>
+          <p>Detalles lindos y modernos para alegrar cada rincón de tu casa.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-disfraces reveal" data-delay="1" href="disfraces-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/disfraces-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Disfraces</h3>
+          <p>Personajes, máscaras y accesorios para transformarte en quien quieras.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-combos reveal" data-delay="2" href="combos-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/combos-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Combos</h3>
+          <p>Kits armados con todo lo necesario para tu festejo, listos para llevar.</p>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== VISITANOS ====== -->
+<section class="visitanos" id="visitanos">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Pasá cuando quieras</div>
+      <h2>Cuatro sucursales, una misma atención</h2>
+      <p class="sub">Todo cerca, en Tucumán. Vení a verlo en persona.</p>
+    </div>
+    <div class="vis-split reveal">
+      <div class="vis-panel">
+        <div class="suc-grid">
+          <a class="suc-card" href="https://www.google.com/maps/search/?api=1&query=Mundo+Magico+Junin+351+Tucuman" target="_blank" rel="noopener"><b>Junín 351</b><small>San Miguel de Tucumán</small><span class="go">Ver en el mapa →</span></a>
+          <a class="suc-card" href="https://www.google.com/maps/search/?api=1&query=Mundo+Magico+Junin+241+Tucuman" target="_blank" rel="noopener"><b>Junín 241</b><small>San Miguel de Tucumán</small><span class="go">Ver en el mapa →</span></a>
+          <a class="suc-card" href="https://www.google.com/maps/search/?api=1&query=Mundo+Magico+Cordoba+784+Tucuman" target="_blank" rel="noopener"><b>Córdoba 784</b><small>San Miguel de Tucumán</small><span class="go">Ver en el mapa →</span></a>
+          <a class="suc-card" href="https://www.google.com/maps/search/?api=1&query=Mundo+Magico+Solano+Vera+510+Yerba+Buena+Tucuman" target="_blank" rel="noopener"><b>Solano Vera 510</b><small>Yerba Buena · línea propia</small><span class="go">Ver en el mapa →</span></a>
+        </div>
+        <div class="hours-pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>Lunes a viernes 9–13 y 17–21 · Sábados 9–13:30</div>
+      </div>
+      <div class="vis-photo">
+        <img src="assets/mundos/local-3d-web-wide.png" alt="Ilustración 3D del local de Mundo Mágico" loading="lazy">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== RESEÑAS DE GOOGLE ====== -->
+<section class="resenas" id="resenas" aria-label="Reseñas de Google">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Lo que dicen de nosotros</div>
+      <h2>Nos recomiendan en Google</h2>
+      <p class="sub">Miles de fiestas después, esto es lo que cuentan nuestros clientes.</p>
+    </div>
+
+    <div class="gsum reveal">
+      <span class="gsum-logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        <b>Google</b>
+      </span>
+      <div class="gsum-score">
+        <span class="num">4,6</span>
+        <span class="stars" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></span>
+        <small>44 reseñas en Google</small>
+      </div>
+      <a class="btn btn-primary" href="https://www.google.com/maps?cid=5518163187759882532" target="_blank" rel="noopener">Dejá tu reseña →</a>
+    </div>
+
+    <div class="res-grid">
+      <figure class="res-card reveal">
+        <svg class="gmark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        <span class="stars" aria-label="5 de 5 estrellas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></span>
+        <blockquote class="quote">Siempre encontrás lo que buscás. Buena atención y precios.</blockquote>
+        <figcaption class="res-author">
+          <span class="res-av" style="background:#ef5c4d" aria-hidden="true">B</span>
+          <span><b>Belén Reynoso</b><small>Hace 5 años</small></span>
+        </figcaption>
+      </figure>
+
+      <figure class="res-card reveal" data-delay="1">
+        <svg class="gmark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        <span class="stars" aria-label="5 de 5 estrellas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></span>
+        <blockquote class="quote">Excelentes precios, variedad y atención.</blockquote>
+        <figcaption class="res-author">
+          <span class="res-av" style="background:#2f63cf" aria-hidden="true">S</span>
+          <span><b>Sil Iraidini Taboada</b><small>Hace 1 año</small></span>
+        </figcaption>
+      </figure>
+
+      <figure class="res-card reveal" data-delay="2">
+        <svg class="gmark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        <span class="stars" aria-label="5 de 5 estrellas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></span>
+        <blockquote class="quote">Muy buena atención.</blockquote>
+        <figcaption class="res-author">
+          <span class="res-av" style="background:#6f9e5b" aria-hidden="true">V</span>
+          <span><b>Valeria Roxana Sánchez</b><small>Hace 2 años</small></span>
+        </figcaption>
+      </figure>
+
+      <figure class="res-card reveal" data-delay="3">
+        <svg class="gmark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        <span class="stars" aria-label="5 de 5 estrellas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></span>
+        <blockquote class="quote">Muy buena atención, asesoramiento y amabilidad. Los precios accesibles.</blockquote>
+        <figcaption class="res-author">
+          <span class="res-av" style="background:#f0913a" aria-hidden="true">L</span>
+          <span><b>Laura Paola Hidalgo</b><small>Hace 4 años</small></span>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ====== CONTACTO ====== -->
+<section class="contacto" id="contacto">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Hablemos</div>
+      <h2>Contacto</h2>
+      <p class="sub">Escribinos por WhatsApp o seguinos en redes para ver las novedades antes que nadie.</p>
+    </div>
+    <div class="con-grid">
+      <a class="con-card reveal" href="https://wa.me/5493813006343?text=%C2%A1Hola%20Mundo%20M%C3%A1gico!%20Quiero%20hacer%20una%20consulta." target="_blank" rel="noopener">
+        <span class="con-ic con-wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.13a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 1 1 6.97 3.86Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg></span>
+        <b>WhatsApp</b>
+        <small>+54 9 381 300-6343</small>
+        <span class="go">Escribinos →</span>
+      </a>
+      <a class="con-card reveal" data-delay="1" href="https://www.instagram.com/mundo_magico_tuc/" target="_blank" rel="noopener">
+        <span class="con-ic con-ig"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63a5.9 5.9 0 0 0-2.13 1.38A5.9 5.9 0 0 0 .63 4.14C.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.8.72 1.47 1.38 2.13a5.9 5.9 0 0 0 2.13 1.38c.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.9 5.9 0 0 0 2.13-1.38 5.9 5.9 0 0 0 1.38-2.13c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.9 5.9 0 0 0-1.38-2.13A5.9 5.9 0 0 0 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84Zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4Zm6.4-11.85a1.44 1.44 0 1 1-1.44 1.44 1.44 1.44 0 0 1 1.44-1.44Z"/></svg></span>
+        <b>Instagram</b>
+        <small>@mundo_magico_tuc</small>
+        <span class="go">Seguinos →</span>
+      </a>
+      <a class="con-card reveal" data-delay="2" href="https://www.instagram.com/mundomagico.yb/" target="_blank" rel="noopener">
+        <span class="con-ic con-ig"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63a5.9 5.9 0 0 0-2.13 1.38A5.9 5.9 0 0 0 .63 4.14C.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.8.72 1.47 1.38 2.13a5.9 5.9 0 0 0 2.13 1.38c.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56a5.9 5.9 0 0 0 2.13-1.38 5.9 5.9 0 0 0 1.38-2.13c.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91a5.9 5.9 0 0 0-1.38-2.13A5.9 5.9 0 0 0 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84Zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4Zm6.4-11.85a1.44 1.44 0 1 1-1.44 1.44 1.44 1.44 0 0 1 1.44-1.44Z"/></svg></span>
+        <b>Instagram Yerba Buena</b>
+        <small>@mundomagico.yb</small>
+        <span class="go">Seguinos →</span>
+      </a>
+      <a class="con-card reveal" data-delay="3" href="https://www.facebook.com/mundomagicotucuman/" target="_blank" rel="noopener">
+        <span class="con-ic con-fb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3.01 1.79-4.67 4.53-4.67 1.31 0 2.68.23 2.68.23v2.95H15.83c-1.49 0-1.95.92-1.95 1.87V12h3.32l-.53 3.47h-2.79v8.38A12 12 0 0 0 24 12Z"/></svg></span>
+        <b>Facebook</b>
+        <small>Mundo Mágico Tucumán</small>
+        <span class="go">Seguinos →</span>
+      </a>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ====== PIE ====== -->
+<footer class="site-footer">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <div class="fname">Mundo Mágico ✨</div>
+      <p>El cotillón de Tucumán desde 1994. La misma familia, el mismo mostrador, la misma alegría.</p>
+    </div>
+    <nav class="foot-col" aria-label="Mundos">
+      <b>Mundos</b>
+      <a href="cotillon-v2.html">Cotillón y fiestas</a>
+      <a href="cumpleanos-v2.html">Línea de cumpleaños</a>
+      <a href="reposteria-v2.html">Repostería</a>
+      <a href="decoracion-v2.html">Decoración del hogar</a>
+      <a href="disfraces-v2.html">Disfraces</a>
+      <a href="combos-v2.html">Combos</a>
+    </nav>
+    <nav class="foot-col" aria-label="La casa">
+      <b>La casa</b>
+      <a href="historia-v2.html">Nuestra historia</a>
+      <a href="especiales-v2.html">Especial Selección Argentina ⚽</a>
+      <a href="index.html#visitanos">Sucursales y horarios</a>
+    </nav>
+    <nav class="foot-col" aria-label="Hablemos">
+      <b>Hablemos</b>
+      <a href="https://wa.me/5493813006343" target="_blank" rel="noopener">WhatsApp: +54 9 381 300-6343</a>
+      <a href="https://www.instagram.com/mundo_magico_tuc/" target="_blank" rel="noopener">Instagram: @mundo_magico_tuc</a>
+      <a href="https://www.facebook.com/mundomagicotucuman/" target="_blank" rel="noopener">Facebook: Mundo Mágico Tucumán</a>
+      <a href="https://www.instagram.com/mundomagico.yb/" target="_blank" rel="noopener">Yerba Buena: @mundomagico.yb</a>
+    </nav>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© 1994–2026 Mundo Mágico · San Miguel de Tucumán, Argentina</span>
+    <span>Hecho con ❤️ y mucho cotillón</span>
+  </div>
+</footer>
+
+<script>
+/* Video diferido: el poster pinta al instante y el video entra tras el load */
+window.addEventListener('load', function(){
+  document.querySelectorAll('video[data-src]').forEach(function(v){
+    v.src = v.getAttribute('data-src');
+    if (v.play) v.play().catch(function(){});
+  });
+});
+
+/* Hero inmersivo: estrellas con profundidad, explosión de confeti de
+   bienvenida (una sola vez) y parallax que sigue al mouse por capas. */
+(function(){
+  var field = document.getElementById('starfield');
+  if(!field) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var colors = ['#1e8834','#f59a1f','#2f63cf','#e23b30','#ffd23e'];
+
+  /* --- Campo de estrellas · (x%, y%, tamaño px, color, capa 1-3) --- */
+  var stars = [
+    [6,16,22,0,3],[13,62,14,1,2],[4,42,11,2,1],[17,28,9,4,2],
+    [22,78,17,0,3],[9,88,10,3,1],[26,48,8,2,1],
+    [89,20,24,1,3],[94,50,13,2,2],[81,36,10,4,1],[95,72,19,0,3],
+    [77,68,11,3,2],[86,88,14,1,1],[73,44,8,0,1],
+    [31,8,11,2,2],[69,7,14,4,3],[50,4,9,0,1],[62,92,12,2,2],[38,93,14,1,3],
+    [44,84,8,3,1],[57,88,9,4,1]
+  ];
+  var html = '';
+  stars.forEach(function(s){
+    html += '<span class="star" data-layer="'+s[4]+'" style="left:'+s[0]+'%;top:'+s[1]+'%">'+
+      '<svg width="'+s[2]+'" height="'+s[2]+'" viewBox="0 0 24 24" fill="'+colors[s[3]]+'">'+
+      '<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg></span>';
+  });
+  field.innerHTML = html;
+
+  /* --- Parallax por capas siguiendo el mouse --- */
+  var fine = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  if(reduce || !fine) return;
+  var hero = document.getElementById('inicio');
+  var layers = field.querySelectorAll('.star');
+  var raf = null, tx = 0, ty = 0;
+  hero.addEventListener('pointermove', function(e){
+    var r = hero.getBoundingClientRect();
+    tx = (e.clientX - r.left)/r.width - .5;
+    ty = (e.clientY - r.top)/r.height - .5;
+    if(raf) return;
+    raf = requestAnimationFrame(function(){
+      raf = null;
+      layers.forEach(function(el){
+        var d = +el.dataset.layer * 14;
+        el.style.translate = (-tx*d)+'px '+(-ty*d)+'px';
+      });
+    });
+  });
+  hero.addEventListener('pointerleave', function(){
+    layers.forEach(function(el){ el.style.translate = '0px 0px'; });
+  });
+})();
+</script>
+<script src="assets/site.js"></script>
+</body>
+</html>

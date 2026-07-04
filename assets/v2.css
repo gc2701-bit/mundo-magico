@@ -1,0 +1,544 @@
+/* ============================================================
+   Mundo Mágico · V2 — sistema de diseño "La juguetería mágica"
+   Versión paralela: no toca base.css ni las páginas originales.
+   Reglas: grilla de 8px, escala tipográfica 1.25, un solo easing,
+   verde del logo como color estructural, resto de la paleta solo
+   como acentos.
+   ============================================================ */
+
+/* ===== Fuentes autoalojadas (variable fonts, subset latin) ===== */
+@font-face{
+  font-family:'Fraunces'; font-style:normal; font-weight:400 700; font-display:optional;
+  src:url('fonts/Fraunces-500.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Fraunces'; font-style:italic; font-weight:400 700; font-display:optional;
+  src:url('fonts/Fraunces-500-italic.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Nunito Sans'; font-style:normal; font-weight:400 800; font-display:optional;
+  src:url('fonts/NunitoSans-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Caveat'; font-style:normal; font-weight:600 700; font-display:optional;
+  src:url('fonts/Caveat-600.woff2') format('woff2');
+}
+
+:root{
+  /* Lienzo */
+  --bg:#fdfbf5;
+  --surface:#ffffff;
+  --ink:#1c1a16;
+  --muted:#615c53;          /* 6.3:1 sobre --bg */
+  --line:#e9e4d8;
+
+  /* Paleta del logo */
+  --green:#1e8834;
+  --green-ink:#14672a;      /* texto/botones sobre claro (5.9:1 en blanco) */
+  --green-soft:#e7f3ea;
+  --blue:#2f63cf;
+  --red:#e23b30;
+  --orange:#f59a1f;
+  --yellow:#ffd23e;
+
+  --accent:var(--green);
+  --accent-deep:var(--green-ink);
+  --accent-contrast:#ffffff;
+
+  /* Tipografía · escala 1.25 (16 base) */
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Nunito Sans', system-ui, -apple-system, sans-serif;
+  --font-hand:'Caveat', cursive;
+  --fs-1:13px; --fs0:16px; --fs1:20px; --fs2:25px; --fs3:31px;
+  --fs4:39px; --fs5:49px; --fs6:61px; --fs7:76px; --fs8:95px;
+
+  /* Espaciado · grilla de 8px */
+  --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:40px;
+  --s6:48px; --s7:64px; --s8:80px; --s9:96px; --s10:128px;
+
+  /* Movimiento · un solo easing */
+  --ease:cubic-bezier(.22,.61,.2,1);
+
+  /* Medidas */
+  --nav-h:72px;
+  --wrap:1200px;
+  --radius:24px;
+  --shadow-sm:0 1px 2px rgba(28,26,22,.05), 0 2px 8px rgba(28,26,22,.06);
+  --shadow:0 8px 24px -8px rgba(28,26,22,.12), 0 2px 8px rgba(28,26,22,.06);
+  --shadow-lg:0 24px 48px -16px rgba(28,26,22,.18), 0 8px 16px -8px rgba(28,26,22,.08);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:var(--fs0); line-height:1.6;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+
+h1,h2,h3{font-family:var(--font-display); font-weight:600; line-height:1.08; margin:0 0 .4em; color:var(--ink); text-wrap:balance}
+h2{font-size:clamp(var(--fs4), 4vw, var(--fs5)); letter-spacing:-.01em}
+p{margin:0 0 1em}
+a{color:inherit}
+img{max-width:100%}
+
+.wrap{max-width:var(--wrap); margin:0 auto; padding:0 var(--s3)}
+section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
+
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:var(--fs-1); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--green-ink); font-weight:800; margin-bottom:var(--s2);
+}
+.eyebrow::before{content:''; width:20px; height:2px; background:var(--green); border-radius:2px}
+
+.sub{color:var(--muted); font-size:var(--fs1); line-height:1.6; max-width:52ch}
+
+/* Íconos SVG inline (trazo) */
+.ic{width:24px; height:24px; flex:none; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+
+/* ===== Accesibilidad ===== */
+:focus-visible{outline:3px solid var(--green); outline-offset:3px; border-radius:6px}
+*{-webkit-tap-highlight-color:rgba(0,0,0,.06)}
+.skip-link{
+  position:absolute; left:16px; top:-64px; z-index:200;
+  background:var(--green-ink); color:#fff; padding:var(--s1) var(--s2);
+  border-radius:12px; font-weight:700; text-decoration:none; transition:top .2s var(--ease);
+}
+.skip-link:focus{top:16px}
+
+/* ===== Nav ===== */
+.nav{
+  position:fixed; inset:0 0 auto 0; height:var(--nav-h); z-index:90;
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s2);
+  padding:0 var(--s3);
+  border-bottom:1px solid transparent;
+  transition:background .3s var(--ease), border-color .3s var(--ease), box-shadow .3s var(--ease);
+}
+.nav.solid{background:rgba(253,251,245,.92); backdrop-filter:blur(12px); border-bottom-color:var(--line); box-shadow:var(--shadow-sm)}
+
+.corner-logo{display:flex; align-items:center; gap:12px; text-decoration:none; flex:0 0 auto}
+.corner-logo img{width:44px; height:44px; object-fit:cover; display:block; border-radius:12px; background:#fff; box-shadow:var(--shadow-sm)}
+.corner-logo .brand{font-family:var(--font-display); font-weight:600; font-size:var(--fs1); color:var(--ink); white-space:nowrap}
+
+.nav-links{display:flex; align-items:center; gap:var(--s3)}
+.nav-links a{text-decoration:none; color:var(--ink); font-weight:600; font-size:15px; opacity:.8; transition:opacity .2s var(--ease), color .2s var(--ease)}
+.nav-links a:hover{opacity:1; color:var(--green-ink)}
+.nav-links a[aria-current="page"]{opacity:1; color:var(--green-ink); font-weight:800}
+.nav-links .wa{
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--green-ink); color:#fff; padding:10px 20px; border-radius:999px;
+  font-weight:700; font-size:14px; opacity:1;
+  box-shadow:0 10px 22px -8px rgba(20,103,42,.55), 0 2px 6px rgba(28,26,22,.08);
+  transition:background .2s var(--ease), transform .15s var(--ease), box-shadow .2s var(--ease);
+}
+.nav-links .wa svg{width:18px; height:18px; flex:none}
+.nav-links .wa:hover{background:var(--green); color:#fff; transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(20,103,42,.6)}
+
+/* --- Menú desplegable "Nuestros mundos" --- */
+.nav-item{position:relative; display:flex; align-items:center}
+.nav-item > a{display:inline-flex; align-items:center; gap:5px}
+.nav-item .caret{width:14px; height:14px; flex:none; transition:transform .2s var(--ease)}
+.nav-item:hover .caret, .nav-item:focus-within .caret{transform:rotate(180deg)}
+.nav-dropdown{
+  position:absolute; top:100%; left:50%; transform:translateX(-50%) translateY(4px);
+  min-width:224px; padding:8px;
+  background:rgba(253,251,245,.98); backdrop-filter:blur(12px);
+  border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow-lg);
+  display:flex; flex-direction:column; gap:2px;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .18s var(--ease), transform .18s var(--ease), visibility .18s;
+  z-index:95;
+}
+/* puente invisible para no perder el hover en el hueco */
+.nav-dropdown::before{content:''; position:absolute; top:-10px; left:0; right:0; height:10px}
+.nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown{
+  opacity:1; visibility:visible; pointer-events:auto; transform:translateX(-50%) translateY(8px);
+}
+.nav-dropdown a{
+  display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
+  font-size:14px; font-weight:600; opacity:.85; white-space:nowrap;
+}
+.nav-dropdown a:hover{opacity:1; background:rgba(30,136,52,.08); color:var(--green-ink)}
+.nd-dot{width:9px; height:9px; flex:none; border-radius:50%; box-shadow:0 0 0 3px rgba(0,0,0,.04)}
+
+.nav-toggle{
+  display:none; width:44px; height:44px; border:0; background:transparent; cursor:pointer;
+  align-items:center; justify-content:center; color:var(--ink); border-radius:12px;
+}
+.nav-toggle svg{width:26px; height:26px}
+
+@media(max-width:820px){
+  .nav-toggle{display:inline-flex}
+  .nav-links{
+    position:absolute; top:var(--nav-h); right:16px; left:16px;
+    flex-direction:column; align-items:stretch; gap:4px;
+    background:rgba(253,251,245,.98); backdrop-filter:blur(12px);
+    border:1px solid var(--line); border-radius:16px; padding:var(--s2);
+    box-shadow:var(--shadow-lg);
+    opacity:0; transform:translateY(-8px); pointer-events:none;
+    transition:opacity .2s var(--ease), transform .2s var(--ease);
+  }
+  .nav-links.open{opacity:1; transform:translateY(0); pointer-events:auto}
+  .nav-links a{padding:12px; border-radius:10px; opacity:1}
+  .nav-links a:hover{background:rgba(30,136,52,.06)}
+  .nav-links .wa{text-align:center; margin-top:4px}
+  /* En móvil el submenú se muestra desplegado (no hay hover táctil) */
+  .nav-item{flex-direction:column; align-items:stretch}
+  .nav-item .caret{display:none}
+  .nav-dropdown{
+    position:static; transform:none; min-width:0; margin:2px 0 4px 10px; padding:0;
+    background:transparent; backdrop-filter:none; border:0; border-radius:0; box-shadow:none;
+    border-left:2px solid var(--line);
+    /* Solo clickeable con el menú abierto: si no, los links invisibles
+       roban el toque a los productos que quedan debajo */
+    opacity:1; visibility:visible; pointer-events:none;
+  }
+  .nav-links.open .nav-dropdown{pointer-events:auto}
+  .nav-dropdown::before{display:none}
+  .nav-dropdown a{padding:10px 12px}
+}
+
+/* ===== Botones ===== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  text-decoration:none; font-weight:700; padding:14px 28px; border-radius:999px;
+  font-size:var(--fs0); cursor:pointer; border:2px solid transparent;
+  transition:transform .15s var(--ease), background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.btn-primary{background:var(--green-ink); color:#fff; box-shadow:0 12px 24px -10px rgba(20,103,42,.5)}
+.btn-primary:hover{background:var(--green); transform:translateY(-2px); box-shadow:0 16px 32px -12px rgba(20,103,42,.55)}
+.btn-ghost{background:transparent; color:var(--green-ink); border-color:var(--green-ink)}
+.btn-ghost:hover{background:var(--green-ink); color:#fff; transform:translateY(-2px)}
+
+/* ===== Reveal al scroll (usa site.js) ===== */
+.reveal{opacity:0; transform:translateY(24px); transition:opacity .8s var(--ease), transform .8s var(--ease)}
+.reveal.is-visible{opacity:1; transform:none}
+.reveal[data-delay="1"]{transition-delay:.09s}
+.reveal[data-delay="2"]{transition-delay:.18s}
+.reveal[data-delay="3"]{transition-delay:.27s}
+.reveal[data-delay="4"]{transition-delay:.36s}
+.reveal[data-delay="5"]{transition-delay:.45s}
+
+/* ===== Pie oscuro por columnas ===== */
+.site-footer{background:#1c1a16; color:#b9b3a6; padding:var(--s7) 0 var(--s4)}
+.site-footer .fname{font-family:var(--font-display); font-weight:600; font-size:var(--fs2); color:#fff; margin-bottom:var(--s2)}
+.foot-grid{display:grid; grid-template-columns:1.3fr 1fr .9fr 1.1fr; gap:var(--s4) var(--s5); align-items:start}
+.foot-brand p{font-size:15px; line-height:1.6; color:#b9b3a6; margin:0; max-width:34ch}
+.foot-col{display:flex; flex-direction:column; gap:12px}
+.foot-col b{color:#fff; font-size:15px; font-weight:800; margin-bottom:2px}
+.foot-col a{color:#b9b3a6; text-decoration:none; font-size:15px; line-height:1.4; transition:color .15s var(--ease)}
+.foot-col a:hover{color:#fff}
+.foot-bottom{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:var(--s1) var(--s3);
+  margin-top:var(--s6); padding-top:var(--s3); border-top:1px solid rgba(255,255,255,.12); font-size:14px}
+@media(max-width:900px){ .foot-grid{grid-template-columns:1fr 1fr} }
+@media(max-width:520px){ .foot-grid{grid-template-columns:1fr} }
+
+/* ===== Botón flotante de WhatsApp (lo inyecta site.js) ===== */
+.wa-float{
+  position:fixed; z-index:120;
+  right:calc(16px + env(safe-area-inset-right)); bottom:calc(16px + env(safe-area-inset-bottom));
+  display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
+  width:58px; height:58px; border-radius:50%;
+  background:#1faa53; color:#fff;
+  box-shadow:0 12px 28px -8px rgba(31,170,83,.55), 0 4px 10px rgba(28,26,22,.16);
+  transition:transform .15s var(--ease), box-shadow .2s var(--ease);
+}
+.wa-float:hover{transform:translateY(-2px); box-shadow:0 18px 36px -8px rgba(31,170,83,.65)}
+.wa-float svg{width:28px; height:28px; flex:none}
+
+/* ============================================================
+   Componentes de páginas de mundo (portal + escenas + productos)
+   ============================================================ */
+
+/* ===== Portal de entrada (video a pantalla completa) ===== */
+.portal{
+  position:relative; min-height:100svh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; overflow:hidden;
+  padding:calc(var(--nav-h) + var(--s4)) var(--s3) var(--s9);
+  background:#1c1a16;
+}
+.portal video.portal-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
+.portal .scrim{position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    radial-gradient(110% 90% at 50% 46%, rgba(10,9,7,.5) 0%, rgba(10,9,7,.16) 58%, rgba(10,9,7,0) 100%),
+    linear-gradient(to bottom, rgba(10,9,7,.5) 0%, rgba(10,9,7,0) 26%, rgba(10,9,7,0) 60%, rgba(10,9,7,.62) 100%)}
+.portal > *{position:relative; z-index:2}
+.portal .eyebrow{
+  color:#fff; margin-bottom:var(--s3); padding:8px 18px; border-radius:999px;
+  background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.28);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.portal .eyebrow::before{background:#fff}
+.portal h1{
+  color:#fff; font-size:clamp(49px, 7.4vw, 95px); line-height:1.02; letter-spacing:-.015em;
+  max-width:15ch; margin:0 auto var(--s3); text-shadow:0 2px 24px rgba(10,9,7,.45);
+}
+.portal h1 em{font-style:italic; font-weight:500}
+.portal .lead{
+  color:rgba(255,255,255,.94); font-size:clamp(var(--fs1), 1.6vw, var(--fs2)); line-height:1.5;
+  max-width:44ch; margin:0 auto; text-shadow:0 1px 16px rgba(10,9,7,.5);
+}
+.enter-cue{
+  position:absolute; bottom:var(--s3); left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none;
+  color:#fff; font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  transition:opacity .2s var(--ease); opacity:.92;
+}
+.enter-cue:hover{opacity:1}
+.enter-cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
+/* Nav en blanco sobre el portal, oscuro al scrollear */
+.portal-page .nav .brand, .portal-page .nav .nav-links a, .portal-page .nav .nav-toggle{color:#fff}
+.portal-page .nav.solid .brand, .portal-page .nav.solid .nav-links a, .portal-page .nav.solid .nav-toggle{color:var(--ink)}
+.portal-page .nav .nav-links .wa, .portal-page .nav.solid .nav-links .wa{color:#fff}
+/* El desplegable tiene fondo claro: sus enlaces siempre en texto oscuro */
+.portal-page .nav .nav-dropdown a{color:var(--ink)}
+.portal-page .nav .nav-dropdown a:hover{color:var(--green-ink)}
+@media(max-width:820px){ .portal-page .nav .nav-links a{color:var(--ink)} }
+
+/* ===== Escenas numeradas ===== */
+.scene{padding:var(--s10) 0; background:var(--bg)}
+.scene.alt{background:#f6f2e8; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.scene .layout{display:grid; grid-template-columns:minmax(240px,.7fr) 1.3fr; gap:var(--s7); align-items:start}
+.scene .intro{position:sticky; top:calc(var(--nav-h) + var(--s4))}
+.scene .num{
+  display:block; font-family:var(--font-display); font-weight:700; font-size:clamp(var(--fs6),9vw,120px);
+  line-height:.85; color:transparent; -webkit-text-stroke:1.5px color-mix(in srgb, var(--accent) 34%, transparent);
+  margin-bottom:var(--s1);
+}
+.scene .intro h2{margin:0 0 var(--s2)}
+.scene .intro p{color:var(--muted); max-width:34ch; margin:0; font-size:var(--fs1); line-height:1.55}
+@media(max-width:860px){
+  .scene{padding:var(--s8) 0}
+  .scene .layout{grid-template-columns:1fr; gap:var(--s4)}
+  .scene .intro{position:static}
+}
+
+/* ============================================================
+   Página de catálogo por categorías (reemplaza las escenas
+   numeradas): barra de saltos sticky + secciones con nombre.
+   Escala a muchas categorías/subcategorías sin numeración.
+   ============================================================ */
+
+/* --- Barra de categorías: sticky bajo el nav, scroll horizontal --- */
+.catbar{
+  position:sticky; top:var(--nav-h); z-index:70; scroll-margin-top:var(--nav-h);
+  background:rgba(253,251,245,.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.catbar-inner{
+  max-width:var(--wrap); margin:0 auto;
+  display:flex; gap:var(--s1); align-items:center;
+  padding:11px var(--s3); overflow-x:auto;
+  scrollbar-width:none; -ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
+}
+.catbar-inner::-webkit-scrollbar{display:none}
+.catbar a{
+  flex:0 0 auto; text-decoration:none; white-space:nowrap;
+  font-weight:700; font-size:14px; color:var(--muted);
+  padding:8px 16px; border-radius:999px;
+  border:1px solid var(--line); background:#fff;
+  transition:color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+}
+.catbar a:hover{color:var(--ink); border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
+.catbar a.is-active{
+  color:#fff; background:var(--accent); border-color:transparent;
+  box-shadow:0 8px 18px -8px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+/* --- Sección de categoría --- */
+.catsec{padding:var(--s8) 0; scroll-margin-top:calc(var(--nav-h) + 72px)}
+.catsec + .catsec{border-top:1px solid var(--line)}
+.catsec:nth-of-type(even){background:#f8f4ea}
+.catsec-head{margin-bottom:var(--s5)}
+.catsec-head h2{
+  position:relative; display:inline-block; margin:0 0 var(--s3);
+  font-size:clamp(var(--fs3),3.6vw,var(--fs4)); letter-spacing:-.01em;
+}
+.catsec-head h2::after{
+  content:''; display:block; width:44px; height:4px; border-radius:4px;
+  background:var(--accent); margin-top:12px;
+}
+.catsec-head p{color:var(--muted); max-width:58ch; margin:0; font-size:var(--fs1); line-height:1.55}
+@media(max-width:860px){ .catsec{padding:var(--s7) 0} }
+
+/* ===== Grilla de productos ===== */
+.pgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:var(--s2)}
+.pcard{display:flex; flex-direction:column; text-decoration:none; color:inherit; background:#fff;
+  border:1px solid rgba(28,26,22,.07); border-radius:20px; overflow:hidden; box-shadow:var(--shadow-sm);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease)}
+.pcard:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg)}
+.pcard-ph{aspect-ratio:1/1; overflow:hidden; background:#fff; position:relative}
+.pcard-ph img{width:100%; height:100%; object-fit:contain; display:block; transition:transform .45s var(--ease)}
+.pcard:not(.has-gallery):hover .pcard-ph img{transform:scale(1.05)}
+.pcard-body{display:flex; flex-direction:column; gap:3px; padding:var(--s2); flex:1}
+.pcard h3{font-family:var(--font-body); font-weight:800; font-size:15px; line-height:1.3; margin:0}
+.pcard .sub{font-size:12px; color:var(--muted); line-height:1.35; text-transform:capitalize}
+.pcard .cta{font-size:13px; font-weight:700; color:var(--accent-deep); margin-top:auto; padding-top:var(--s1);
+  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
+.pcard:hover .cta{gap:9px}
+@media(prefers-reduced-motion:reduce){ .pcard:hover{transform:none} .pcard-ph img{transition:none} }
+
+/* ===== Galería dentro de la tarjeta ===== */
+.gtrack{display:flex; height:100%; transition:transform .35s var(--ease); will-change:transform}
+.gtrack img{flex:0 0 100%}
+.gnav{position:absolute; top:50%; transform:translateY(-50%); z-index:2;
+  width:36px; height:36px; border:none; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; line-height:1; padding-bottom:2px; color:var(--ink);
+  background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(28,26,22,.18);
+  opacity:0; transition:opacity .2s var(--ease), background .2s var(--ease)}
+.gprev{left:8px} .gnext{right:8px}
+.gnav:hover{background:#fff}
+.pcard-ph:hover .gnav, .gnav:focus-visible{opacity:1}
+.gcap{position:absolute; left:8px; bottom:8px; z-index:2;
+  font-size:11px; font-weight:700; color:var(--ink); text-transform:capitalize;
+  padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.9);
+  box-shadow:0 1px 4px rgba(28,26,22,.16)}
+.gdots{position:absolute; right:8px; bottom:10px; z-index:2; display:flex; gap:5px}
+.gdot{width:6px; height:6px; border-radius:50%; cursor:pointer;
+  background:rgba(255,255,255,.6); box-shadow:0 0 0 1px rgba(28,26,22,.18);
+  transition:background .2s var(--ease), transform .2s var(--ease)}
+.gdot.is-on{background:#fff; transform:scale(1.35)}
+@media(hover:none){ .gnav{opacity:1; background:rgba(255,255,255,.92)} }
+
+/* ===== Mosaico de categorías (sin foto todavía) ===== */
+.items{display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s2)}
+.item{
+  position:relative; display:flex; flex-direction:column; justify-content:flex-end;
+  min-height:240px; padding:var(--s3); text-decoration:none; color:inherit;
+  border-radius:var(--radius); overflow:hidden; border:1px solid rgba(28,26,22,.06);
+  background:#fff; box-shadow:var(--shadow-sm);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.item:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg)}
+.item:nth-child(4n+1){background:#eef3fb} .item:nth-child(4n+2){background:#fdefed}
+.item:nth-child(4n+3){background:#fdf5dd} .item:nth-child(4n){background:var(--green-soft)}
+.item .item-ic{
+  position:absolute; top:var(--s3); left:var(--s3); width:64px; height:64px;
+  border-radius:20px; display:grid; place-items:center; background:rgba(255,255,255,.75);
+  box-shadow:0 8px 16px -8px rgba(28,26,22,.18);
+  transition:transform .3s var(--ease);
+}
+.item .item-ic .ic{width:32px; height:32px; color:var(--accent-deep)}
+.item:hover .item-ic{transform:translateY(-4px)}
+.item h3{font-size:var(--fs1); margin:0 0 2px}
+.item .cta{font-size:13px; font-weight:700; color:var(--accent-deep); display:inline-flex; align-items:center; gap:6px; transition:gap .2s var(--ease)}
+.item:hover .cta{gap:10px}
+.item .feat-tag{font-size:14px; color:var(--muted); max-width:36ch; margin:0 0 var(--s1)}
+.item.feat{grid-column:1 / -1; min-height:208px}
+.item.feat .item-ic{width:80px; height:80px; border-radius:24px}
+.item.feat .item-ic .ic{width:40px; height:40px}
+@media(max-width:520px){ .items{grid-template-columns:1fr} .item{min-height:200px} }
+@media(prefers-reduced-motion:reduce){ .item:hover{transform:none} }
+
+/* ===== Tira "otros mundos" ===== */
+.otros{padding:var(--s8) 0; background:#f6f2e8; border-top:1px solid var(--line)}
+.otros h2{text-align:center; font-size:clamp(var(--fs3),3.4vw,var(--fs4))}
+.otros-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:var(--s2); margin-top:var(--s4)}
+.otros-card{
+  display:flex; flex-direction:column; align-items:center; gap:var(--s1); text-align:center;
+  text-decoration:none; color:inherit; padding:var(--s3) var(--s2); border:1px solid var(--line);
+  border-radius:20px; background:#fff; font-weight:700; font-size:15px;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+.otros-card:hover{transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent}
+.otros-card .ic{width:28px; height:28px; color:var(--green-ink)}
+@media(prefers-reduced-motion:reduce){ .otros-card:hover{transform:none} }
+
+/* ===== Ficha de producto (modal / lightbox) ===== */
+.pcard{cursor:pointer}
+.ficha-overlay{
+  position:fixed; inset:0; z-index:150; display:none;
+  background:rgba(20,18,16,.55); backdrop-filter:blur(6px);
+  padding:var(--s3); overflow-y:auto;
+}
+.ficha-overlay.open{display:flex}
+body.ficha-open{overflow:hidden}
+.ficha{
+  margin:auto; background:#fff; border-radius:var(--radius); overflow:hidden;
+  width:min(900px, 100%); display:grid; grid-template-columns:1.05fr .95fr;
+  box-shadow:var(--shadow-lg); position:relative;
+  animation:ficha-in .3s var(--ease);
+}
+@keyframes ficha-in{from{opacity:0; transform:translateY(22px) scale(.98)}}
+@media(max-width:760px){ .ficha{grid-template-columns:1fr} }
+
+.ficha .gal{background:#fff; position:relative; display:flex; flex-direction:column}
+.ficha .gal .main{flex:1; aspect-ratio:1/1; overflow:hidden}
+.ficha .gal .main img{width:100%; height:100%; object-fit:contain; display:block}
+.ficha .thumbs{display:flex; gap:8px; padding:10px; overflow-x:auto; background:#f3f0e8}
+.ficha .thumbs[hidden]{display:none}
+.ficha .thumbs button{
+  flex:none; width:58px; height:58px; border-radius:12px; overflow:hidden;
+  border:2px solid transparent; padding:0; background:#fff; cursor:pointer;
+  transition:border-color .2s var(--ease);
+}
+.ficha .thumbs button.is-on{border-color:var(--green)}
+.ficha .thumbs img{width:100%; height:100%; object-fit:contain; display:block}
+
+.ficha .info{padding:var(--s4) var(--s4) var(--s3); display:flex; flex-direction:column}
+.ficha .cat{
+  align-self:flex-start; font-weight:800; font-size:12px; letter-spacing:.04em;
+  color:var(--green-ink); background:var(--green-soft); padding:5px 14px; border-radius:999px;
+  margin-bottom:var(--s2); text-transform:uppercase;
+}
+.ficha h2{font-family:var(--font-display); font-weight:600; font-size:var(--fs3); line-height:1.1; margin:0 0 6px}
+.ficha .price{font-family:var(--font-display); font-weight:700; font-size:var(--fs2); color:var(--green-ink); margin:0 0 var(--s2)}
+.ficha .desc{color:var(--muted); font-size:15px; line-height:1.55; margin:0 0 var(--s2)}
+.ficha .items{margin:0 0 var(--s3)}
+.ficha .items b{display:block; font-size:14px; margin-bottom:8px; color:var(--ink)}
+.ficha .items ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px}
+.ficha .items li{display:flex; gap:9px; line-height:1.4; font-size:14px; color:var(--muted)}
+.ficha .items li::before{content:"✓"; color:var(--green); font-weight:800; flex:none}
+.ficha .btn-wa{
+  margin-top:auto; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  background:var(--green); color:#fff; border:0; padding:0 var(--s3); height:56px; border-radius:16px;
+  font-family:var(--font-body); font-weight:800; font-size:16px; text-decoration:none;
+  box-shadow:0 12px 24px -10px rgba(20,103,42,.5); transition:background .2s var(--ease), transform .15s var(--ease);
+}
+.ficha .btn-wa:hover{background:var(--green-ink); transform:translateY(-2px)}
+.ficha .btn-wa svg{width:22px; height:22px; fill:currentColor}
+.ficha .aviso{text-align:center; font-size:13px; color:var(--muted); margin:var(--s2) 0 0}
+.ficha-close{
+  position:absolute; top:14px; right:14px; z-index:5;
+  width:44px; height:44px; border-radius:50%; border:0; cursor:pointer;
+  background:rgba(255,255,255,.95); box-shadow:var(--shadow);
+  font-size:18px; line-height:1; color:var(--ink);
+  display:grid; place-items:center; transition:transform .18s var(--ease);
+}
+.ficha-close:hover{transform:rotate(90deg)}
+
+/* Combos: precio a la vista sobre la foto de la tarjeta */
+.pcard .pricetag{
+  position:absolute; top:12px; right:12px; z-index:2;
+  background:var(--yellow, #f5c518); color:var(--ink);
+  font-family:var(--font-display); font-weight:700; font-size:15px;
+  padding:5px 14px; border-radius:999px; box-shadow:var(--shadow-sm);
+}
+
+/* ===== Reduced motion ===== */
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1 !important; transform:none !important; transition:none}
+  .btn:hover, .wa-float:hover{transform:none}
+  .ficha{animation:none}
+  .ficha-close:hover{transform:none}
+  *{scroll-behavior:auto}
+}
+
+/* ===== Táctil (sin mouse): nada de :hover que mueva el objetivo del toque =====
+   En un teléfono el primer toque "activa" el :hover en vez de navegar. Si ese
+   :hover desplaza la tarjeta (transform), el segundo toque cae sobre otra y
+   termina abriendo el mundo equivocado. En pantallas táctiles anulamos esos
+   desplazamientos y el corrimiento de la animación de aparición. */
+@media(hover:none){
+  .nav-links .wa:hover, .btn:hover, .btn-primary:hover, .btn-ghost:hover,
+  .wa-float:hover, .pcard:hover, .otros-card:hover, .item:hover,
+  .mundo:hover, .ficha .btn-wa:hover{ transform:none !important; }
+  .pcard:not(.has-gallery):hover .pcard-ph img,
+  .item:hover .item-ic, .mundo:hover .tile-img{ transform:none !important; }
+  .reveal{ transform:none !important; }
+}

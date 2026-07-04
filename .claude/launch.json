@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mundo-magico",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/static-server.js"
+      ],
+      "port": 8000,
+      "autoPort": true
+    }
+  ]
+}
