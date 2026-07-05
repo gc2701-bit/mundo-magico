@@ -75,6 +75,8 @@
   border-top-color:color-mix(in srgb, var(--accent) 26%, var(--bg));
 }
 .otros-card{ border-color:color-mix(in srgb, var(--accent) 24%, var(--bg)); }
+/* Descripción breve dentro de la tarjeta de producto (sin capitalizar, a diferencia de .sub) */
+.pcard .pdesc{ font-size:12px; color:var(--muted); line-height:1.4; text-transform:none; }
 </style>
 <script>/* Producto: evita el salto a "#" si tocás antes de que cargue site.js (sobre todo en celular) */
 addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a.pcard,a.item"):null;if(a){var h=a.getAttribute("href");if(h==="#"||h===null)e.preventDefault();}},true);</script>
@@ -134,6 +136,7 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
   <div class="catbar-inner">
     <a href="#la-mesa">La mesa servida</a>
     <a href="#los-rincones">Rincones</a>
+    <a href="#floreros">Floreros</a>
     <a href="#las-paredes">Paredes</a>
     <a href="#textiles">Textiles</a>
   </div>
@@ -180,6 +183,35 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
       <a class="item reveal" data-delay="1" href="#"><span class="item-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8h6l1.5 13h-9zM12 8V5M10 3.5h4"/></svg></span><h3>Difusores y aromas</h3><span class="cta">Ver en la tienda →</span></a>
       <a class="item reveal" data-delay="2" href="#"><span class="item-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M9 21c0-4-3-5-3-9a6 6 0 0 1 12 0c0 4-3 5-3 9M12 12V6"/></svg></span><h3>Plantas y maceteros</h3><span class="cta">Ver en la tienda →</span></a>
       <a class="item reveal" data-delay="3" href="#"><span class="item-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21h10M8 21V8a4 4 0 0 1 8 0v13M8 12h8M12 3v2"/></svg></span><h3>Faroles y portavelas</h3><span class="cta">Ver en la tienda →</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== FLOREROS ====== -->
+<section class="catsec" id="floreros">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Floreros</h2>
+      <p>Cerámica noble en cada forma: del cilindro esbelto a la pecera abierta. Elegí el que mejor abraza tus flores.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Silueta redondeada de cuello angosto, ideal para ramos silvestres." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Hornero.jpg" alt="Florero Hornero" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Hornero</h3><span class="pdesc">Silueta redondeada de cuello angosto, ideal para ramos silvestres.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Base ancha que se afina hacia arriba, con mucha presencia." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Volcan.jpg" alt="Florero Volcán" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Volcán</h3><span class="pdesc">Base ancha que se afina hacia arriba, con mucha presencia.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Forma de tulipa que abraza las flores y las luce naturales." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Tulipa.jpg" alt="Florero Tulipa" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Tulipa</h3><span class="pdesc">Forma de tulipa que abraza las flores y las luce naturales.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Cuerpo bombé y boca justa, perfecto para ramos cortos." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Bombe.jpg" alt="Florero Bombé" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Bombé</h3><span class="pdesc">Cuerpo bombé y boca justa, perfecto para ramos cortos.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Líneas alargadas tipo huso para tallos largos y elegantes." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Huso.jpg" alt="Florero Huso" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Huso</h3><span class="pdesc">Líneas alargadas tipo huso para tallos largos y elegantes.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Cilindro bajo y compacto, ideal para centros de mesa." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Cilindro-10.jpg" alt="Florero Cilindro 10" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Cilindro 10</h3><span class="pdesc">Cilindro bajo y compacto, ideal para centros de mesa.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Cilindro de altura media, versátil para cualquier ambiente." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Cilindro-12.jpg" alt="Florero Cilindro 12" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Cilindro 12</h3><span class="pdesc">Cilindro de altura media, versátil para cualquier ambiente.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Cilindro alto y esbelto para ramos generosos." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Cilindro-15.jpg" alt="Florero Cilindro 15" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Cilindro 15</h3><span class="pdesc">Cilindro alto y esbelto para ramos generosos.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Boca amplia que se cierra hacia la base, moderno y limpio." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Conico.jpg" alt="Florero Cónico" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Cónico</h3><span class="pdesc">Boca amplia que se cierra hacia la base, moderno y limpio.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Perfil trapezoidal de aire geométrico y actual." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Trapecio.jpg" alt="Florero Trapecio" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Trapecio</h3><span class="pdesc">Perfil trapezoidal de aire geométrico y actual.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="El de siempre: proporción equilibrada que combina con todo." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Clasico.jpg" alt="Florero Clásico" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Clásico</h3><span class="pdesc">El de siempre: proporción equilibrada que combina con todo.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Detalle de garra en la base, con carácter y estilo." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Garra.jpg" alt="Florero Garra" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Garra</h3><span class="pdesc">Detalle de garra en la base, con carácter y estilo.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Diseño simple y prolijo para el día a día." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Good.jpg" alt="Florero Good" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Good</h3><span class="pdesc">Diseño simple y prolijo para el día a día.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Boca ancha tipo tina para arreglos frondosos." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Tina.jpg" alt="Florero Tina" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Tina</h3><span class="pdesc">Boca ancha tipo tina para arreglos frondosos.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Esfera abierta tipo pecera, ideal con agua y flores flotantes." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Pecera.jpg" alt="Florero Pecera" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Pecera</h3><span class="pdesc">Esfera abierta tipo pecera, ideal con agua y flores flotantes.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Cono estilizado y alto que estira cualquier rincón." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Conico-Alto.jpg" alt="Florero Cónico Alto" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Cónico Alto</h3><span class="pdesc">Cono estilizado y alto que estira cualquier rincón.</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Floreros" data-desc="Copa amplia sobre pie, elegante como pieza central." href="#"><div class="pcard-ph"><img src="productos/4.%20Decoracion%20del%20hogar/Floreros/Florero-Copon.jpg" alt="Florero Copón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Florero Copón</h3><span class="pdesc">Copa amplia sobre pie, elegante como pieza central.</span><span class="cta">Ver en la tienda →</span></div></a>
     </div>
   </div>
 </section>
