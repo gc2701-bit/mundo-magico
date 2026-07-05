@@ -211,7 +211,8 @@
 /* ===================== MUNDOS ===================== */
 .mundos{padding:var(--s10) 0; background:#f6f2e8; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
 .mundos .head{text-align:center; margin-bottom:var(--s7)}
-.mundos .head .sub{margin:0 auto}
+.mundos .head h2{font-size:clamp(35px,3.6vw,44px)}
+.mundos .head .sub{margin:0 auto; font-size:18px}
 .mundo-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s3); perspective:1200px}
 @media(max-width:900px){ .mundo-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media(max-width:560px){ .mundo-grid{grid-template-columns:1fr} }
@@ -253,7 +254,8 @@
 /* ===================== VISITANOS ===================== */
 .visitanos{padding:90px 0; background:#f6f2e8; border-top:1px solid var(--line)}
 .visitanos .head{text-align:center; max-width:640px; margin:0 auto var(--s6)}
-.visitanos .head .sub{margin:0 auto}
+.visitanos .head h2{font-size:clamp(35px,3.6vw,44px)}
+.visitanos .head .sub{margin:0 auto; font-size:18px}
 .vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s4); align-items:stretch}
 .vis-panel{grid-column:1; min-width:0; display:flex; flex-direction:column; gap:var(--s2)}
 .vis-photo{grid-column:2; align-self:stretch; position:relative; overflow:hidden; aspect-ratio:1536/1024;
@@ -285,8 +287,8 @@
 /* ===================== RESEÑAS DE GOOGLE ===================== */
 .resenas{padding:38px 0; background:var(--bg); border-top:1px solid var(--line)}
 .resenas .head{text-align:center; max-width:672px; margin:0 auto 19px}
-.resenas .head h2{font-size:24px; margin-bottom:2px}
-.resenas .head .sub{margin:0 auto; font-size:16px}
+.resenas .head h2{font-size:clamp(35px,3.6vw,44px)}
+.resenas .head .sub{margin:0 auto; font-size:18px}
 
 /* Resumen: la G de Google + puntaje + estrellas, en línea con el CTA */
 .gsum{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px 19px;
@@ -324,8 +326,8 @@
 /* ===================== CONTACTO ===================== */
 .contacto{padding:58px 0; background:var(--bg); border-top:1px solid var(--line)}
 .contacto .head{text-align:center; max-width:640px; margin:0 auto 22px}
-.contacto .head h2{margin-bottom:6px}
-.contacto .head .sub{margin:0 auto; font-size:15px}
+.contacto .head h2{margin-bottom:6px; font-size:clamp(35px,3.6vw,44px)}
+.contacto .head .sub{margin:0 auto; font-size:14px}
 .con-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
 @media(max-width:900px){ .con-grid{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:560px){ .con-grid{grid-template-columns:1fr} }
@@ -357,6 +359,18 @@
 .temp-btn{background:#123d5c; color:#fff; box-shadow:0 12px 24px -10px rgba(18,61,92,.5)}
 .temp-btn:hover{background:#1b6ca8; color:#fff; transform:translateY(-2px)}
 @media(max-width:640px){ .temporada-inner{flex-direction:column; align-items:flex-start} }
+
+/* ===================== BANDA · SERVICIOS ESPECIALES ===================== */
+.banda-especial{padding:var(--s4) 0; background:linear-gradient(100deg,#c39b3f 0%,#e6cf8f 26%,#faf5e6 50%,#e6cf8f 74%,#c39b3f 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.banda-inner{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.banda-ic{width:56px; height:56px; flex:none; border-radius:18px; background:#fff; display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.banda-ic svg{width:30px; height:30px; stroke:#9a7524; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.banda-txt{flex:1 1 320px; min-width:0}
+.banda-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:#5f4a12}
+.banda-txt small{display:block; font-size:15px; color:#7a621f; margin-top:2px}
+.banda-btn{background:#5f4a12; color:#fff; box-shadow:0 12px 24px -10px rgba(95,74,18,.5)}
+.banda-btn:hover{background:#9a7524; color:#fff; transform:translateY(-2px)}
+@media(max-width:640px){ .banda-inner{flex-direction:column; align-items:flex-start} }
 </style>
 </head>
 <body>
@@ -385,6 +399,7 @@
         <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
       </div>
     </div>
+    <a href="eventos-v2.html">Eventos a medida</a>
     <a href="#visitanos">Visitanos</a>
     <a href="#contacto">Contacto</a>
     <a class="wa" href="https://wa.me/5493813006343" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.13a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 1 1 6.97 3.86Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>Escribinos</a>
@@ -551,6 +566,18 @@
   </div>
 </section>
 
+<!-- ====== BANDA · SERVICIOS ESPECIALES ====== -->
+<section class="banda-especial" aria-label="Eventos a medida y venta mayorista">
+  <div class="wrap banda-inner reveal">
+    <span class="banda-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="14" r="5"/><circle cx="15" cy="10" r="5"/></svg></span>
+    <div class="banda-txt">
+      <b>¿Casamiento, 15 años o compra por cantidad?</b>
+      <small>Te armamos el evento completo. Y si comprás por cantidad o sos mayorista, también tenemos lo tuyo.</small>
+    </div>
+    <a class="btn banda-btn" href="eventos-v2.html">Ver servicios especiales →</a>
+  </div>
+</section>
+
 <!-- ====== VISITANOS ====== -->
 <section class="visitanos" id="visitanos">
   <div class="wrap">
@@ -699,6 +726,7 @@
     <nav class="foot-col" aria-label="La casa">
       <b>La casa</b>
       <a href="historia-v2.html">Nuestra historia</a>
+      <a href="eventos-v2.html">Eventos y mayoristas 💍</a>
       <a href="especiales-v2.html">Especial Selección Argentina ⚽</a>
       <a href="index.html#visitanos">Sucursales y horarios</a>
     </nav>
