@@ -467,7 +467,7 @@ body.ficha-open{overflow:hidden}
 @keyframes ficha-in{from{opacity:0; transform:translateY(22px) scale(.98)}}
 @media(max-width:760px){ .ficha{grid-template-columns:1fr} }
 
-.ficha .gal{background:#fff; position:relative; display:flex; flex-direction:column}
+.ficha .gal{background:#fff; position:relative; display:flex; flex-direction:column; min-width:0}
 .ficha .gal .main{flex:1; aspect-ratio:1/1; overflow:hidden}
 .ficha .gal .main img{width:100%; height:100%; object-fit:contain; display:block}
 .ficha .thumbs{display:flex; gap:8px; padding:10px; overflow-x:auto; background:#f3f0e8}
@@ -480,7 +480,7 @@ body.ficha-open{overflow:hidden}
 .ficha .thumbs button.is-on{border-color:var(--green)}
 .ficha .thumbs img{width:100%; height:100%; object-fit:contain; display:block}
 
-.ficha .info{padding:var(--s4) var(--s4) var(--s3); display:flex; flex-direction:column}
+.ficha .info{padding:var(--s4) var(--s4) var(--s3); display:flex; flex-direction:column; min-width:0}
 .ficha .cat{
   align-self:flex-start; font-weight:800; font-size:12px; letter-spacing:.04em;
   color:var(--green-ink); background:var(--green-soft); padding:5px 14px; border-radius:999px;

@@ -1,2 +1,5 @@
 # Local Netlify folder
 .netlify
+
+# Backups de fotos originales antes de recortarlas (quedan solo localmente)
+productos/**/_orig/
