@@ -81,6 +81,13 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 
 <!-- ====== BARRA DE CATEGORÍAS (sticky) ====== -->
 <nav class="catbar" id="catalogo" aria-label="Categorías">
+  <div class="catsearch">
+    <div class="field">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="catSearch" placeholder="Buscar disfraz…" aria-label="Buscar disfraces" autocomplete="off">
+      <button class="catsearch-clear" type="button" aria-label="Limpiar búsqueda" hidden>✕</button>
+    </div>
+  </div>
   <div class="catbar-inner">
     <a href="#disfraces">Los disfraces</a>
     <a href="#acto-patrio">Acto patrio</a>

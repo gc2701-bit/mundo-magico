@@ -1,4 +1,4 @@
-/* Mundo Mágico · comportamiento compartido
+﻿/* Mundo Mágico · comportamiento compartido
    - Fondo sólido del nav al hacer scroll
    - Menú móvil accesible
    - Animaciones de aparición al hacer scroll (respeta reduced-motion) */
@@ -206,6 +206,85 @@
       d.addEventListener('click', function (e) { go(e, idx); });
     });
   });
+
+  /* --- Buscador por categoría: filtra las tarjetas de la página en vivo --- */
+  var searchInput = document.getElementById('catSearch');
+  if (searchInput) {
+    var searchCards = Array.prototype.slice.call(document.querySelectorAll('.catsec .pcard'));
+    var searchSecs = Array.prototype.slice.call(document.querySelectorAll('.catsec'));
+    var clearBtn = document.querySelector('.catsearch-clear');
+    var main = document.querySelector('main');
+
+    // Quita acentos y pasa a minúsculas para comparar sin importar tildes.
+    var norm = function (s) {
+      return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+
+    // Texto buscable de cada tarjeta: nombre + variantes + descripción +
+    // categoría + título de su sección (así "fiesta" trae los de esa sección).
+    searchCards.forEach(function (card) {
+      var parts = [];
+      var h3 = card.querySelector('h3');
+      var sub = card.querySelector('.sub');
+      var pdesc = card.querySelector('.pdesc');
+      var sec = card.closest('.catsec');
+      var secH2 = sec && sec.querySelector('.catsec-head h2');
+      if (h3) parts.push(h3.textContent);
+      if (sub) parts.push(sub.textContent);
+      if (pdesc) parts.push(pdesc.textContent);
+      if (card.dataset.desc) parts.push(card.dataset.desc);
+      if (card.dataset.cat) parts.push(card.dataset.cat);
+      if (secH2) parts.push(secH2.textContent);
+      card._hay = norm(parts.join(' '));
+    });
+
+    // Cartel de "sin resultados" (se crea una sola vez).
+    var emptyEl = document.createElement('div');
+    emptyEl.className = 'catsearch-empty is-filtered-out';
+    emptyEl.setAttribute('aria-live', 'polite');
+    emptyEl.innerHTML = '<b>Sin resultados</b><span>No encontramos productos con esa búsqueda. Probá con otra palabra o escribinos por WhatsApp.</span>';
+    if (main) main.appendChild(emptyEl);
+
+    var applySearch = function () {
+      var raw = searchInput.value.trim();
+      if (clearBtn) clearBtn.hidden = !raw;
+      var q = norm(raw);
+
+      if (!q) {
+        searchCards.forEach(function (c) { c.classList.remove('is-filtered-out'); });
+        searchSecs.forEach(function (s) { s.classList.remove('is-filtered-out'); });
+        emptyEl.classList.add('is-filtered-out');
+        return;
+      }
+
+      var terms = q.split(/\s+/);
+      var anyMatch = false;
+      searchCards.forEach(function (c) {
+        var match = terms.every(function (t) { return c._hay.indexOf(t) !== -1; });
+        c.classList.toggle('is-filtered-out', !match);
+        if (match) { c.classList.add('is-visible'); anyMatch = true; }  // forzar reveal
+      });
+      // Ocultar secciones que quedaron sin ninguna tarjeta visible.
+      searchSecs.forEach(function (s) {
+        var visible = s.querySelector('.pcard:not(.is-filtered-out)');
+        s.classList.toggle('is-filtered-out', !visible);
+      });
+      emptyEl.classList.toggle('is-filtered-out', anyMatch);
+    };
+
+    searchInput.addEventListener('input', applySearch);
+    searchInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && searchInput.value) { searchInput.value = ''; applySearch(); }
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        applySearch();
+        searchInput.focus();
+      });
+    }
+    applySearch();
+  }
 
   /* --- Nav: fondo sólido al bajar --- */
   var nav = document.getElementById('nav');

@@ -349,6 +349,44 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
   box-shadow:0 8px 18px -8px color-mix(in srgb, var(--accent) 65%, transparent);
 }
 
+/* --- Buscador dentro del catbar --- */
+.catsearch{
+  max-width:var(--wrap); margin:0 auto;
+  padding:11px var(--s3) 0;
+}
+.catsearch .field{
+  display:flex; align-items:center; gap:9px;
+  background:#fff; border:1px solid var(--line); border-radius:999px;
+  padding:9px 15px; transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.catsearch .field:focus-within{
+  border-color:color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.catsearch .ic{width:18px; height:18px; flex:0 0 auto; color:var(--muted)}
+.catsearch input{
+  flex:1; min-width:0; border:0; outline:0; background:transparent;
+  font-family:inherit; font-size:14px; font-weight:600; color:var(--ink);
+}
+.catsearch input::placeholder{color:var(--muted); font-weight:600}
+.catsearch input::-webkit-search-cancel-button{display:none}
+.catsearch-clear{
+  flex:0 0 auto; border:0; background:transparent; cursor:pointer;
+  color:var(--muted); font-size:15px; line-height:1; padding:4px; border-radius:50%;
+  transition:color .15s var(--ease), background .15s var(--ease);
+}
+.catsearch-clear:hover{color:var(--ink); background:var(--line)}
+
+/* Ocultar tarjetas/secciones filtradas (gana a .pcard{display:flex}) */
+.is-filtered-out{display:none !important}
+
+/* Estado "sin resultados" */
+.catsearch-empty{
+  max-width:var(--wrap); margin:0 auto; padding:var(--s7) var(--s3);
+  text-align:center; color:var(--muted);
+}
+.catsearch-empty b{display:block; color:var(--ink); font-size:var(--fs2); margin-bottom:6px}
+
 /* --- Sección de categoría --- */
 .catsec{padding:var(--s8) 0; scroll-margin-top:calc(var(--nav-h) + 72px)}
 .catsec + .catsec{border-top:1px solid var(--line)}

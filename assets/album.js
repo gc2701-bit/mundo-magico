@@ -23,6 +23,14 @@
     if (v) videoPages.push({ index: i, video: v });
   });
 
+  // Evitar que el page-flip capture los gestos hechos sobre los controles del
+  // video: sin esto, tocar play/pausa cerca de la esquina voltea la hoja.
+  videoPages.forEach(function (vp) {
+    ['mousedown', 'touchstart', 'pointerdown', 'click'].forEach(function (evt) {
+      vp.video.addEventListener(evt, function (e) { e.stopPropagation(); });
+    });
+  });
+
   function playOnly(activeIndex) {
     // Pausar cualquier <video> presente, incluidos los clones temporales que
     // el page-flip crea mientras se voltea la hoja.
