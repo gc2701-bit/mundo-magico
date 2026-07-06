@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explorar · Mundo Mágico</title>
+<meta name="description" content="Descubrí los productos de Mundo Mágico como un reel: deslizá y encontrá cotillón, disfraces, repostería, decoración y más.">
+<meta name="theme-color" content="#0d0c0b">
+<link rel="icon" href="Logo/Mundo-Magico%20Logo.jpg">
+
+<meta property="og:title" content="Explorar · Mundo Mágico Tucumán">
+<meta property="og:description" content="Descubrí nuestros productos de a uno, a pantalla completa. Deslizá y encontrá tu próxima idea para festejar.">
+<meta property="og:image" content="assets/mundos/cotillon.jpg">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+
+<link rel="preload" href="assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/explorar.css">
+</head>
+<body class="reel-page">
+
+<div class="reel-top">
+  <a class="reel-back" href="index.html" aria-label="Volver al inicio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <span class="reel-brand">Explorar</span>
+  <span class="reel-counter" id="counter" aria-live="polite"></span>
+</div>
+
+<div class="chips" id="chips" role="tablist" aria-label="Filtrar por categoría"></div>
+
+<div class="reel-backdrop" id="backdrop" aria-hidden="true"></div>
+<main class="reel" id="reel" aria-label="Productos"></main>
+
+<script src="assets/explorar-data.js"></script>
+<script src="assets/explorar.js"></script>
+</body>
+</html>

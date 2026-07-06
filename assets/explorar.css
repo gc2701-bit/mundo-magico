@@ -1,0 +1,473 @@
+/* ==========================================================================
+   Explorar · feed inmersivo tipo reel
+   ========================================================================== */
+
+.reel-page {
+  margin: 0;
+  background: #0d0c0b;
+  color: #fff;
+  overflow: hidden;              /* el que scrollea es el .reel, no el body */
+  height: 100dvh;
+  overscroll-behavior: none;
+  /* Ancho de la columna del reel: full en celular, centrada en pantallas grandes. */
+  --col: 460px;
+}
+
+/* ---------- Barra superior flotante (mínima, para no romper la inmersión) --- */
+.reel-top {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--col);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px calc(10px + 28px);
+  background: linear-gradient(180deg, rgba(8,7,6,.72) 0%, rgba(8,7,6,0) 100%);
+  pointer-events: none;          /* deja pasar el toque salvo a los hijos */
+}
+.reel-top > * { pointer-events: auto; }
+
+.reel-back {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.32);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.16);
+}
+.reel-back svg { width: 22px; height: 22px; }
+
+.reel-brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 1px 10px rgba(0,0,0,.5);
+}
+
+.reel-counter {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: rgba(255,255,255,.9);
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.14);
+  padding: 5px 11px;
+  border-radius: 999px;
+  min-width: 56px;
+  text-align: center;
+}
+
+/* ---------- Chips de categoría (fila con scroll horizontal) ---------- */
+.chips {
+  position: fixed;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--col);
+  z-index: 19;
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  pointer-events: auto;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,.34);
+  border: 1px solid rgba(255,255,255,.2);
+  backdrop-filter: blur(6px);
+  padding: 7px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .18s ease, border-color .18s ease, transform .12s ease;
+}
+.chip:hover { transform: translateY(-1px); }
+.chip.is-on {
+  background: var(--cat, #fff);
+  border-color: #fff;
+  color: #fff;
+  box-shadow: 0 4px 14px -4px rgba(0,0,0,.5);
+}
+
+/* ---------- Fondo ambiental (pantallas anchas) ---------- */
+.reel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(70px) brightness(.42) saturate(1.15);
+  transform: scale(1.25);
+  transition: background-image .5s ease;
+  display: none;                 /* solo se muestra cuando hay espacio a los lados */
+}
+
+/* ---------- Contenedor del reel ----------
+   Ocupa TODO el ancho para que la rueda del mouse scrollee en cualquier parte;
+   el contenido de cada slide se centra en una columna angosta (ver más abajo). */
+.reel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100dvh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.reel::-webkit-scrollbar { display: none; }
+
+/* ---------- Slide ---------- */
+.slide {
+  position: relative;
+  height: 100dvh;
+  width: 100%;
+  scroll-snap-align: start;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+}
+
+/* Fondo: copia borrosa y oscurecida de la foto + tinte de la categoría. */
+.slide-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) saturate(1.1);
+  transform: scale(1.18);
+  opacity: .55;
+}
+.slide::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--cat, #000) 26%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(8,7,6,.35) 0%, rgba(8,7,6,.05) 30%, rgba(8,7,6,.82) 100%);
+  pointer-events: none;
+}
+
+/* Foto del producto en primer plano (prolija, sin recorte). */
+.slide-media {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 12px 150px;
+}
+.slide-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,.7);
+}
+
+/* Galería de colores: fila de puntos + nombre, dentro de la info. */
+.slide-gallery {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.slide-dots {
+  display: flex;
+  gap: 8px;
+}
+.sdot {
+  width: 10px; height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.55);
+  background: rgba(255,255,255,.35);
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s ease, transform .15s ease;
+}
+.sdot.is-on { background: #fff; transform: scale(1.25); }
+.slide-cap {
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,.9);
+  text-transform: capitalize;
+  text-shadow: 0 1px 8px rgba(0,0,0,.6);
+}
+
+/* ---------- Info del producto (abajo, flotando) ---------- */
+.slide-info {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 4;
+  padding: 72px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  /* Degradado oscuro propio para que el texto siempre se lea sobre la foto. */
+  background: linear-gradient(to top,
+    rgba(8,7,6,.94) 0%,
+    rgba(8,7,6,.86) 34%,
+    rgba(8,7,6,.55) 66%,
+    rgba(8,7,6,0) 100%);
+}
+.cat-chip {
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--cat, #444);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.slide-info h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(19px, 4.8vw, 26px);
+  line-height: 1.12;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 2px 18px rgba(0,0,0,.55);
+  max-width: 22ch;
+}
+.slide-info .specs {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 34ch;
+}
+.slide-info .specs li {
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.38;
+  color: rgba(255,255,255,.92);
+  padding-left: 15px;
+  position: relative;
+  text-shadow: 0 1px 8px rgba(0,0,0,.5);
+}
+.slide-info .specs li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 8px;
+  width: 5px; height: 5px;
+  border-radius: 999px;
+  background: var(--cat, #fff);
+}
+/* Solo se ven los primeros 2 renglones; el resto se abre con "Leer más". */
+.slide-info .specs.is-clamped li:nth-child(n+3) { display: none; }
+.readmore {
+  align-self: flex-start;
+  margin-top: 2px;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  opacity: .92;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.readmore:hover { opacity: 1; }
+.slide-price {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+
+.slide-actions {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wa-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+  background: #22a45a;
+  padding: 11px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 26px -8px rgba(0,0,0,.6);
+  transition: transform .12s ease, background .18s ease;
+}
+.wa-cta:hover { transform: translateY(-2px); background: #1f9552; }
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  backdrop-filter: blur(6px);
+  padding: 10px 15px;
+  border-radius: 999px;
+  transition: transform .12s ease, background .18s ease;
+}
+.share-btn:hover { transform: translateY(-2px); background: rgba(255,255,255,.24); }
+.share-btn svg { flex: 0 0 auto; }
+
+/* ---------- Toast "link copiado" ---------- */
+.reel-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 20px);
+  z-index: 40;
+  max-width: min(90vw, 420px);
+  text-align: center;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #17140f;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 999px;
+  box-shadow: 0 14px 40px -10px rgba(0,0,0,.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+.reel-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Slide de intro (video de categoría) ---------- */
+.slide-intro { background: #000; }
+.slide-intro video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.slide-intro::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(8,7,6,.35) 0%, rgba(8,7,6,.15) 40%, rgba(8,7,6,.75) 100%);
+  z-index: 1;
+}
+.intro-info {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 24px;
+  max-width: 30ch;
+}
+.intro-info .eyebrow-cat {
+  display: inline-block;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--cat, #444);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.intro-info h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(38px, 11vw, 60px);
+  line-height: 1.02;
+  color: #fff;
+  margin: 0 0 10px;
+  text-shadow: 0 3px 26px rgba(0,0,0,.6);
+}
+.intro-info p {
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: rgba(255,255,255,.92);
+  margin: 0 0 20px;
+}
+.intro-cue {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,.85);
+  animation: cueBob 1.8s ease-in-out infinite;
+}
+@keyframes cueBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+
+.slide-empty .intro-info h2 { font-size: 28px; }
+.slide-empty .wa-cta { background: #22a45a; margin-top: 14px; }
+
+/* ---------- Pantallas anchas: contenido en columna centrada ----------
+   El slide sigue ocupando todo el ancho (para scrollear con la rueda en
+   cualquier lado); su fondo borroso (.slide-bg) hace de ambiente y el
+   contenido —foto e info— se centra en una columna angosta. */
+@media (min-width: 520px) {
+  .reel-page { background: #100e0b; }
+  /* La foto no ocupa toda la altura ni todo el ancho: se ve menos "zoomeada". */
+  .slide-media {
+    max-width: var(--col);
+    margin: 0 auto;
+    padding: 68px 20px 150px;
+  }
+  .slide-media img { max-height: 66vh; }
+  /* Info centrada al ancho de la columna. */
+  .slide-info {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: var(--col);
+  }
+  /* En pantalla grande el fondo borroso se ve un poco más presente. */
+  .slide-bg { opacity: .7; }
+}
+
+/* Con mouse (no táctil): scroll suave, sin que el snap "trabe" la rueda. */
+@media (hover: hover) and (pointer: fine) {
+  .reel { scroll-snap-type: y proximity; }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .reel { scroll-behavior: auto; }
+  .intro-cue { animation: none; }
+  .slide-bg { filter: blur(20px); }
+}
