@@ -50,6 +50,7 @@
           '<h2></h2>' +
           '<p class="price" hidden></p>' +
           '<p class="desc" hidden></p>' +
+          '<ul class="specs" hidden></ul>' +
           '<div class="items" hidden></div>' +
           '<a class="btn-wa" href="#" target="_blank" rel="noopener">' +
             '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm4.52 11.97c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>' +
@@ -65,6 +66,7 @@
     var titleEl2 = overlay.querySelector('h2');
     var priceEl = overlay.querySelector('.price');
     var descEl = overlay.querySelector('.desc');
+    var specsEl = overlay.querySelector('.specs');
     var itemsEl = overlay.querySelector('.items');
     var waBtn = overlay.querySelector('.btn-wa');
     var closeBtn = overlay.querySelector('.ficha-close');
@@ -90,10 +92,27 @@
       priceEl.textContent = price;
       show(priceEl, !!price);
 
-      // Descripción: la explícita, o el subtítulo de la tarjeta
-      var desc = card.dataset.desc || (subEl ? subEl.textContent.trim() : '');
+      // Descripción explícita (intro), si la hay. Si no hay ficha técnica ni
+      // descripción, caemos al subtítulo de la tarjeta como último recurso.
+      var desc = card.dataset.desc || ((!card.dataset.specs && subEl) ? subEl.textContent.trim() : '');
       descEl.textContent = desc;
       show(descEl, !!desc);
+
+      // Ficha técnica: cada dato en su propia línea (uno debajo del otro).
+      // En combos, la lista "El combo trae" ya cumple ese rol, así que no la repetimos.
+      specsEl.innerHTML = '';
+      var showSpecs = false;
+      if (!card.dataset.items && card.dataset.specs) {
+        card.dataset.specs.split('|').forEach(function (line) {
+          var t = line.trim();
+          if (!t) return;
+          var li = document.createElement('li');
+          li.textContent = t;
+          specsEl.appendChild(li);
+          showSpecs = true;
+        });
+      }
+      show(specsEl, showSpecs);
 
       // Lista "El combo trae" (combos)
       itemsEl.innerHTML = '';
@@ -182,6 +201,28 @@
     });
   }
 
+  /* --- Ficha técnica en la tarjeta: convierte data-specs en una lista
+     vertical (un dato debajo del otro) y reemplaza el viejo subtítulo. --- */
+  document.querySelectorAll('.pcard[data-specs]').forEach(function (card) {
+    var body = card.querySelector('.pcard-body');
+    if (!body) return;
+    var lines = card.dataset.specs.split('|').map(function (s) { return s.trim(); })
+      .filter(function (s) { return s; });
+    if (!lines.length) return;
+    var ul = document.createElement('ul');
+    ul.className = 'specs';
+    lines.forEach(function (l) {
+      var li = document.createElement('li');
+      li.textContent = l;
+      ul.appendChild(li);
+    });
+    // Sacamos el subtítulo/descripción vieja para no duplicar info.
+    body.querySelectorAll('.sub, .pdesc').forEach(function (e) { e.remove(); });
+    var h3 = body.querySelector('h3');
+    if (h3) h3.insertAdjacentElement('afterend', ul);
+    else body.insertBefore(ul, body.firstChild);
+  });
+
   /* --- Galería de producto: flechas/puntos para ver cada color --- */
   document.querySelectorAll('.pcard.has-gallery').forEach(function (card) {
     var track = card.querySelector('.gtrack');
@@ -232,6 +273,7 @@
       if (h3) parts.push(h3.textContent);
       if (sub) parts.push(sub.textContent);
       if (pdesc) parts.push(pdesc.textContent);
+      if (card.dataset.specs) parts.push(card.dataset.specs.replace(/\|/g, ' '));
       if (card.dataset.desc) parts.push(card.dataset.desc);
       if (card.dataset.cat) parts.push(card.dataset.cat);
       if (secH2) parts.push(secH2.textContent);
