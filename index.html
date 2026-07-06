@@ -411,7 +411,7 @@
   <div class="starfield" id="starfield" aria-hidden="true"></div>
 
   <div class="hero-anim" aria-hidden="true">
-    <video autoplay muted playsinline preload="none" data-src="Logo/Logo-Animacion-2.mp4"></video>
+    <video autoplay muted loop playsinline webkit-playsinline preload="none" data-src="Logo/Logo-Animacion-2.mp4"></video>
   </div>
   <div class="hero-logo-static" aria-hidden="true">
     <img src="Logo/Mundo-Magico%20Logo.jpg" alt="" width="128" height="128">
@@ -745,11 +745,29 @@
 </footer>
 
 <script>
-/* Video diferido: el video entra tras el load */
+/* Video diferido: el video entra tras el load y arranca solo (sin botón de play).
+   En el celu el autoplay solo lo permite el navegador si el video está muteado:
+   forzamos la propiedad muted (no solo el atributo) y reintentamos al primer
+   toque/scroll por si el navegador bloqueó el primer intento. */
 window.addEventListener('load', function(){
   document.querySelectorAll('video[data-src]').forEach(function(v){
+    v.muted = true;              // iOS/Android: la propiedad, no solo el atributo
+    v.defaultMuted = true;
+    v.playsInline = true;
+    v.setAttribute('muted', '');
     v.src = v.getAttribute('data-src');
-    if (v.play) v.play().catch(function(){});
+
+    var play = function(){ var p = v.play(); if (p && p.catch) p.catch(function(){}); };
+    play();
+
+    // Respaldo: si quedó pausado, lo arranca en la primera interacción.
+    var kick = function(){
+      if (v.paused) play();
+      document.removeEventListener('touchstart', kick);
+      document.removeEventListener('click', kick);
+    };
+    document.addEventListener('touchstart', kick, { passive: true, once: true });
+    document.addEventListener('click', kick, { once: true });
   });
 });
 
