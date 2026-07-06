@@ -41,7 +41,6 @@
 
 <link rel="preload" href="assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="Logo/Logo%20animado%20nuevo%20-%20poster.jpg" as="image" fetchpriority="high">
 <link rel="stylesheet" href="assets/v2.css">
 <style>
 /* ===================== HERO ===================== */
@@ -240,8 +239,8 @@
 /* un color del logo por mundo */
 .mundo .body{border-top:5px solid var(--accent-line, #2f63cf)}
 .m-cotillon  .tile{background:#e9effc} .m-cotillon  .body{--accent-line:#2f63cf} .m-cotillon h3, .m-cotillon .go{color:#24509e}
-.m-cumple    .tile{background:#fdeae8} .m-cumple    .body{--accent-line:#ef5c4d} .m-cumple h3, .m-cumple .go{color:#b3271d}
-.m-reposteria .tile{background:#fdf3d5} .m-reposteria .body{--accent-line:#ec6a9c} .m-reposteria h3, .m-reposteria .go{color:#8a6300}
+.m-cumple    .tile{background:#fdeae8} .m-cumple    .body{--accent-line:#e23b30} .m-cumple h3, .m-cumple .go{color:#b3271d}
+.m-reposteria .tile{background:#fdf3d5} .m-reposteria .body{--accent-line:#ec6a9c} .m-reposteria h3, .m-reposteria .go{color:#bb3b6e}
 .m-deco      .tile{background:var(--green-soft)} .m-deco      .body{--accent-line:#6f9e5b} .m-deco h3, .m-deco .go{color:var(--green-ink)}
 .m-disfraces .tile{background:#232f58} .m-disfraces .body{--accent-line:#7c4dd6} .m-disfraces h3, .m-disfraces .go{color:#24509e}
 .m-combos    .tile{background:#fdeeda} .m-combos    .body{--accent-line:#f0913a} .m-combos h3, .m-combos .go{color:#9a5303}
@@ -392,7 +391,7 @@
       <a href="#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
       <div class="nav-dropdown" role="menu">
         <a href="cotillon-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón y fiestas</a>
-        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#ef5c4d"></span>Línea de cumpleaños</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Línea de cumpleaños</a>
         <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
         <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
         <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#7c4dd6"></span>Disfraces</a>
@@ -411,7 +410,7 @@
   <div class="starfield" id="starfield" aria-hidden="true"></div>
 
   <div class="hero-anim" aria-hidden="true">
-    <video autoplay muted playsinline preload="none" poster="Logo/Logo%20animado%20nuevo%20-%20poster.jpg" data-src="Logo/Logo-Animacion-2.mp4"></video>
+    <video autoplay muted playsinline preload="none" data-src="Logo/Logo-Animacion-2.mp4"></video>
   </div>
   <div class="hero-logo-static" aria-hidden="true">
     <img src="Logo/Mundo-Magico%20Logo.jpg" alt="" width="128" height="128">
@@ -745,7 +744,7 @@
 </footer>
 
 <script>
-/* Video diferido: el poster pinta al instante y el video entra tras el load */
+/* Video diferido: el video entra tras el load */
 window.addEventListener('load', function(){
   document.querySelectorAll('video[data-src]').forEach(function(v){
     v.src = v.getAttribute('data-src');
