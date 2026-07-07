@@ -22,10 +22,112 @@
   var reel, chipsWrap, counterEl, toastEl, backdropEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
-  var currentCat = null;      // null = "Descubrir" (mezcla)
+  var currentCat = null;      // null = "Para vos" (mezcla personalizada)
   var pinnedId = null;        // producto a mostrar primero (link compartido)
 
   document.addEventListener('DOMContentLoaded', init);
+
+  /* ==========================================================================
+     "Para vos": aprendizaje liviano 100% en el navegador (sin cuentas ni
+     servidor). Guardamos en localStorage cuánto se detiene cada persona en
+     cada producto/categoría y qué acciones toma (WhatsApp, compartir, ver
+     más fotos, "leer más"). Con eso el mix de "Para vos" no es un shuffle
+     puro: los productos/categorías con más afinidad aparecen con más
+     frecuencia, pero el puntaje se atenúa con logaritmo + un límite de
+     "racha" por categoría para que el feed siga sintiéndose variado y no
+     quede pegado a un solo interés. Todo el dato vive solo en ese navegador;
+     no se manda a ningún lado. */
+  var Affinity = (function () {
+    var KEY = 'mm_explorar_affinity_v1';
+    var HALF_LIFE_DAYS = 14;   // los puntajes viejos se van desinflando solos
+    var data = load();
+    var saveTimer;
+
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return { cats: {}, products: {}, savedAt: Date.now() };
+        return decay(JSON.parse(raw));
+      } catch (e) { return { cats: {}, products: {}, savedAt: Date.now() }; }
+    }
+
+    function decay(d) {
+      var days = (Date.now() - (d.savedAt || Date.now())) / 86400000;
+      if (days > 0) {
+        var factor = Math.pow(0.5, days / HALF_LIFE_DAYS);
+        Object.keys(d.cats || {}).forEach(function (k) { d.cats[k] *= factor; });
+        Object.keys(d.products || {}).forEach(function (k) { d.products[k] *= factor; });
+      }
+      d.cats = d.cats || {};
+      d.products = d.products || {};
+      return d;
+    }
+
+    function persist() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () {
+        try {
+          data.savedAt = Date.now();
+          localStorage.setItem(KEY, JSON.stringify(data));
+        } catch (e) {}
+      }, 500);
+    }
+
+    // Suma puntos a un producto (y a su categoría) o solo a una categoría.
+    function bumpProduct(p, weight) {
+      if (!p || weight <= 0) return;
+      data.products[p.id] = (data.products[p.id] || 0) + weight;
+      data.cats[p.cat.page] = (data.cats[p.cat.page] || 0) + weight;
+      persist();
+    }
+    function bumpCat(cat, weight) {
+      if (!cat || weight <= 0) return;
+      data.cats[cat.page] = (data.cats[cat.page] || 0) + weight;
+      persist();
+    }
+
+    // Peso relativo de un producto para el sorteo ponderado del mix. Log
+    // amortigua: ningún interés puntual "tapa" el resto del catálogo.
+    function weight(p) {
+      var c = data.cats[p.cat.page] || 0;
+      var pr = data.products[p.id] || 0;
+      var w = 1 + Math.log(1 + Math.max(c, 0)) * 0.9 + Math.log(1 + Math.max(pr, 0)) * 1.4;
+      return w > 0.15 ? w : 0.15;
+    }
+
+    return { bumpProduct: bumpProduct, bumpCat: bumpCat, weight: weight };
+  })();
+
+  // Sorteo ponderado sin reemplazo (clave de Efraimidis-Spirit): da un orden
+  // aleatorio distinto cada vez, pero los productos con más peso "ganan" ese
+  // sorteo con más frecuencia. Con afinidad en cero se comporta como un
+  // shuffle común (así arranca cualquier visita nueva).
+  function weightedShuffle(list) {
+    return list
+      .map(function (p) { return { p: p, key: Math.pow(Math.random(), 1 / Affinity.weight(p)) }; })
+      .sort(function (a, b) { return b.key - a.key; })
+      .map(function (s) { return s.p; });
+  }
+
+  // Evita más de `max` slides seguidas de la misma categoría (aunque el
+  // sorteo ponderado las haya agrupado): busca la próxima de otra categoría
+  // y la adelanta. Mantiene el sesgo por afinidad sin perder variedad.
+  function diversify(list, max) {
+    for (var i = max; i < list.length; i++) {
+      var streak = true;
+      for (var k = 1; k <= max; k++) {
+        if (list[i - k].cat !== list[i].cat) { streak = false; break; }
+      }
+      if (!streak) continue;
+      for (var j = i + 1; j < list.length; j++) {
+        if (list[j].cat !== list[i].cat) {
+          var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+          break;
+        }
+      }
+    }
+    return list;
+  }
 
   function init() {
     reel = document.getElementById('reel');
@@ -42,6 +144,15 @@
     setupObservers();
     setupWheelNav();
     loadAll();
+
+    // No perder el tiempo activo pendiente si cierran/minimizan antes de
+    // cambiar de slide.
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        var active = reel.querySelector('.slide.is-active');
+        if (active) flushDwell(active);
+      }
+    });
   }
 
   /* ---------- Carga y parseo de las páginas de categoría ---------- */
@@ -139,7 +250,7 @@
   /* ---------- Chips de categoría ---------- */
   function buildChips() {
     var frag = document.createDocumentFragment();
-    frag.appendChild(makeChip('Descubrir', null));
+    frag.appendChild(makeChip('Para vos', null));
     CATS.forEach(function (cat) { frag.appendChild(makeChip(cat.name, cat)); });
     chipsWrap.appendChild(frag);
   }
@@ -152,6 +263,8 @@
     if (cat) b.style.setProperty('--cat', cat.color);
     b.addEventListener('click', function () {
       currentCat = cat;
+      // Elegir una categoría a propósito es la señal más fuerte de interés.
+      if (cat) Affinity.bumpCat(cat, 5);
       chipsWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('is-on'); });
       b.classList.add('is-on');
       render();
@@ -163,8 +276,9 @@
   /* ---------- Armado del feed ---------- */
   function buildFeed() {
     if (!currentCat) {
-      // Modo Descubrir: mezcla de todas las categorías.
-      var mix = shuffle(products.slice());
+      // Modo "Para vos": sorteo ponderado por afinidad (no un shuffle plano),
+      // con un límite de racha por categoría para que siga siendo variado.
+      var mix = diversify(weightedShuffle(products.slice()), 2);
       // Si llegaron por un link compartido, ese producto va primero (una vez).
       if (pinnedId) {
         var idx = mix.findIndex(function (p) { return p.id === pinnedId; });
@@ -181,8 +295,10 @@
   }
 
   function render() {
-    // limpiar observadores previos
+    // limpiar observadores previos (y contabilizar el tiempo activo pendiente
+    // antes de tirar esas slides, para que ese rato no se pierda)
     reel.querySelectorAll('.slide').forEach(function (s) {
+      if (s.classList.contains('is-active')) flushDwell(s);
       if (slidesIO) slidesIO.unobserve(s);
       if (activeIO) activeIO.unobserve(s);
     });
@@ -256,7 +372,7 @@
     if (p.price) html += '<div class="slide-price">' + esc(p.price) + '</div>';
     info.innerHTML = html;
 
-    // "Leer más": muestra/oculta el resto de la descripción.
+    // "Leer más": muestra/oculta el resto de la descripción (interés real).
     var readmore = info.querySelector('.readmore');
     if (readmore) {
       readmore.addEventListener('click', function () {
@@ -264,6 +380,7 @@
         var open = ul.classList.toggle('is-open');
         ul.classList.toggle('is-clamped', !open);
         readmore.textContent = open ? 'Leer menos' : 'Leer más';
+        if (open) Affinity.bumpProduct(p, 1);
       });
     }
 
@@ -275,6 +392,10 @@
 
     function showImage(i) {
       i = Math.min(Math.max(i, 0), p.images.length - 1);
+      // Mirar otras fotos a propósito es señal de interés (no la llamada
+      // inicial: esta función solo la disparan el click en un punto o el
+      // deslizamiento del carrusel, nunca la hidratación).
+      if (i !== cur) Affinity.bumpProduct(p, 0.6);
       cur = i;
       var im = p.images[i];
       track.style.transform = 'translateX(-' + (i * 100) + '%)';
@@ -320,6 +441,7 @@
     cta.target = '_blank';
     cta.rel = 'noopener';
     cta.innerHTML = waIcon() + 'Consultar por WhatsApp';
+    cta.addEventListener('click', function () { Affinity.bumpProduct(p, 6); });
     actions.appendChild(cta);
 
     var share = document.createElement('button');
@@ -327,7 +449,7 @@
     share.className = 'share-btn';
     share.setAttribute('aria-label', 'Compartir este producto');
     share.innerHTML = shareIcon() + '<span>Compartir</span>';
-    share.addEventListener('click', function () { shareProduct(p); });
+    share.addEventListener('click', function () { Affinity.bumpProduct(p, 4); shareProduct(p); });
     actions.appendChild(share);
 
     info.appendChild(actions);
@@ -420,22 +542,38 @@
       });
     }, { root: reel, rootMargin: '150% 0px', threshold: 0 });
 
-    // Slide "activa" (la que ocupa la pantalla): actualiza contador y reproduce video.
+    // Slide "activa" (la que ocupa la pantalla): actualiza contador, reproduce
+    // video y cronometra cuánto se queda ahí (esa duración alimenta "Para vos").
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     activeIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         var vid = e.target.querySelector('video');
         if (e.intersectionRatio >= 0.6) {
           e.target.classList.add('is-active');
+          e.target._activeSince = Date.now();
           if (e.target.dataset.pos) updateCounter(+e.target.dataset.pos, +e.target.dataset.total);
           if (vid && !reduce) { vid.play().catch(function () {}); }
           setBackdrop(e.target);
         } else {
+          if (e.target.classList.contains('is-active')) flushDwell(e.target);
           e.target.classList.remove('is-active');
           if (vid) vid.pause();
         }
       });
     }, { root: reel, threshold: [0, 0.6, 1] });
+  }
+
+  // Convierte el tiempo que una slide estuvo activa en puntos de afinidad.
+  // Tope de 8s para que dejar el celu quieto en una foto no infle el puntaje.
+  function flushDwell(slide) {
+    var since = slide._activeSince;
+    slide._activeSince = null;
+    if (!since) return;
+    var seconds = (Date.now() - since) / 1000;
+    if (seconds < 0.15) return;   // toque fugaz al pasar de largo: no cuenta
+    var score = Math.min(seconds, 8) * 0.15;
+    if (slide._product) Affinity.bumpProduct(slide._product, score);
+    else if (slide._intro) Affinity.bumpCat(slide._intro, score * 0.5);
   }
 
   // Fondo ambiental (desktop): copia difuminada de la foto activa para llenar
@@ -576,14 +714,6 @@
   function slug(s) {
     return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  }
-
-  function shuffle(a) {
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
   }
 
   function esc(s) {
