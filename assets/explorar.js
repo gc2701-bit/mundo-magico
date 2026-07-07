@@ -141,6 +141,7 @@
     pinnedId = params.get('p');
 
     buildChips();
+    setupChipsDrag();
     setupObservers();
     setupWheelNav();
     loadAll();
@@ -271,6 +272,51 @@
       reel.scrollTo({ top: 0 });
     });
     return b;
+  }
+
+  // En celular la fila de chips se desliza con el dedo (scroll táctil
+  // nativo), pero con mouse no hay gesto equivalente: sin esto, en la compu
+  // las categorías que no entran en la columna quedaban "cortadas" y sin
+  // forma de llegar a ellas. Agrega arrastre con el mouse y deja que la
+  // rueda vertical mueva la fila de costado.
+  function setupChipsDrag() {
+    if (!chipsWrap) return;
+    var down = false, dragged = false, startX = 0, startScroll = 0;
+
+    chipsWrap.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      down = true; dragged = false;
+      startX = e.clientX;
+      startScroll = chipsWrap.scrollLeft;
+    });
+
+    chipsWrap.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var dx = e.clientX - startX;
+      if (!dragged && Math.abs(dx) < 4) return;
+      dragged = true;
+      chipsWrap.classList.add('is-dragging');
+      chipsWrap.scrollLeft = startScroll - dx;
+    });
+
+    function endDrag() { down = false; chipsWrap.classList.remove('is-dragging'); }
+    chipsWrap.addEventListener('pointerup', endDrag);
+    chipsWrap.addEventListener('pointercancel', endDrag);
+    chipsWrap.addEventListener('pointerleave', endDrag);
+
+    // Si hubo arrastre real, se cancela el click: si no, soltar el mouse
+    // después de arrastrar "elegiría" sin querer la categoría de abajo.
+    chipsWrap.addEventListener('click', function (e) {
+      if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; }
+    }, true);
+
+    // Rueda del mouse (vertical) mueve la fila de costado, ya que no hay
+    // gesto táctil para deslizarla en escritorio.
+    chipsWrap.addEventListener('wheel', function (e) {
+      if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;   // ya viene horizontal
+      chipsWrap.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }, { passive: false });
   }
 
   /* ---------- Armado del feed ---------- */

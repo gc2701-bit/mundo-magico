@@ -85,8 +85,15 @@
   overflow-x: auto;
   scrollbar-width: none;
   pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  /* Difumina los bordes en vez de "cortar" de golpe: avisa que hay más
+     categorías para el lado sin necesitar una scrollbar visible. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%);
 }
 .chips::-webkit-scrollbar { display: none; }
+.chips.is-dragging { cursor: grabbing; }
 .chip {
   flex: 0 0 auto;
   font-family: 'Nunito Sans', system-ui, sans-serif;
