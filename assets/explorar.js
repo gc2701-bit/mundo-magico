@@ -40,6 +40,7 @@
 
     buildChips();
     setupObservers();
+    setupWheelNav();
     loadAll();
   }
 
@@ -220,14 +221,26 @@
     bg.className = 'slide-bg';
     bg.style.backgroundImage = 'url("' + p.images[0].src + '")';
 
+    // Carrusel de fotos: una fila deslizable con todas las variantes.
     var media = document.createElement('div');
     media.className = 'slide-media';
-    var img = document.createElement('img');
-    img.src = first.src;
-    img.alt = first.alt || p.title;
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    media.appendChild(img);
+    var carousel = document.createElement('div');
+    carousel.className = 'media-carousel';
+    var track = document.createElement('div');
+    track.className = 'media-track';
+    p.images.forEach(function (im) {
+      var cell = document.createElement('div');
+      cell.className = 'media-cell';
+      var cimg = document.createElement('img');
+      cimg.src = im.src;
+      cimg.alt = im.alt || p.title;
+      cimg.loading = 'lazy';
+      cimg.decoding = 'async';
+      cell.appendChild(cimg);
+      track.appendChild(cell);
+    });
+    carousel.appendChild(track);
+    media.appendChild(carousel);
 
     var info = document.createElement('div');
     info.className = 'slide-info';
@@ -255,33 +268,47 @@
     }
 
     // Galería de colores: fila de puntos + nombre del color, dentro de la info
-    // (arriba del chip) para que no se monte sobre el texto.
+    // (arriba del chip). Los puntos y el gesto de deslizar comparten showImage().
+    var cur = 0;
+    var dotEls = [];
+    var capEl = null;
+
+    function showImage(i) {
+      i = Math.min(Math.max(i, 0), p.images.length - 1);
+      cur = i;
+      var im = p.images[i];
+      track.style.transform = 'translateX(-' + (i * 100) + '%)';
+      bg.style.backgroundImage = 'url("' + im.src + '")';
+      if (backdropEl && slide.classList.contains('is-active')) {
+        backdropEl.style.backgroundImage = 'url("' + im.src + '")';
+      }
+      if (capEl) capEl.textContent = im.cap || '';
+      dotEls.forEach(function (d, k) { d.classList.toggle('is-on', k === i); });
+    }
+
     if (p.images.length > 1) {
       var gallery = document.createElement('div');
       gallery.className = 'slide-gallery';
       var dots = document.createElement('div');
       dots.className = 'slide-dots';
-      var cap = document.createElement('span');
-      cap.className = 'slide-cap';
-      cap.textContent = first.cap || '';
+      capEl = document.createElement('span');
+      capEl.className = 'slide-cap';
+      capEl.textContent = first.cap || '';
       p.images.forEach(function (im, i) {
         var d = document.createElement('button');
         d.type = 'button';
         d.className = 'sdot' + (i === 0 ? ' is-on' : '');
         d.setAttribute('aria-label', im.cap || ('Foto ' + (i + 1)));
-        d.addEventListener('click', function () {
-          img.src = im.src;
-          bg.style.backgroundImage = 'url("' + im.src + '")';
-          if (backdropEl && slide.classList.contains('is-active')) backdropEl.style.backgroundImage = 'url("' + im.src + '")';
-          dots.querySelectorAll('.sdot').forEach(function (x) { x.classList.remove('is-on'); });
-          d.classList.add('is-on');
-          cap.textContent = im.cap || '';
-        });
+        d.addEventListener('click', function () { showImage(i); });
         dots.appendChild(d);
+        dotEls.push(d);
       });
       gallery.appendChild(dots);
-      gallery.appendChild(cap);
+      gallery.appendChild(capEl);
       info.insertBefore(gallery, info.firstChild);
+
+      // Deslizar la foto: arrastre horizontal sobre el carrusel.
+      enableSwipe(carousel, track, p.images.length, function () { return cur; }, showImage);
     }
 
     var actions = document.createElement('div');
@@ -314,6 +341,54 @@
     if (!slide._hydrated || !slide._product) return;
     slide._hydrated = false;
     slide.innerHTML = '';
+  }
+
+  // Arrastre horizontal del carrusel de fotos. Bloquea el eje en el primer
+  // movimiento: si es más horizontal cambia de foto; si es vertical, deja
+  // pasar el scroll del reel intacto.
+  function enableSwipe(carousel, track, count, getCur, go) {
+    var downX = 0, downY = 0, w = 0;
+    var active = false, decided = false, horiz = false;
+
+    carousel.addEventListener('pointerdown', function (e) {
+      if (count < 2 || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      active = true; decided = false; horiz = false;
+      downX = e.clientX; downY = e.clientY;
+      w = carousel.clientWidth || 1;
+      track.style.transition = 'none';
+    });
+
+    carousel.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      var dx = e.clientX - downX, dy = e.clientY - downY;
+      if (!decided) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        decided = true;
+        horiz = Math.abs(dx) > Math.abs(dy);
+        if (horiz) { try { carousel.setPointerCapture(e.pointerId); } catch (err) {} }
+      }
+      if (!horiz) return;
+      var cur = getCur();
+      var off = dx;
+      // Resistencia en los extremos (no hay foto más allá).
+      if ((cur === 0 && dx > 0) || (cur === count - 1 && dx < 0)) off = dx * 0.35;
+      track.style.transform = 'translateX(calc(' + (-cur * 100) + '% + ' + off + 'px))';
+    });
+
+    function end(e) {
+      if (!active) return;
+      active = false;
+      track.style.transition = '';
+      if (!horiz) return;
+      var dx = e.clientX - downX;
+      var cur = getCur();
+      var threshold = Math.min(60, w * 0.18);
+      if (dx <= -threshold) go(cur + 1);
+      else if (dx >= threshold) go(cur - 1);
+      else go(cur);   // no alcanzó el umbral: vuelve a su lugar
+    }
+    carousel.addEventListener('pointerup', end);
+    carousel.addEventListener('pointercancel', end);
   }
 
   function buildIntro(cat) {
@@ -386,19 +461,63 @@
     counterEl.textContent = total ? (pos + ' / ' + total) : '';
   }
 
-  /* ---------- Teclado (desktop): flechas ↑/↓ ---------- */
-  document.addEventListener('keydown', function (e) {
-    if (!reel) return;
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    var slides = Array.prototype.slice.call(reel.querySelectorAll('.slide'));
-    if (!slides.length) return;
-    e.preventDefault();
+  /* ---------- Navegación por slide (teclado + rueda en escritorio) ----------
+     En vez de dejar que la rueda/trackpad frene "donde sea", cada gesto avanza
+     exactamente una slide y aterriza centrado — como un reel de verdad. */
+  function slideList() {
+    return Array.prototype.slice.call(reel.querySelectorAll('.slide'));
+  }
+  function currentIndex(slides) {
     var mid = reel.scrollTop + reel.clientHeight / 2;
     var cur = 0;
     slides.forEach(function (s, i) { if (s.offsetTop <= mid) cur = i; });
-    var next = e.key === 'ArrowDown' ? Math.min(cur + 1, slides.length - 1) : Math.max(cur - 1, 0);
-    slides[next].scrollIntoView({ behavior: 'smooth' });
+    return cur;
+  }
+  function goRelative(dir) {
+    var slides = slideList();
+    if (!slides.length) return;
+    var next = Math.min(Math.max(currentIndex(slides) + dir, 0), slides.length - 1);
+    // Scroll a la posición EXACTA de la slide (no dejamos que la inercia decida).
+    reel.scrollTo({ top: slides[next].offsetTop, behavior: 'smooth' });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (!reel) return;
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' &&
+        e.key !== 'PageDown' && e.key !== 'PageUp') return;
+    if (!reel.querySelector('.slide')) return;
+    e.preventDefault();
+    goRelative(e.key === 'ArrowDown' || e.key === 'PageDown' ? 1 : -1);
   });
+
+  // Rueda/trackpad: solo en punteros finos (escritorio). En táctil dejamos el
+  // scroll nativo con snap, que ya se siente natural. Se llama desde init(),
+  // cuando el elemento .reel ya existe.
+  function setupWheelNav() {
+    var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!finePointer || !reel) return;
+    // En escritorio el JS controla el aterrizaje exacto, así que apagamos el
+    // scroll-snap nativo: si no, "pelea" contra la animación suave y frena a medias.
+    reel.style.scrollSnapType = 'none';
+    var wheelLocked = false;
+    var wheelAccum = 0;
+    var wheelReset;
+    reel.addEventListener('wheel', function (e) {
+      e.preventDefault();                 // evita el scroll libre que deja a medias
+      if (wheelLocked) return;
+      // Acumula hasta superar un umbral para no disparar con micro-movimientos,
+      // y se reinicia si el usuario deja de mover la rueda un instante.
+      wheelAccum += e.deltaY;
+      clearTimeout(wheelReset);
+      wheelReset = setTimeout(function () { wheelAccum = 0; }, 200);
+      if (Math.abs(wheelAccum) < 24) return;
+      var dir = wheelAccum > 0 ? 1 : -1;
+      wheelAccum = 0;
+      wheelLocked = true;
+      goRelative(dir);
+      setTimeout(function () { wheelLocked = false; }, 480);
+    }, { passive: false });
+  }
 
   /* ---------- Compartir producto ---------- */
   function shareProduct(p) {
