@@ -7,6 +7,7 @@
   background: #0d0c0b;
   color: #fff;
   overflow: hidden;              /* el que scrollea es el .reel, no el body */
+  height: 100vh;                  /* fallback para navegadores sin dvh */
   height: 100dvh;
   overscroll-behavior: none;
   /* Ancho de la columna del reel: full en celular, centrada en pantallas grandes. */
@@ -129,10 +130,11 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  height: 100vh;                    /* fallback para navegadores sin dvh */
   height: 100dvh;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
-  overscroll-behavior-y: contain;   /* el gesto no "salta" fuera del feed */
+  overscroll-behavior: contain;     /* corta pull-to-refresh y el rebote fuera del feed */
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -141,6 +143,7 @@
 /* ---------- Slide ---------- */
 .slide {
   position: relative;
+  height: 100vh;                  /* fallback para navegadores sin dvh */
   height: 100dvh;
   width: 100%;
   scroll-snap-align: start;
@@ -150,6 +153,11 @@
   align-items: center;
   justify-content: center;
   background: #111;
+  /* La altura ya es explícita (100dvh): el navegador puede saltear pintar/
+     renderizar las slides fuera de pantalla sin que el layout se mueva. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+  contain-intrinsic-size: auto 100dvh;
 }
 
 /* Fondo: copia borrosa y oscurecida de la foto + tinte de la categoría. */
@@ -184,7 +192,11 @@
 .slide-media img {
   max-width: 100%;
   max-height: 100%;
+  /* Relación fija para reservar el espacio antes de que cargue la foto real:
+     sin esto el <img> pasa de 0x0 a su tamaño final y "salta" (layout shift). */
+  aspect-ratio: 4 / 5;
   object-fit: contain;
+  background: rgba(255,255,255,.03);
   border-radius: 14px;
   box-shadow: 0 24px 60px -20px rgba(0,0,0,.7);
 }
@@ -502,9 +514,9 @@
 
   .slide-info {
     opacity: 0;
-    transform: translateY(18px);
-    transition: opacity .42s ease .04s,
-                transform .55s cubic-bezier(.22,.7,.22,1) .04s;
+    transform: scale(.96) translateY(10px);
+    transition: opacity .3s ease-out .04s,
+                transform .3s ease-out .04s;
     will-change: opacity, transform;
   }
   .slide.is-active .slide-info { opacity: 1; transform: none; }
