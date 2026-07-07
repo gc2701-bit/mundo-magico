@@ -411,7 +411,7 @@
   <div class="starfield" id="starfield" aria-hidden="true"></div>
 
   <div class="hero-anim" aria-hidden="true">
-    <video autoplay muted loop playsinline webkit-playsinline preload="none" data-src="Logo/Logo-Animacion-2.mp4"></video>
+    <video autoplay muted playsinline webkit-playsinline preload="none" data-src="Logo/Logo-Animacion-2.mp4"></video>
   </div>
   <div class="hero-logo-static" aria-hidden="true">
     <img src="Logo/Mundo-Magico%20Logo.jpg" alt="" width="128" height="128">
@@ -745,10 +745,12 @@
 </footer>
 
 <script>
-/* Video diferido: el video entra tras el load y arranca solo (sin botón de play).
-   En el celu el autoplay solo lo permite el navegador si el video está muteado:
-   forzamos la propiedad muted (no solo el atributo) y reintentamos al primer
-   toque/scroll por si el navegador bloqueó el primer intento. */
+/* Video diferido: el video entra tras el load, se reproduce una sola vez y
+   queda fijo en el último cuadro (sin loop, sin botón de play). Se recarga
+   cada vez que la página carga. En el celu el autoplay solo lo permite el
+   navegador si el video está muteado: forzamos la propiedad muted (no solo el
+   atributo) y reintentamos al primer toque/scroll SOLO si el navegador bloqueó
+   el primer intento (nunca lo reinicia una vez que terminó). */
 window.addEventListener('load', function(){
   document.querySelectorAll('video[data-src]').forEach(function(v){
     v.muted = true;              // iOS/Android: la propiedad, no solo el atributo
@@ -760,9 +762,11 @@ window.addEventListener('load', function(){
     var play = function(){ var p = v.play(); if (p && p.catch) p.catch(function(){}); };
     play();
 
-    // Respaldo: si quedó pausado, lo arranca en la primera interacción.
+    // Respaldo: si el navegador bloqueó el autoplay (quedó pausado sin haber
+    // llegado al final), lo arranca en la primera interacción. Si ya terminó,
+    // no lo reinicia: se queda fijo en el último cuadro.
     var kick = function(){
-      if (v.paused) play();
+      if (v.paused && !v.ended) play();
       document.removeEventListener('touchstart', kick);
       document.removeEventListener('click', kick);
     };
