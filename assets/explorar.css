@@ -104,7 +104,10 @@
 }
 .chip:hover { transform: translateY(-1px); }
 .chip.is-on {
-  background: var(--cat, #fff);
+  /* #444 es el mismo fallback que ya usa .cat-chip: el chip "Para vos" no
+     tiene --cat (no es una categoría), así que sin esto quedaba blanco
+     sobre blanco y no se leía el texto. */
+  background: var(--cat, #444);
   border-color: #fff;
   color: #fff;
   box-shadow: 0 4px 14px -4px rgba(0,0,0,.5);
