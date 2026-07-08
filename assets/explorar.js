@@ -19,7 +19,7 @@
     { name: 'Especiales', page: 'especiales-v2.html', color: '#4aa3e0', video: null, tagline: 'Selección Argentina y ediciones especiales.' }
   ];
 
-  var reel, chipsWrap, counterEl, toastEl, backdropEl;
+  var reel, chipsWrap, toastEl, backdropEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
   var currentCat = null;      // null = "Para vos" (mezcla personalizada)
@@ -132,7 +132,6 @@
   function init() {
     reel = document.getElementById('reel');
     chipsWrap = document.getElementById('chips');
-    counterEl = document.getElementById('counter');
     backdropEl = document.getElementById('backdrop');
     if (!reel) return;
 
@@ -351,24 +350,19 @@
     reel.innerHTML = '';
 
     var feed = buildFeed();
-    var total = feed.filter(function (x) { return !x.intro; }).length;
-    var n = 0;
     feed.forEach(function (item) {
-      var slide = item.intro ? buildIntro(item.intro) : buildSlide(item, ++n, total);
+      var slide = item.intro ? buildIntro(item.intro) : buildSlide(item);
       reel.appendChild(slide);
       slidesIO.observe(slide);
       activeIO.observe(slide);
     });
-    updateCounter(feed.length ? 1 : 0, total);
   }
 
   /* ---------- Slides ---------- */
-  function buildSlide(p, index, total) {
+  function buildSlide(p) {
     var slide = document.createElement('section');
     slide.className = 'slide';
     slide.style.setProperty('--cat', p.cat.color);
-    slide.dataset.pos = index;
-    slide.dataset.total = total;
     slide._product = p;   // se hidrata al acercarse al viewport
     return slide;
   }
@@ -597,7 +591,6 @@
         if (e.intersectionRatio >= 0.6) {
           e.target.classList.add('is-active');
           e.target._activeSince = Date.now();
-          if (e.target.dataset.pos) updateCounter(+e.target.dataset.pos, +e.target.dataset.total);
           if (vid && !reduce) { vid.play().catch(function () {}); }
           setBackdrop(e.target);
         } else {
@@ -637,12 +630,6 @@
       var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!reduce) { v.src = v.dataset.src; }
     }
-  }
-
-  /* ---------- Contador ---------- */
-  function updateCounter(pos, total) {
-    if (!counterEl) return;
-    counterEl.textContent = total ? (pos + ' / ' + total) : '';
   }
 
   /* ---------- Navegación por slide (teclado + rueda en escritorio) ----------

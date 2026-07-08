@@ -55,21 +55,6 @@
   text-shadow: 0 1px 10px rgba(0,0,0,.5);
 }
 
-.reel-counter {
-  margin-left: auto;
-  flex: 0 0 auto;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .02em;
-  color: rgba(255,255,255,.9);
-  background: rgba(0,0,0,.32);
-  border: 1px solid rgba(255,255,255,.14);
-  padding: 5px 11px;
-  border-radius: 999px;
-  min-width: 56px;
-  text-align: center;
-}
-
 /* ---------- Chips de categoría (fila con scroll horizontal) ---------- */
 .chips {
   position: fixed;
