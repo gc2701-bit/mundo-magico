@@ -565,6 +565,21 @@ body.ficha-open{overflow:hidden}
   padding:5px 14px; border-radius:999px; box-shadow:var(--shadow-sm);
 }
 
+/* ===== Barra de carga (navegación entre páginas) =====
+   Aviso visual de que la página está cambiando: sin esto, en una conexión
+   lenta (sobre todo en el celular) el clic no muestra nada por un rato y
+   parece que la web se colgó. Aparece solo si la navegación tarda más que
+   un instante, para no titilar en los cambios de página rápidos. */
+.page-loading-bar{
+  position:fixed; top:0; left:0; height:3px; width:0;
+  background:linear-gradient(90deg, var(--accent, #ff5b8a), var(--accent-deep, #e2456f));
+  box-shadow:0 0 8px color-mix(in srgb, var(--accent, #ff5b8a) 70%, transparent);
+  z-index:9999; pointer-events:none; opacity:0;
+  transition:width .5s cubic-bezier(.2,.6,.2,1), opacity .25s ease;
+}
+.page-loading-bar.is-active{ opacity:1; }
+.page-loading-bar.is-done{ width:100% !important; transition:width .2s ease, opacity .3s ease .1s; opacity:0; }
+
 /* ===== Reduced motion ===== */
 @media(prefers-reduced-motion:reduce){
   .reveal{opacity:1 !important; transform:none !important; transition:none}
@@ -572,6 +587,7 @@ body.ficha-open{overflow:hidden}
   .ficha{animation:none}
   .ficha-close:hover{transform:none}
   *{scroll-behavior:auto}
+  .page-loading-bar{transition:opacity .15s ease}
 }
 
 /* ===== Táctil (sin mouse): nada de :hover que mueva el objetivo del toque =====
