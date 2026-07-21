@@ -17,3 +17,19 @@
     gtag('js', new Date());
     gtag('config', 'G-878T3NRZDV');
 })();
+
+// Rastreo de clicks en botones de WhatsApp (todas las páginas, incluido el botón flotante)
+document.addEventListener('click', function(e){
+    var link = e.target.closest('a[href*="wa.me"]');
+    if (!link) return;
+    var label = (link.getAttribute('aria-label') || link.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 100) || 'WhatsApp';
+    if (window.gtag) {
+        window.gtag('event', 'whatsapp_click', {
+            button_label: label,
+            page_path: location.pathname
+        });
+    }
+    if (window.clarity) {
+        window.clarity('event', 'whatsapp_click');
+    }
+}, true);
