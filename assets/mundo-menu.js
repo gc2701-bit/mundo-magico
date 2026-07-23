@@ -58,9 +58,19 @@
   var oldSep = dropdown.querySelector('.nd-sep');
   if (oldSep) oldSep.remove();
 
+  // Netlify sirve las páginas con "Pretty URLs": reescribe href="foo.html" a
+  // "/foo" en el HTML final. Sin normalizar, el lookup de acá abajo no
+  // encuentra nada en producción (aunque en local, con el .html intacto,
+  // funcione perfecto) y el menú queda sin subcategorías.
+  function normalizeKey(href) {
+    var h = href.replace(/^\//, '').replace(/\/$/, '');
+    if (!/\.html?$/i.test(h)) h += '.html';
+    return h;
+  }
+
   items.forEach(function (a) {
     var page = a.getAttribute('href');
-    var subs = SUBCATS[page];
+    var subs = SUBCATS[normalizeKey(page)];
 
     var col = document.createElement('div');
     col.className = 'nd-col';
