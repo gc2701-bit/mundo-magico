@@ -186,6 +186,27 @@
       });
     });
 
+    // Deep link desde el buscador (?p=slug-del-titulo, ver assets/search.js):
+    // en vez de dejar a la persona en la grilla entera de la categoría, la
+    // llevamos directo a la ficha del producto que buscó.
+    var wantedSlug = new URLSearchParams(location.search).get('p');
+    if (wantedSlug) {
+      var slugify = function (s) {
+        return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      };
+      var target = null;
+      pcards.forEach(function (card) {
+        if (target) return;
+        var h3 = card.querySelector('h3');
+        if (h3 && slugify(h3.textContent.trim()) === wantedSlug) target = card;
+      });
+      if (target) {
+        target.scrollIntoView({ block: 'center' });
+        openFicha(target);
+      }
+    }
+
     closeBtn.addEventListener('click', closeFicha);
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeFicha(); });
     document.addEventListener('keydown', function (e) {

@@ -25,6 +25,12 @@
     return (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
   };
 
+  // Mismo criterio de slug que site.js: identifica un producto por su título
+  // para que el link del resultado abra la ficha directo, no solo la página.
+  var slugify = function (s) {
+    return norm(s).replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
   var index = null;   // se arma una sola vez, la primera vez que se abre
   var loading = false;
 
@@ -124,10 +130,14 @@
       byPage[page] = [];
       (data[page] || []).forEach(function (p) {
         var hay = norm([p.title, (p.specs || []).join(' '), meta.label].join(' '));
+        var basePage = p.href || page;
         var item = {
           title: p.title,
           thumb: (p.images && p.images[0]) ? p.images[0].src : '',
-          href: p.href || page,
+          // "?p=slug": la página de destino (site.js) lo detecta al cargar y
+          // abre la ficha de ese producto directo, en vez de dejarlo perdido
+          // en la grilla entera de la categoría.
+          href: basePage + (basePage.indexOf('?') === -1 ? '?' : '&') + 'p=' + encodeURIComponent(slugify(p.title)),
           label: meta.label,
           color: meta.color,
           _titleNorm: norm(p.title),

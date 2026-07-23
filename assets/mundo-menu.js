@@ -76,9 +76,24 @@
     col.className = 'nd-col';
     a.classList.add('nd-col-head');
     a.parentNode.insertBefore(col, a);
-    col.appendChild(a);
+
+    var headRow = document.createElement('div');
+    headRow.className = 'nd-col-head-row';
+    headRow.appendChild(a);
+    col.appendChild(headRow);
 
     if (subs && subs.length) {
+      // Flechita: en mobile las subcategorías arrancan colapsadas (ver
+      // v2.css) y se despliegan al tocarla, sin robarle el toque al link
+      // del mundo que sigue llevando directo a la página.
+      var toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'nd-col-toggle';
+      toggle.setAttribute('aria-label', 'Ver subcategorías de ' + a.textContent.trim());
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+      headRow.appendChild(toggle);
+
       var box = document.createElement('div');
       box.className = 'nd-col-links';
       subs.forEach(function (s) {
@@ -89,6 +104,12 @@
         box.appendChild(sub);
       });
       col.appendChild(box);
+
+      toggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        var open = col.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
     }
   });
 })();

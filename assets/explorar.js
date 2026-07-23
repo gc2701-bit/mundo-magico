@@ -8,6 +8,16 @@
 
   var WA = '5493813006343';
 
+  // Envoltorio de assets/analytics.js: ese script se carga antes que este en
+  // explorar.html, pero por las dudas (bloqueadores de ads, orden distinto)
+  // no explota si trackEvent todavía no existe.
+  // OJO: se llama "trackGA" (no "track") a propósito — hydrate() ya usa
+  // "track" como nombre de variable local (el div del carrusel de fotos), y
+  // ese var shadowea cualquier función con el mismo nombre en todo ese scope.
+  function trackGA(name, params) {
+    if (window.trackEvent) window.trackEvent(name, params);
+  }
+
   // Categoría -> página de origen, color de acento y video de portada (si tiene).
   // Mismo orden que "Nuestros mundos" en el nav (index.html), + Especiales al
   // final (no es un mundo permanente, es una edición estacional enlazada desde
@@ -168,6 +178,7 @@
     setupChipsDrag(tagChipsWrap);
     setupObservers();
     setupWheelNav();
+    setupSwipeNav();
     loadAll();
 
     // No perder el tiempo activo pendiente si cierran/minimizan antes de
@@ -617,7 +628,10 @@
     cta.target = '_blank';
     cta.rel = 'noopener';
     cta.innerHTML = waIcon() + 'Consultar por WhatsApp';
-    cta.addEventListener('click', function () { Affinity.bumpProduct(p, 6); });
+    cta.addEventListener('click', function () {
+      Affinity.bumpProduct(p, 6);
+      trackGA('explorar_whatsapp_click', { item_name: p.title, item_cat: p.cat && p.cat.name });
+    });
     actions.appendChild(cta);
 
     var share = document.createElement('button');
@@ -625,7 +639,11 @@
     share.className = 'share-btn';
     share.setAttribute('aria-label', 'Compartir este producto');
     share.innerHTML = shareIcon() + '<span>Compartir</span>';
-    share.addEventListener('click', function () { Affinity.bumpProduct(p, 4); shareProduct(p); });
+    share.addEventListener('click', function () {
+      Affinity.bumpProduct(p, 4);
+      trackGA('explorar_share_click', { item_name: p.title, item_cat: p.cat && p.cat.name });
+      shareProduct(p);
+    });
     actions.appendChild(share);
 
     info.appendChild(actions);
@@ -747,8 +765,19 @@
     var seconds = (Date.now() - since) / 1000;
     if (seconds < 0.15) return;   // toque fugaz al pasar de largo: no cuenta
     var score = Math.min(seconds, 8) * 0.15;
-    if (slide._product) Affinity.bumpProduct(slide._product, score);
-    else if (slide._intro) Affinity.bumpCat(slide._intro, score * 0.5);
+    if (slide._product) {
+      Affinity.bumpProduct(slide._product, score);
+      // Cada vez que se deja una slide de producto queda registrado un
+      // "deslizamiento" con su duración: de ahí salen tanto el conteo de
+      // gente que desliza como el tiempo que se queda en cada producto.
+      trackGA('explorar_swipe', {
+        item_name: slide._product.title,
+        item_cat: slide._product.cat && slide._product.cat.name,
+        dwell_seconds: Math.round(seconds * 10) / 10
+      });
+    } else if (slide._intro) {
+      Affinity.bumpCat(slide._intro, score * 0.5);
+    }
   }
 
   // Fondo ambiental (desktop): copia difuminada de la foto activa para llenar
@@ -780,12 +809,16 @@
     slides.forEach(function (s, i) { if (s.offsetTop <= mid) cur = i; });
     return cur;
   }
-  function goRelative(dir) {
+  function goRelative(dir, instant) {
     var slides = slideList();
     if (!slides.length) return;
     var next = Math.min(Math.max(currentIndex(slides) + dir, 0), slides.length - 1);
     // Scroll a la posición EXACTA de la slide (no dejamos que la inercia decida).
-    reel.scrollTo({ top: slides[next].offsetTop, behavior: 'smooth' });
+    // `instant` (usado al soltar un swipe) corta directo a la próxima foto sin
+    // animación: con la animación se alcanzaba a ver un pedazo de la slide
+    // saliente tapando/destapando la que entra, y eso es justo lo que no
+    // querían ver.
+    reel.scrollTo({ top: slides[next].offsetTop, behavior: instant ? 'auto' : 'smooth' });
   }
 
   document.addEventListener('keydown', function (e) {
@@ -796,6 +829,45 @@
     e.preventDefault();
     goRelative(e.key === 'ArrowDown' || e.key === 'PageDown' ? 1 : -1);
   });
+
+  // Deslizamiento táctil: a propósito NO sigue el dedo en vivo (touch-action:
+  // none en .reel, ver explorar.css). Se mide el gesto completo y recién al
+  // soltar, si pasó el umbral, se pasa de foto de un salto — como pidieron:
+  // "que no se mueva mientras deslizo, que la imagen se vaya una vez deslizado".
+  function setupSwipeNav() {
+    if (!reel) return;
+    var downX = 0, downY = 0, active = false, decided = false, vertical = false, h = 1;
+
+    reel.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse') return;   // el mouse ya tiene su rueda
+      active = true; decided = false; vertical = false;
+      downX = e.clientX; downY = e.clientY;
+      h = reel.clientHeight || 1;
+    });
+
+    reel.addEventListener('pointermove', function (e) {
+      if (!active || decided) return;
+      var dx = e.clientX - downX, dy = e.clientY - downY;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      decided = true;
+      vertical = Math.abs(dy) > Math.abs(dx);
+      // Vertical: es el gesto del feed, no del carrusel de fotos horizontal.
+      if (vertical) { try { reel.setPointerCapture(e.pointerId); } catch (err) {} }
+    });
+
+    function end(e) {
+      if (!active) return;
+      active = false;
+      try { reel.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (!decided || !vertical) return;
+      var dy = e.clientY - downY;
+      var threshold = Math.min(70, h * 0.12);
+      if (dy <= -threshold) goRelative(1, true);
+      else if (dy >= threshold) goRelative(-1, true);
+    }
+    reel.addEventListener('pointerup', end);
+    reel.addEventListener('pointercancel', end);
+  }
 
   // Rueda/trackpad: solo en punteros finos (escritorio). En táctil dejamos el
   // scroll nativo con snap, que ya se siente natural. Se llama desde init(),

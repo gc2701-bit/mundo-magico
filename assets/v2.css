@@ -188,7 +188,9 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 }
 .nd-col{display:flex; flex-direction:column; gap:2px; min-width:150px; padding:0 16px; border-left:1px solid var(--line)}
 .nd-col:first-child{border-left:0; padding-left:0}
+.nd-col-head-row{display:flex; align-items:center}
 .nd-col-head{font-weight:800; margin-bottom:2px}
+.nd-col-toggle{display:none}
 .nd-col-links{display:flex; flex-direction:column}
 .nd-col-links a{padding:6px 10px; font-size:13px; font-weight:600; opacity:.65}
 .nd-col-links a:hover{opacity:1}
@@ -252,7 +254,15 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
     position:static; transform:none;
   }
   .nd-col{border-left:0; padding:0; min-width:0}
-  .nd-col-links{padding-left:12px; margin:2px 0 8px 10px; border-left:2px solid var(--line)}
+  .nd-col-toggle{
+    display:inline-flex; align-items:center; justify-content:center; flex:none;
+    width:36px; height:36px; margin-left:auto; border:0; border-radius:8px;
+    background:transparent; color:var(--muted); cursor:pointer;
+  }
+  .nd-col-toggle svg{width:18px; height:18px; transition:transform .2s var(--ease)}
+  .nd-col.is-open .nd-col-toggle svg{transform:rotate(180deg)}
+  .nd-col-links{display:none; padding-left:12px; margin:2px 0 8px 10px; border-left:2px solid var(--line)}
+  .nd-col.is-open .nd-col-links{display:flex}
 }
 
 /* ===== Botones ===== */

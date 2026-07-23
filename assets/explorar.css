@@ -235,6 +235,10 @@
   overscroll-behavior: contain;     /* corta pull-to-refresh y el rebote fuera del feed */
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  /* El dedo ya NO arrastra el feed en vivo (ver setupSwipeNav en explorar.js):
+     el gesto se mide entero y recién al soltar se pasa de foto, de un salto.
+     El scroll nativo sigue existiendo solo para el scrollTo() programático. */
+  touch-action: none;
 }
 .reel::-webkit-scrollbar { display: none; }
 
@@ -276,7 +280,8 @@
   pointer-events: none;
 }
 
-/* Foto del producto en primer plano (prolija, sin recorte). */
+/* Foto del producto en primer plano (prolija, sin recorte: se ve el
+   producto entero, no una parte cortada). */
 .slide-media {
   position: relative;
   z-index: 1;
