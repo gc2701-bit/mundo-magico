@@ -45,7 +45,7 @@
     { key: 'feliz-cumpleanos', label: 'Feliz Cumpleaños' }
   ];
 
-  var reel, chipsWrap, tagChipsWrap, chipsPanel, chipsToggle, chipsToggleLabel, toastEl, backdropEl, loadingEl;
+  var reel, chipsWrap, tagChipsWrap, chipsPanel, chipsScrim, chipsToggle, chipsToggleLabel, toastEl, backdropEl, loadingEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
   var currentCat = null;      // null = "Para vos" (mezcla personalizada)
@@ -161,6 +161,7 @@
     chipsWrap = document.getElementById('chips');
     tagChipsWrap = document.getElementById('tagChips');
     chipsPanel = document.getElementById('chipsPanel');
+    chipsScrim = document.getElementById('chipsScrim');
     chipsToggle = document.getElementById('chipsToggle');
     chipsToggleLabel = document.getElementById('chipsToggleLabel');
     backdropEl = document.getElementById('backdrop');
@@ -304,6 +305,7 @@
   }
   function setChipsPanelOpen(open) {
     chipsPanel.classList.toggle('is-open', open);
+    if (chipsScrim) chipsScrim.classList.toggle('is-open', open);
     chipsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     chipsToggle.classList.toggle('is-on', open);
   }
@@ -854,6 +856,17 @@
       // Vertical: es el gesto del feed, no del carrusel de fotos horizontal.
       if (vertical) { try { reel.setPointerCapture(e.pointerId); } catch (err) {} }
     });
+
+    // Refuerzo: en algunos navegadores/dispositivos "touch-action:none" del
+    // CSS no alcanza solo (deslizamientos rápidos, o el texto con su propio
+    // scroll interno en .slide-info-text) y el scroll nativo se cuela después
+    // de un rato. Con preventDefault() acá directamente no hay forma de que
+    // vuelva a "seguir el dedo": esto es lo que de verdad lo bloquea siempre.
+    reel.addEventListener('touchmove', function (e) {
+      if (!active) return;
+      if (decided && !vertical) return;   // horizontal: es el carrusel de fotos, no tocar
+      e.preventDefault();
+    }, { passive: false });
 
     function end(e) {
       if (!active) return;
