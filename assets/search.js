@@ -8,6 +8,11 @@
   var nav = document.getElementById('nav');
   if (!nav) return; // páginas sin nav estándar (explorar.html) quedan afuera
 
+  // Envoltorio de assets/analytics.js (se carga antes que este script).
+  function trackGA(name, params) {
+    if (window.trackEvent) window.trackEvent(name, params);
+  }
+
   // Nombre lindo + color por página, mismos 8 mundos que index.html + Especiales.
   var PAGE_META = {
     'globos-fiesta-v2.html': { label: 'Cotillón',               color: '#2f63cf' },
@@ -230,7 +235,21 @@
     renderItems(list);
   }
 
-  input.addEventListener('input', function () { render(index ? search(input.value) : []); });
+  var searchTrackTimer = null;
+  input.addEventListener('input', function () {
+    var list = index ? search(input.value) : [];
+    render(list);
+
+    // Recién a los 800ms de que dejó de tipear: no tiene sentido mandar un
+    // evento por cada letra mientras arma la palabra que busca.
+    clearTimeout(searchTrackTimer);
+    var term = input.value.trim();
+    if (term.length < 2) return;
+    searchTrackTimer = setTimeout(function () {
+      trackGA('header_search', { search_term: term, results_count: list.length, page_path: location.pathname });
+      if (!list.length) trackGA('search_no_results', { search_term: term, page_path: location.pathname });
+    }, 800);
+  });
 
   // Flechas + Enter para navegar los resultados sin mouse.
   input.addEventListener('keydown', function (e) {

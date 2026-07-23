@@ -11,6 +11,13 @@
     return 'https://wa.me/' + WA_NUMBER + (text ? '?text=' + encodeURIComponent(text) : '');
   };
 
+  // Envoltorio de assets/analytics.js (se carga antes que este script en
+  // todas las páginas). Nombre distinto de "track" a propósito: más abajo,
+  // el carrusel de fotos de cada tarjeta usa esa palabra para su propio div.
+  function trackGA(name, params) {
+    if (window.trackEvent) window.trackEvent(name, params);
+  }
+
   /* --- Botón flotante de WhatsApp en todas las páginas --- */
   if (!document.querySelector('.wa-float')) {
     var fab = document.createElement('a');
@@ -167,11 +174,19 @@
 
       waBtn.href = waLink(card.dataset.wamsg ||
         ('¡Hola Mundo Mágico! Me interesa "' + name + '"' + (price ? ' (' + price + ')' : '') + '. ¿Me pasás más info?'));
+      // El click de waBtn está atado una sola vez (más abajo, fuera de esta
+      // función): guardamos acá qué producto es el que se ve ahora mismo.
+      waBtn.dataset.trackName = name;
+      waBtn.dataset.trackCat = cat;
 
       overlay.classList.add('open');
       document.body.classList.add('ficha-open');
       closeBtn.focus();
     }
+
+    waBtn.addEventListener('click', function () {
+      trackGA('ficha_whatsapp_click', { item_name: waBtn.dataset.trackName, item_cat: waBtn.dataset.trackCat });
+    });
 
     function closeFicha() {
       overlay.classList.remove('open');
@@ -308,10 +323,13 @@
     emptyEl.innerHTML = '<b>Sin resultados</b><span>No encontramos productos con esa búsqueda. Probá con otra palabra o escribinos por WhatsApp.</span>';
     if (main) main.appendChild(emptyEl);
 
+    var noResultsTimer = null;
+
     var applySearch = function () {
       var raw = searchInput.value.trim();
       if (clearBtn) clearBtn.hidden = !raw;
       var q = norm(raw);
+      clearTimeout(noResultsTimer);
 
       if (!q) {
         searchCards.forEach(function (c) { c.classList.remove('is-filtered-out'); });
@@ -333,6 +351,14 @@
         s.classList.toggle('is-filtered-out', !visible);
       });
       emptyEl.classList.toggle('is-filtered-out', anyMatch);
+
+      // Recién a los 800ms (dejamos de tipear): evita mandar un evento por
+      // cada letra mientras la búsqueda todavía "no dio con nada" a medias.
+      if (!anyMatch) {
+        noResultsTimer = setTimeout(function () {
+          trackGA('catsearch_no_results', { search_term: raw, page_path: location.pathname });
+        }, 800);
+      }
     };
 
     searchInput.addEventListener('input', applySearch);

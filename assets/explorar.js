@@ -979,6 +979,7 @@
   // + botón para sacar el filtro, en vez de dejar la pantalla en negro.
   function renderNoMatches() {
     var where = currentCat ? esc(currentCat.name) : 'Para vos';
+    trackGA('explorar_no_results', { item_cat: where, tag: currentTag ? currentTag.label : null });
     var msg = currentTag
       ? 'No encontramos productos con "' + esc(currentTag.label) + '" en ' + where + '.'
       : 'No encontramos productos en ' + where + '.';
