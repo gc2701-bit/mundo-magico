@@ -9,13 +9,18 @@
   var WA = '5493813006343';
 
   // Categoría -> página de origen, color de acento y video de portada (si tiene).
+  // Mismo orden que "Nuestros mundos" en el nav (index.html), + Especiales al
+  // final (no es un mundo permanente, es una edición estacional enlazada desde
+  // todas las páginas).
   var CATS = [
     { name: 'Cotillón',     page: 'globos-fiesta-v2.html', color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Globos, cortinas, guirnaldas y banderines.' },
-    { name: 'Todo para la mesa', page: 'mesa-v2.html',    color: '#0e9488', video: 'Header categories/Reposteria-3.mp4',       tagline: 'Descartables, servilletas, velas y toppers.' },
-    { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, sombreros, vinchas, coronas y anteojos.' },
-    { name: 'Repostería',   page: 'reposteria-v2.html',   color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4',       tagline: 'Insumos para hornear y mesa dulce.' },
-    { name: 'Decoración',   page: 'decoracion-v2.html',   color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa.' },
     { name: 'Cumpleaños',   page: 'cumpleanos-v2.html',   color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Líneas infantiles con licencia, todas juntas.' },
+    { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, sombreros, vinchas, coronas y anteojos.' },
+    // Repostería todavía no tiene tarjetas con foto (reposteria-v2.html usa
+    // ítems de ícono + texto): sin fotos no hay nada que mostrar en el reel.
+    // Reactivar cuando esa página tenga pgrid/pcard como las demás:
+    // { name: 'Repostería', page: 'reposteria-v2.html', color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4', tagline: 'Insumos para hornear y mesa dulce.' },
+    { name: 'Decoración',   page: 'decoracion-v2.html',   color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa.' },
     { name: 'Combos',       page: 'combos-v2.html',       color: '#f0913a', video: null, tagline: 'La fiesta resuelta en un solo pack.' },
     { name: 'Especiales',   page: 'especiales-v2.html',   color: '#4aa3e0', video: null, tagline: 'Selección Argentina y ediciones especiales.' }
   ];
@@ -23,14 +28,14 @@
   // Filtros por tipo de producto: cruzan todos los mundos (un producto puede
   // vivir en un solo mundo y aparecer igual acá gracias a data-tags). "Mesa" y
   // "sombreros" ya no hacen falta como tag: con la reorganización por tipo,
-  // esos productos ya viven juntos en su propio mundo (Todo para la mesa /
+  // esos productos ya viven juntos en su propio mundo (Decoración del hogar /
   // Disfraces y accesorios).
   var TAGS = [
     { key: 'con-luz',          label: 'Con luz' },
     { key: 'feliz-cumpleanos', label: 'Feliz Cumpleaños' }
   ];
 
-  var reel, chipsWrap, tagChipsWrap, toastEl, backdropEl;
+  var reel, chipsWrap, tagChipsWrap, toastEl, backdropEl, loadingEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
   var currentCat = null;      // null = "Para vos" (mezcla personalizada)
@@ -146,6 +151,7 @@
     chipsWrap = document.getElementById('chips');
     tagChipsWrap = document.getElementById('tagChips');
     backdropEl = document.getElementById('backdrop');
+    loadingEl = document.getElementById('reelLoading');
     if (!reel) return;
 
     // Si vienen desde un link compartido (?p=...), arrancamos por ese producto.
@@ -185,6 +191,7 @@
       // Al abrir el archivo local (file://) fetch está bloqueado y no llega nada:
       // usamos el snapshot embebido en assets/explorar-data.js como respaldo.
       if (!products.length) products = loadFromSnapshot();
+      hideLoading();
       if (!products.length) { showEmpty(); return; }
       render();
     });
@@ -279,13 +286,19 @@
     b.type = 'button';
     b.className = 'chip' + (cat === currentCat ? ' is-on' : '');
     b.textContent = label;
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', cat === currentCat ? 'true' : 'false');
     if (cat) b.style.setProperty('--cat', cat.color);
     b.addEventListener('click', function () {
       currentCat = cat;
       // Elegir una categoría a propósito es la señal más fuerte de interés.
       if (cat) Affinity.bumpCat(cat, 5);
-      chipsWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('is-on'); });
+      chipsWrap.querySelectorAll('.chip').forEach(function (c) {
+        c.classList.remove('is-on');
+        c.setAttribute('aria-selected', 'false');
+      });
       b.classList.add('is-on');
+      b.setAttribute('aria-selected', 'true');
       render();
       reel.scrollTo({ top: 0 });
     });
@@ -305,10 +318,15 @@
     b.type = 'button';
     b.className = 'chip-tag';
     b.textContent = tag.label;
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', 'false');
     b.addEventListener('click', function () {
       currentTag = (currentTag === tag) ? null : tag;   // toca de nuevo para sacar el filtro
-      tagChipsWrap.querySelectorAll('.chip-tag').forEach(function (c) { c.classList.remove('is-on'); });
-      if (currentTag) b.classList.add('is-on');
+      tagChipsWrap.querySelectorAll('.chip-tag').forEach(function (c) {
+        c.classList.remove('is-on');
+        c.setAttribute('aria-selected', 'false');
+      });
+      if (currentTag) { b.classList.add('is-on'); b.setAttribute('aria-selected', 'true'); }
       render();
       reel.scrollTo({ top: 0 });
     });
@@ -369,6 +387,20 @@
     return list.filter(function (p) { return p.tags && p.tags.indexOf(currentTag.key) > -1; });
   }
 
+  // La portada con video de un mundo ("Deslizá para ver ↑") solo se muestra la
+  // primera vez que se elige ese chip en la sesión: repetirla cada vez que se
+  // toca el mismo chip es un paso de más entre el usuario y el botón de
+  // WhatsApp. sessionStorage puede tirar en navegación privada; si falla,
+  // simplemente se muestra la portada siempre (comportamiento anterior).
+  function introSeen(cat) {
+    try { return sessionStorage.getItem('explorar:seenIntro:' + cat.page) === '1'; }
+    catch (e) { return false; }
+  }
+  function markIntroSeen(cat) {
+    try { sessionStorage.setItem('explorar:seenIntro:' + cat.page, '1'); }
+    catch (e) { /* sin persistencia, no pasa nada */ }
+  }
+
   function buildFeed() {
     var pool = byTag(products);
     if (!currentCat) {
@@ -387,7 +419,10 @@
     // combinado) + sus productos.
     var list = pool.filter(function (p) { return p.cat === currentCat; });
     var feed = [];
-    if (currentCat.video && !currentTag) feed.push({ intro: currentCat });
+    if (currentCat.video && !currentTag && !introSeen(currentCat)) {
+      feed.push({ intro: currentCat });
+      markIntroSeen(currentCat);
+    }
     return feed.concat(list);
   }
 
@@ -402,6 +437,9 @@
     reel.innerHTML = '';
 
     var feed = buildFeed();
+    // Un mundo + un tag pueden cruzarse en cero productos (ej. "Combos" +
+    // "Con luz"): antes quedaba la pantalla en negro sin explicación.
+    if (!feed.length) { renderNoMatches(); return; }
     feed.forEach(function (item) {
       var slide = item.intro ? buildIntro(item.intro) : buildSlide(item);
       reel.appendChild(slide);
@@ -452,6 +490,13 @@
 
     var info = document.createElement('div');
     info.className = 'slide-info';
+
+    // Todo lo de largo variable (galería, título, specs) va en un envoltorio
+    // aparte con su propio scroll: así, si un título/lista de specs es más
+    // alto de lo normal, lo que se recorta es el texto y no el botón de
+    // WhatsApp (que queda siempre fuera de este envoltorio, ver más abajo).
+    var textWrap = document.createElement('div');
+    textWrap.className = 'slide-info-text';
     var CLAMP = 2;   // renglones de descripción visibles antes de "Leer más"
     var html = '<span class="cat-chip">' + esc(p.cat.name) + '</span>' +
                '<h2>' + esc(p.title) + '</h2>';
@@ -461,14 +506,21 @@
         p.specs.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>';
       if (clamp) html += '<button type="button" class="readmore">Leer más</button>';
     }
-    if (p.price) html += '<div class="slide-price">' + esc(p.price) + '</div>';
-    info.innerHTML = html;
+    textWrap.innerHTML = html;
+    info.appendChild(textWrap);
+
+    if (p.price) {
+      var priceEl = document.createElement('div');
+      priceEl.className = 'slide-price';
+      priceEl.textContent = p.price;
+      info.appendChild(priceEl);
+    }
 
     // "Leer más": muestra/oculta el resto de la descripción (interés real).
-    var readmore = info.querySelector('.readmore');
+    var readmore = textWrap.querySelector('.readmore');
     if (readmore) {
       readmore.addEventListener('click', function () {
-        var ul = info.querySelector('.specs');
+        var ul = textWrap.querySelector('.specs');
         var open = ul.classList.toggle('is-open');
         ul.classList.toggle('is-clamped', !open);
         readmore.textContent = open ? 'Leer menos' : 'Leer más';
@@ -518,7 +570,7 @@
       });
       gallery.appendChild(dots);
       gallery.appendChild(capEl);
-      info.insertBefore(gallery, info.firstChild);
+      textWrap.insertBefore(gallery, textWrap.firstChild);
 
       // Deslizar la foto: arrastre horizontal sobre el carrusel.
       enableSwipe(carousel, track, p.images.length, function () { return cur; }, showImage);
@@ -813,6 +865,31 @@
 
   function shareIcon() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
+  }
+
+  function hideLoading() {
+    if (loadingEl) loadingEl.classList.add('is-hidden');
+  }
+
+  // Cuando un mundo + un filtro de tipo no tienen productos en común: mensaje
+  // + botón para sacar el filtro, en vez de dejar la pantalla en negro.
+  function renderNoMatches() {
+    var where = currentCat ? esc(currentCat.name) : 'Para vos';
+    var msg = currentTag
+      ? 'No encontramos productos con "' + esc(currentTag.label) + '" en ' + where + '.'
+      : 'No encontramos productos en ' + where + '.';
+    reel.innerHTML = '<section class="slide slide-empty">' +
+      '<div class="intro-info"><h2>Sin resultados</h2><p>' + msg + '</p>' +
+      '<button type="button" class="wa-cta" id="clearFilterBtn">Quitar filtro</button></div></section>';
+    var btn = document.getElementById('clearFilterBtn');
+    if (btn) btn.addEventListener('click', function () {
+      currentTag = null;
+      if (tagChipsWrap) tagChipsWrap.querySelectorAll('.chip-tag').forEach(function (c) {
+        c.classList.remove('is-on');
+        c.setAttribute('aria-selected', 'false');
+      });
+      render();
+    });
   }
 
   function showEmpty() {

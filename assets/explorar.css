@@ -159,6 +159,36 @@
   display: none;                 /* solo se muestra cuando hay espacio a los lados */
 }
 
+/* ---------- Estado de carga (mientras se leen las páginas de cada mundo) ----
+   Sin esto, en una conexión lenta la pantalla queda negra y sin señales por
+   varios segundos antes de que aparezca el primer producto. */
+.reel-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #0d0c0b;
+}
+.reel-loading.is-hidden { display: none; }
+.reel-loading-dot {
+  width: 9px; height: 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.75);
+  animation: reel-loading-bounce 1s ease-in-out infinite;
+}
+.reel-loading-dot:nth-child(2) { animation-delay: .15s; }
+.reel-loading-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes reel-loading-bounce {
+  0%, 80%, 100% { opacity: .35; transform: scale(.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reel-loading-dot { animation: none; opacity: .75; }
+}
+
 /* ---------- Contenedor del reel ----------
    Ocupa TODO el ancho para que la rueda del mouse scrollee en cualquier parte;
    el contenido de cada slide se centra en una columna angosta (ver más abajo). */
@@ -305,6 +335,10 @@
   position: absolute;
   left: 0; right: 0; bottom: 0;
   z-index: 4;
+  /* Tope de seguridad: nunca más alto que la propia slide. Adentro,
+     .slide-info-text tiene su scroll propio; precio y acciones quedan afuera
+     (flex-shrink:0) para que el botón de WhatsApp nunca dependa de ese scroll. */
+  max-height: 100%;
   padding: 72px 18px calc(20px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
@@ -318,6 +352,16 @@
     rgba(8,7,6,.55) 66%,
     rgba(8,7,6,0) 100%);
 }
+.slide-info-text {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  scrollbar-width: none;
+}
+.slide-info-text::-webkit-scrollbar { display: none; }
 .cat-chip {
   font-family: 'Nunito Sans', system-ui, sans-serif;
   font-size: 11px;
@@ -374,6 +418,7 @@
 }
 .readmore:hover { opacity: 1; }
 .slide-price {
+  flex-shrink: 0;
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
   font-size: 18px;
@@ -382,6 +427,7 @@
 }
 
 .slide-actions {
+  flex-shrink: 0;
   margin-top: 4px;
   display: flex;
   align-items: center;

@@ -9,11 +9,12 @@ const path = require('path');
 
 const ROOT = process.cwd();
 
-// Mismas categorías/páginas que assets/explorar.js
+// Mismas categorías/páginas que assets/explorar.js (CATS). Repostería queda
+// afuera: reposteria-v2.html todavía usa ítems de ícono + texto, sin tarjetas
+// .pcard con foto, así que no hay nada que este script pueda extraer de ahí.
 const PAGES = [
-  'cotillon-v2.html',
+  'globos-fiesta-v2.html',
   'cumpleanos-v2.html',
-  'reposteria-v2.html',
   'decoracion-v2.html',
   'disfraces-v2.html',
   'combos-v2.html',
