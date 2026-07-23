@@ -42,6 +42,11 @@
   if (wa) wa.insertAdjacentElement('beforebegin', btn);
   else links.appendChild(btn);
 
+  /* ---- Botón fijo en la barra superior, solo visible en móvil (ver
+     .nav-search-mobile en v2.css): mismo buscador, disparador aparte para
+     no depender de abrir el menú hamburguesa primero ---- */
+  var mobileBtn = document.getElementById('nav-search-mobile');
+
   /* ---- Overlay, inyectado una sola vez (mismo patrón que la ficha de producto de site.js) ---- */
   var overlay = document.createElement('div');
   overlay.className = 'search-overlay';
@@ -65,8 +70,10 @@
   var emptyEl = overlay.querySelector('.search-empty');
   var closeBtn = overlay.querySelector('.search-close');
   var activeIdx = -1;
+  var lastTrigger = btn;
 
-  function open() {
+  function open(e) {
+    lastTrigger = (e && e.currentTarget) || btn;
     overlay.classList.add('open');
     document.body.classList.add('search-open');
     ensureIndex(function () { input.focus(); render([]); });
@@ -76,10 +83,11 @@
     document.body.classList.remove('search-open');
     input.value = '';
     render([]);
-    btn.focus();
+    lastTrigger.focus();
   }
 
   btn.addEventListener('click', open);
+  if (mobileBtn) mobileBtn.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
   document.addEventListener('keydown', function (e) {

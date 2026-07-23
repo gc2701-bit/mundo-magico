@@ -35,7 +35,7 @@
     { key: 'feliz-cumpleanos', label: 'Feliz Cumpleaños' }
   ];
 
-  var reel, chipsWrap, tagChipsWrap, toastEl, backdropEl, loadingEl;
+  var reel, chipsWrap, tagChipsWrap, chipsPanel, chipsToggle, chipsToggleLabel, toastEl, backdropEl, loadingEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
   var currentCat = null;      // null = "Para vos" (mezcla personalizada)
@@ -150,6 +150,9 @@
     reel = document.getElementById('reel');
     chipsWrap = document.getElementById('chips');
     tagChipsWrap = document.getElementById('tagChips');
+    chipsPanel = document.getElementById('chipsPanel');
+    chipsToggle = document.getElementById('chipsToggle');
+    chipsToggleLabel = document.getElementById('chipsToggleLabel');
     backdropEl = document.getElementById('backdrop');
     loadingEl = document.getElementById('reelLoading');
     if (!reel) return;
@@ -160,6 +163,7 @@
 
     buildChips();
     buildTagChips();
+    setupChipsToggle();
     setupChipsDrag();
     setupChipsDrag(tagChipsWrap);
     setupObservers();
@@ -273,6 +277,30 @@
     };
   }
 
+  /* ---------- Botón que abre/cierra el panel de categorías ----------
+     Colapsado por defecto: solo un botón "Categorías" en la barra superior,
+     así el feed no arranca con dos filas de chips tapando la foto. */
+  function setupChipsToggle() {
+    if (!chipsToggle || !chipsPanel) return;
+    chipsToggle.addEventListener('click', function () {
+      setChipsPanelOpen(!chipsPanel.classList.contains('is-open'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!chipsPanel.classList.contains('is-open')) return;
+      if (chipsPanel.contains(e.target) || chipsToggle.contains(e.target)) return;
+      setChipsPanelOpen(false);
+    });
+  }
+  function setChipsPanelOpen(open) {
+    chipsPanel.classList.toggle('is-open', open);
+    chipsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    chipsToggle.classList.toggle('is-on', open);
+  }
+  function updateChipsToggleLabel() {
+    if (!chipsToggleLabel) return;
+    chipsToggleLabel.textContent = currentTag ? currentTag.label : (currentCat ? currentCat.name : 'Categorías');
+  }
+
   /* ---------- Chips de categoría ---------- */
   function buildChips() {
     var frag = document.createDocumentFragment();
@@ -299,6 +327,8 @@
       });
       b.classList.add('is-on');
       b.setAttribute('aria-selected', 'true');
+      updateChipsToggleLabel();
+      setChipsPanelOpen(false);
       render();
       reel.scrollTo({ top: 0 });
     });
@@ -327,6 +357,8 @@
         c.setAttribute('aria-selected', 'false');
       });
       if (currentTag) { b.classList.add('is-on'); b.setAttribute('aria-selected', 'true'); }
+      updateChipsToggleLabel();
+      setChipsPanelOpen(false);
       render();
       reel.scrollTo({ top: 0 });
     });

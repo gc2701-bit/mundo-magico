@@ -55,21 +55,61 @@
   text-shadow: 0 1px 10px rgba(0,0,0,.5);
 }
 
-/* ---------- Chips de categoría (fila con scroll horizontal) ---------- */
-.chips {
+/* ---------- Botón que abre/cierra el panel de categorías ---------- */
+.chips-toggle {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.32);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.16);
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chips-toggle svg { width: 18px; height: 18px; flex: none }
+.chips-toggle.is-on { background: #fff; color: #111; border-color: #fff; }
+
+/* ---------- Panel de categorías: oculto por defecto, se despliega con el botón ---------- */
+.chips-panel {
   position: fixed;
   top: 58px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(-6px);
   width: 100%;
   max-width: var(--col);
   z-index: 19;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+}
+.chips-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---------- Chips de categoría (fila con scroll horizontal) ---------- */
+.chips {
   display: flex;
   gap: 8px;
   padding: 0 12px 4px;
   overflow-x: auto;
   scrollbar-width: none;
-  pointer-events: auto;
   cursor: grab;
   user-select: none;
   /* Difumina los bordes en vez de "cortar" de golpe: avisa que hay más
@@ -82,19 +122,11 @@
 
 /* ---------- Chips de tipo (segunda fila: filtros que cruzan mundos) ---------- */
 .chips-tag {
-  position: fixed;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: var(--col);
-  z-index: 19;
   display: flex;
   gap: 8px;
   padding: 0 12px 4px;
   overflow-x: auto;
   scrollbar-width: none;
-  pointer-events: auto;
   cursor: grab;
   user-select: none;
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%);

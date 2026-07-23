@@ -199,8 +199,19 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 }
 .nav-toggle svg{width:26px; height:26px}
 
+/* Botón de búsqueda fijo en la barra superior: solo en móvil (ver JS en
+   search.js, que lo engancha al mismo buscador que el ítem del menú) */
+.nav-search-mobile{
+  display:none; width:44px; height:44px; border:0; background:transparent; cursor:pointer;
+  align-items:center; justify-content:center; color:var(--ink); border-radius:12px; margin-left:auto;
+}
+.nav-search-mobile svg{width:22px; height:22px}
+
 @media(max-width:820px){
   .nav-toggle{display:inline-flex}
+  .corner-logo .brand{display:none}
+  .nav-search-mobile{display:inline-flex}
+  .nav-links .nav-search-btn{display:none}
   .nav-links{
     position:absolute; top:var(--nav-h); right:16px; left:16px;
     max-height:calc(100vh - var(--nav-h) - 16px); overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -232,6 +243,13 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
   .nav-dropdown.nd-mega{
     position:static; transform:none; flex-direction:column; flex-wrap:nowrap;
     width:auto; max-width:none; padding:0; gap:0;
+  }
+  /* Las reglas de :hover/:focus-within (pensadas para desktop) tienen más
+     especificidad que los resets de arriba y ganaban en mobile, corriendo
+     el mega-menú fuera de pantalla con su translateX(-50%) */
+  .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown,
+  .nav-item:hover .nav-dropdown.nd-mega, .nav-item:focus-within .nav-dropdown.nd-mega{
+    position:static; transform:none;
   }
   .nd-col{border-left:0; padding:0; min-width:0}
   .nd-col-links{padding-left:12px; margin:2px 0 8px 10px; border-left:2px solid var(--line)}
