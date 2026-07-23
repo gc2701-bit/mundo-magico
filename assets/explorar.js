@@ -10,19 +10,31 @@
 
   // Categoría -> página de origen, color de acento y video de portada (si tiene).
   var CATS = [
-    { name: 'Cotillón',   page: 'cotillon-v2.html',   color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Todo para que la fiesta explote de color.' },
-    { name: 'Cumpleaños', page: 'cumpleanos-v2.html', color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Velas, números y globos para el gran día.' },
-    { name: 'Repostería', page: 'reposteria-v2.html', color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4',       tagline: 'Toppers, wafers y todo para decorar la torta.' },
-    { name: 'Decoración', page: 'decoracion-v2.html', color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa y tu mesa.' },
-    { name: 'Disfraces',  page: 'disfraces-v2.html',  color: '#7c4dd6', video: 'Header categories/Disfraces - web.mp4',    tagline: 'Para actos, fechas patrias y personajes.' },
-    { name: 'Combos',     page: 'combos-v2.html',     color: '#f0913a', video: null, tagline: 'La fiesta resuelta en un solo pack.' },
-    { name: 'Especiales', page: 'especiales-v2.html', color: '#4aa3e0', video: null, tagline: 'Selección Argentina y ediciones especiales.' }
+    { name: 'Cotillón',     page: 'globos-fiesta-v2.html', color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Globos, cortinas, guirnaldas y banderines.' },
+    { name: 'Todo para la mesa', page: 'mesa-v2.html',    color: '#0e9488', video: 'Header categories/Reposteria-3.mp4',       tagline: 'Descartables, servilletas, velas y toppers.' },
+    { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, sombreros, vinchas, coronas y anteojos.' },
+    { name: 'Repostería',   page: 'reposteria-v2.html',   color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4',       tagline: 'Insumos para hornear y mesa dulce.' },
+    { name: 'Decoración',   page: 'decoracion-v2.html',   color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa.' },
+    { name: 'Cumpleaños',   page: 'cumpleanos-v2.html',   color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Líneas infantiles con licencia, todas juntas.' },
+    { name: 'Combos',       page: 'combos-v2.html',       color: '#f0913a', video: null, tagline: 'La fiesta resuelta en un solo pack.' },
+    { name: 'Especiales',   page: 'especiales-v2.html',   color: '#4aa3e0', video: null, tagline: 'Selección Argentina y ediciones especiales.' }
   ];
 
-  var reel, chipsWrap, toastEl, backdropEl;
+  // Filtros por tipo de producto: cruzan todos los mundos (un producto puede
+  // vivir en un solo mundo y aparecer igual acá gracias a data-tags). "Mesa" y
+  // "sombreros" ya no hacen falta como tag: con la reorganización por tipo,
+  // esos productos ya viven juntos en su propio mundo (Todo para la mesa /
+  // Disfraces y accesorios).
+  var TAGS = [
+    { key: 'con-luz',          label: 'Con luz' },
+    { key: 'feliz-cumpleanos', label: 'Feliz Cumpleaños' }
+  ];
+
+  var reel, chipsWrap, tagChipsWrap, toastEl, backdropEl;
   var products = [];          // todos los productos cargados
   var slidesIO, activeIO;     // observers: hidratar media / marcar activa
   var currentCat = null;      // null = "Para vos" (mezcla personalizada)
+  var currentTag = null;      // filtro por tipo, independiente del mundo
   var pinnedId = null;        // producto a mostrar primero (link compartido)
 
   document.addEventListener('DOMContentLoaded', init);
@@ -132,6 +144,7 @@
   function init() {
     reel = document.getElementById('reel');
     chipsWrap = document.getElementById('chips');
+    tagChipsWrap = document.getElementById('tagChips');
     backdropEl = document.getElementById('backdrop');
     if (!reel) return;
 
@@ -140,7 +153,9 @@
     pinnedId = params.get('p');
 
     buildChips();
+    buildTagChips();
     setupChipsDrag();
+    setupChipsDrag(tagChipsWrap);
     setupObservers();
     setupWheelNav();
     loadAll();
@@ -223,8 +238,11 @@
         if (tag) price = tag.textContent.trim();
       }
 
+      var dataTags = card.getAttribute('data-tags') || '';
+      var tags = dataTags.split('|').map(function (s) { return s.trim(); }).filter(Boolean);
+
       out.push(finalizeProduct(cat, {
-        title: title, images: images, specs: specs, price: price,
+        title: title, images: images, specs: specs, price: price, tags: tags,
         wamsg: card.getAttribute('data-wamsg') || ''
       }));
     });
@@ -242,6 +260,7 @@
       title: o.title,
       images: o.images,
       specs: o.specs || [],
+      tags: o.tags || [],
       price: o.price || '',
       wamsg: wamsg
     };
@@ -273,57 +292,89 @@
     return b;
   }
 
+  /* ---------- Chips de tipo (filtran por data-tags, cruzan mundos) ---------- */
+  function buildTagChips() {
+    if (!tagChipsWrap) return;
+    var frag = document.createDocumentFragment();
+    TAGS.forEach(function (tag) { frag.appendChild(makeTagChip(tag)); });
+    tagChipsWrap.appendChild(frag);
+  }
+
+  function makeTagChip(tag) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip-tag';
+    b.textContent = tag.label;
+    b.addEventListener('click', function () {
+      currentTag = (currentTag === tag) ? null : tag;   // toca de nuevo para sacar el filtro
+      tagChipsWrap.querySelectorAll('.chip-tag').forEach(function (c) { c.classList.remove('is-on'); });
+      if (currentTag) b.classList.add('is-on');
+      render();
+      reel.scrollTo({ top: 0 });
+    });
+    return b;
+  }
+
   // En celular la fila de chips se desliza con el dedo (scroll táctil
   // nativo), pero con mouse no hay gesto equivalente: sin esto, en la compu
   // las categorías que no entran en la columna quedaban "cortadas" y sin
   // forma de llegar a ellas. Agrega arrastre con el mouse y deja que la
   // rueda vertical mueva la fila de costado.
-  function setupChipsDrag() {
-    if (!chipsWrap) return;
+  function setupChipsDrag(wrap) {
+    wrap = wrap || chipsWrap;
+    if (!wrap) return;
     var down = false, dragged = false, startX = 0, startScroll = 0;
 
-    chipsWrap.addEventListener('pointerdown', function (e) {
+    wrap.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       down = true; dragged = false;
       startX = e.clientX;
-      startScroll = chipsWrap.scrollLeft;
+      startScroll = wrap.scrollLeft;
     });
 
-    chipsWrap.addEventListener('pointermove', function (e) {
+    wrap.addEventListener('pointermove', function (e) {
       if (!down) return;
       var dx = e.clientX - startX;
       if (!dragged && Math.abs(dx) < 4) return;
       dragged = true;
-      chipsWrap.classList.add('is-dragging');
-      chipsWrap.scrollLeft = startScroll - dx;
+      wrap.classList.add('is-dragging');
+      wrap.scrollLeft = startScroll - dx;
     });
 
-    function endDrag() { down = false; chipsWrap.classList.remove('is-dragging'); }
-    chipsWrap.addEventListener('pointerup', endDrag);
-    chipsWrap.addEventListener('pointercancel', endDrag);
-    chipsWrap.addEventListener('pointerleave', endDrag);
+    function endDrag() { down = false; wrap.classList.remove('is-dragging'); }
+    wrap.addEventListener('pointerup', endDrag);
+    wrap.addEventListener('pointercancel', endDrag);
+    wrap.addEventListener('pointerleave', endDrag);
 
     // Si hubo arrastre real, se cancela el click: si no, soltar el mouse
     // después de arrastrar "elegiría" sin querer la categoría de abajo.
-    chipsWrap.addEventListener('click', function (e) {
+    wrap.addEventListener('click', function (e) {
       if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; }
     }, true);
 
     // Rueda del mouse (vertical) mueve la fila de costado, ya que no hay
     // gesto táctil para deslizarla en escritorio.
-    chipsWrap.addEventListener('wheel', function (e) {
+    wrap.addEventListener('wheel', function (e) {
       if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;   // ya viene horizontal
-      chipsWrap.scrollLeft += e.deltaY;
+      wrap.scrollLeft += e.deltaY;
       e.preventDefault();
     }, { passive: false });
   }
 
   /* ---------- Armado del feed ---------- */
+  // Filtro por tipo (data-tags): independiente del mundo, se puede combinar
+  // con "Para vos" o con una categoría elegida.
+  function byTag(list) {
+    if (!currentTag) return list;
+    return list.filter(function (p) { return p.tags && p.tags.indexOf(currentTag.key) > -1; });
+  }
+
   function buildFeed() {
+    var pool = byTag(products);
     if (!currentCat) {
       // Modo "Para vos": sorteo ponderado por afinidad (no un shuffle plano),
       // con un límite de racha por categoría para que siga siendo variado.
-      var mix = diversify(weightedShuffle(products.slice()), 2);
+      var mix = diversify(weightedShuffle(pool.slice()), 2);
       // Si llegaron por un link compartido, ese producto va primero (una vez).
       if (pinnedId) {
         var idx = mix.findIndex(function (p) { return p.id === pinnedId; });
@@ -332,10 +383,11 @@
       }
       return mix;
     }
-    // Categoría elegida: intro con video (si tiene) + sus productos.
-    var list = products.filter(function (p) { return p.cat === currentCat; });
+    // Categoría elegida: intro con video (si tiene, y no hay filtro de tipo
+    // combinado) + sus productos.
+    var list = pool.filter(function (p) { return p.cat === currentCat; });
     var feed = [];
-    if (currentCat.video) feed.push({ intro: currentCat });
+    if (currentCat.video && !currentTag) feed.push({ intro: currentCat });
     return feed.concat(list);
   }
 

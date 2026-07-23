@@ -1,17 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <script src="assets/analytics.js"></script>
 <script src="assets/loader.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Disfraces en Tucumán · Mundo Mágico</title>
-<meta name="description" content="Entrá al mundo de los disfraces: paisanas, gauchos, damas antiguas y accesorios para el acto escolar, la fiesta o el día que quieras ser otro. En Tucumán.">
+<title>Disfraces y accesorios en Tucumán · Mundo Mágico</title>
+<meta name="description" content="Entrá al mundo de disfraces y accesorios: paisanas, gauchos, damas antiguas, sombreros, vinchas, coronas y anteojos para el acto, la fiesta o el día que quieras ser otro. En Tucumán.">
 <meta name="theme-color" content="#1c1a16">
 <link rel="icon" href="Logo/Mundo-Magico%20Logo.jpg">
 
-<meta property="og:title" content="Disfraces · Mundo Mágico Tucumán">
-<meta property="og:description" content="Personajes, máscaras y accesorios para transformarte en quien quieras.">
+<meta property="og:title" content="Disfraces y accesorios · Mundo Mágico Tucumán">
+<meta property="og:description" content="Personajes, sombreros, vinchas, coronas y anteojos para transformarte en quien quieras.">
 <meta property="og:image" content="assets/mundos/disfraces.jpg">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_AR">
@@ -21,7 +21,7 @@
 <link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/v2.css">
 <style>
-/* Mundo DISFRACES · acento azul del logo */
+/* Mundo DISFRACES Y ACCESORIOS · acento violeta del logo */
 :root{ --accent:#7c4dd6; --accent-deep:#5a34a8 }
 .scene .intro .btn{margin-top:var(--s3)}
 
@@ -32,6 +32,7 @@
   border-top-color:color-mix(in srgb, var(--accent) 26%, var(--bg));
 }
 .otros-card{ border-color:color-mix(in srgb, var(--accent) 24%, var(--bg)); }
+.badge-top{display:inline-block;font-size:.7rem;font-weight:700;padding:.15em .6em;border-radius:999px;background:var(--accent-deep);color:#fff;margin-left:.5em;vertical-align:middle;text-transform:uppercase;letter-spacing:.02em}
 </style>
 <script>/* Producto: evita el salto a "#" si tocás antes de que cargue site.js (sobre todo en celular) */
 addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a.pcard,a.item"):null;if(a){var h=a.getAttribute("href");if(h==="#"||h===null)e.preventDefault();}},true);</script>
@@ -53,11 +54,13 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
     <div class="nav-item has-dropdown">
       <a href="index.html#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
       <div class="nav-dropdown" role="menu">
-        <a href="cotillon-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón y fiestas</a>
-        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Línea de cumpleaños</a>
+        <span class="nd-label">Mundos</span>
+        <a href="globos-fiesta-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Cumpleaños</a>
+        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#a23e8c"></span>Disfraces y accesorios</a>
         <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
         <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
-        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#7c4dd6"></span>Disfraces</a>
+        <div class="nd-sep" role="separator"></div>
         <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
       </div>
     </div>
@@ -73,11 +76,11 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 <header class="portal" id="inicio">
   <video class="portal-video" autoplay muted loop playsinline preload="none" data-src="Header%20categories/Disfraces%20-%20web.mp4"></video>
   <div class="scrim" aria-hidden="true"></div>
-  <div class="eyebrow">Mundo disfraces</div>
+  <div class="eyebrow">Mundo disfraces y accesorios</div>
   <h1>Transformate en <em>quien quieras</em></h1>
-  <p class="lead">Paisanas, gauchos, damas antiguas y personajes para el acto escolar, la fiesta o el día que quieras ser otro.</p>
-  <a class="enter-cue" href="#catalogo" aria-label="Ver los disfraces">
-    Elegí tu disfraz
+  <p class="lead">Paisanas, gauchos y damas antiguas, más sombreros, vinchas, coronas y anteojos para completar cualquier look.</p>
+  <a class="enter-cue" href="#catalogo" aria-label="Ver disfraces y accesorios">
+    Elegí tu look
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
   </a>
 </header>
@@ -87,7 +90,7 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
   <div class="catsearch">
     <div class="field">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="search" id="catSearch" placeholder="Buscar disfraz…" aria-label="Buscar disfraces" autocomplete="off">
+      <input type="search" id="catSearch" placeholder="Buscar disfraz, sombrero, vincha…" aria-label="Buscar disfraces y accesorios" autocomplete="off">
       <button class="catsearch-clear" type="button" aria-label="Limpiar búsqueda" hidden>✕</button>
     </div>
   </div>
@@ -95,6 +98,10 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
     <a href="#disfraces">Los disfraces</a>
     <a href="#acto-patrio">Acto patrio</a>
     <a href="#para-la-fiesta">Para la fiesta</a>
+    <a href="#sombreros-gorros">Sombreros y gorros</a>
+    <a href="#anteojos">Anteojos</a>
+    <a href="#mis15">Mis 15</a>
+    <a href="#novias">Novias</a>
   </div>
 </nav>
 
@@ -138,13 +145,13 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
       <a data-specs="Colores: negro y blanco" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Guantes%20de%20encaje%20(negro%20y%20blanco).jpg" alt="Guantes de encaje" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Guantes de encaje</h3><span class="sub">negro y blanco</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Colores: marrón, blanco, negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Guantes%20largos%20de%20raso%20(marron%2C%20blanco%2C%20negro).jpeg" alt="Guantes largos de raso" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Guantes largos de raso</h3><span class="sub">marrón, blanco, negro</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Negras" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Mantillas%20de%20dama%20antigua%20negras.jpeg" alt="Mantillas de dama antigua negras" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Mantillas de dama antigua</h3><span class="sub">negras</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20blancos%20(disfraz).jpeg" alt="Pañuelos blancos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos blancos</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#" data-pos="1364"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20blancos%20(disfraz).jpeg" alt="Pañuelos blancos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos blancos</h3><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Patrios" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20celestes%20(disfraz%20patrio).jpeg" alt="Pañuelos celestes patrios" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos celestes</h3><span class="sub">patrios</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Floreados" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Panuelos%20de%20paisana.jpg" alt="Pañuelos de paisana floreados" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pañuelos de paisana</h3><span class="sub">floreados</span><span class="cta">Ver en la tienda →</span></div></a>
       <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Pechera%20yabot%20con%20faja%20y%20mono%20de%20caballero.jpeg" alt="Pechera yabot con faja y moño" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pechera yabot con faja y moño</h3><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Peinetones españoles" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Peinetas.jpg" alt="Peinetas españolas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Peinetas</h3><span class="sub">peinetones españoles</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Marrón con flecos" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Poncho%20de%20gaucho%20marron%20con%20flecos.jpeg" alt="Poncho de gaucho marrón con flecos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Poncho de gaucho</h3><span class="sub">marrón con flecos</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Colores: beige, rojo, blanco y celeste" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Ponchos-Patrios.jpg" alt="Ponchos patrios" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Ponchos patrios</h3><span class="sub">beige, rojo, blanco y celeste</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Colores: beige, rojo, blanco y celeste" class="pcard reveal" href="#" data-pos="1999"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Ponchos-Patrios.jpg" alt="Ponchos patrios" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Ponchos patrios</h3><span class="sub">beige, rojo, blanco y celeste</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Para armar" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/_otero/Gorro%20Granadero.jpg" alt="Gorro granadero" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro granadero</h3><span class="sub">para armar</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Con sable" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/_otero/Pechera%20Granadero%20con%20Sable.jpg" alt="Pechera granadera con sable" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Pechera granadera</h3><span class="sub">con sable</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Parasoles de encaje blanco" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombrillas%20-%20parasoles%20de%20encaje%20blanco.jpeg" alt="Sombrillas de encaje blanco" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrillas</h3><span class="sub">parasoles de encaje blanco</span><span class="cta">Ver en la tienda →</span></div></a>
@@ -157,23 +164,122 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
   <div class="wrap">
     <div class="catsec-head reveal">
       <h2>Para la fiesta</h2>
-      <p>Vinchas, sombreros, anteojos y accesorios fluo y brillantes para sumarle magia a cualquier festejo.</p>
+      <p>Alas, corbatas, moños y accesorios fluo y brillantes para sumarle magia a cualquier festejo.</p>
     </div>
     <div class="pgrid">
-      <a data-specs="La más pedida" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Vincha%20corona%20de%20flores%20con%20luces%20LED.jpeg" alt="Vincha corona de flores con luces LED" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha corona de flores LED</h3><span class="sub">la más pedida</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Colores: rosa, celeste, fucsia" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Alas%20de%20hada%20con%20varita%20(rosa%2C%20celeste%2C%20fucsia).jpeg" alt="Alas de hada con varita" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Alas de hada con varita</h3><span class="sub">rosa, celeste, fucsia</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Flores fluo" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Collares%20y%20vinchas%20hawaianas%20de%20flores%20fluo.jpeg" alt="Collares y vinchas hawaianas fluo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Collares y vinchas hawaianas</h3><span class="sub">flores fluo</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Incluye: | Azul | Verde | Plata" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Corbatas%20de%20lentejuelas%20(azul%2C%20verde%2C%20plata).jpeg" alt="Corbatas de lentejuelas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Corbatas de lentejuelas</h3><span class="sub">azul, verde, plata</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorras%20neon%20fluorescentes.jpeg" alt="Gorras neón fluorescentes" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorras neón fluorescentes</h3><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Corbatines de lunares" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Monos%20-%20corbatines%20de%20lunares.jpeg" alt="Moños corbatines de lunares" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Moños</h3><span class="sub">corbatines de lunares</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Colores: fucsia, naranja, amarillo" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20bombin%20de%20colores%20(fucsia%2C%20naranja%2C%20amarillo).jpeg" alt="Sombreros bombín de colores" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros bombín de colores</h3><span class="sub">fucsia, naranja, amarillo</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Con cinta a cuadros" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20fedora%20neon%20con%20cinta%20a%20cuadros.jpeg" alt="Sombreros fedora neón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros fedora neón</h3><span class="sub">con cinta a cuadros</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Incluye: | Blanco | Rosa | Plata | Dorado" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20(blanco%2C%20rosa%2C%20plata%2C%20dorado).jpeg" alt="Sombreros vaqueros glitter" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros glitter</h3><span class="sub">blanco, rosa, plata, dorado</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a data-specs="Colores: rosa, blanco, azul, negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20con%20cinta%20(rosa%2C%20blanco%2C%20azul%2C%20negro).jpeg" alt="Sombreros vaqueros glitter con cinta" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros con cinta</h3><span class="sub">rosa, blanco, azul, negro</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Con lentejuelas | Fucsia" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Paraguas-Disfraz.jpg" alt="Sombrillas de tul con lentejuelas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrillas de tul</h3><span class="sub">con lentejuelas · fucsia</span><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="Autoadhesivos" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Stickers%20de%20strass%20autoadhesivos.jpeg" alt="Stickers de strass autoadhesivos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Stickers de strass</h3><span class="sub">autoadhesivos</span><span class="cta">Ver en la tienda →</span></div></a>
-      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Vinchas%20de%20flores%20con%20tinsel.jpeg" alt="Vinchas de flores con tinsel" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vinchas de flores con tinsel</h3><span class="cta">Ver en la tienda →</span></div></a>
       <a data-specs="De seguridad" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Chalecos%20reflectivos%20de%20seguridad.jpeg" alt="Chalecos reflectivos de seguridad" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Chalecos reflectivos</h3><span class="sub">de seguridad</span><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SOMBREROS Y GORROS ====== -->
+<section class="catsec" id="sombreros-gorros">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Sombreros y gorros <span class="badge-top">Lo más vendido</span></h2>
+      <p>Sombreros, vinchas, gorros y coronas: el rubro que más elegís en Mundo Mágico, para cualquier fiesta o disfraz.</p>
+    </div>
+    <div class="pgrid">
+      <a data-specs="La más pedida" class="pcard reveal" href="#" data-tags="con-luz"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Vincha%20corona%20de%20flores%20con%20luces%20LED.jpeg" alt="Vincha corona de flores con luces LED" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha corona de flores LED</h3><span class="sub">la más pedida</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Flores fluo" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Collares%20y%20vinchas%20hawaianas%20de%20flores%20fluo.jpeg" alt="Collares y vinchas hawaianas fluo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Collares y vinchas hawaianas</h3><span class="sub">flores fluo</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorras%20neon%20fluorescentes.jpeg" alt="Gorras neón fluorescentes" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorras neón fluorescentes</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Colores: fucsia, naranja, amarillo" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20bombin%20de%20colores%20(fucsia%2C%20naranja%2C%20amarillo).jpeg" alt="Sombreros bombín de colores" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros bombín de colores</h3><span class="sub">fucsia, naranja, amarillo</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Incluye: | Blanco | Rosa | Plata | Dorado" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20(blanco%2C%20rosa%2C%20plata%2C%20dorado).jpeg" alt="Sombreros vaqueros glitter" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros glitter</h3><span class="sub">blanco, rosa, plata, dorado</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Colores: rosa, blanco, azul, negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Sombreros%20vaqueros%20glitter%20con%20cinta%20(rosa%2C%20blanco%2C%20azul%2C%20negro).jpeg" alt="Sombreros vaqueros glitter con cinta" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombreros vaqueros con cinta</h3><span class="sub">rosa, blanco, azul, negro</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Vinchas%20de%20flores%20con%20tinsel.jpeg" alt="Vinchas de flores con tinsel" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vinchas de flores con tinsel</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20bruja%20transparente%204411.jpg" alt="Gorro de bruja transparente" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de bruja transparente</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20bruja%20clasico%20negro%2078483.jpg" alt="Gorro de bruja clásico negro" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de bruja clásico</h3><span class="sub">negro</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20bruja%20con%20hebilla%2078674.jpg" alt="Gorro de bruja con hebilla" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de bruja con hebilla</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20bruja%20malefica%2079367.jpg" alt="Gorro de bruja maléfica con cuernos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de bruja maléfica</h3><span class="sub">con cuernos</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Borde dorado" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20pirata%20borde%20dorado%2078773.jpg" alt="Gorro de pirata borde dorado" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de pirata</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Terciopelo negro con calavera" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20pirata%20terciopelo%20calavera%2078803.jpg" alt="Gorro de pirata terciopelo con calavera" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de pirata</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20capitan%2078926.jpg" alt="Gorro de capitán" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de capitán</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20policia%2034294.jpg" alt="Gorro de policía" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de policía</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20aviador%2078902.jpg" alt="Gorro de aviador" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de aviador</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Azul" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20piloto%20azul%2078896.jpg" alt="Gorro de piloto azul" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de piloto</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Marrón" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20sheriff%20marron%2078933.jpg" alt="Gorro de sheriff marrón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de sheriff</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20vaquero%20sheriff%2078940.jpg" alt="Gorro de vaquero sheriff" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de vaquero</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Con pluma amarilla" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Sombrero%20mosquetero%2079039.jpg" alt="Sombrero de mosquetero" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero de mosquetero</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Bandas multicolor" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20mexicano%2011362.jpg" alt="Gorro mexicano bandas multicolor" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro mexicano</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Natural" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20espantapajaros%20598.jpg" alt="Gorro de espantapájaros" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro de espantapájaros</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Gorro%20flamenco%2079275.jpg" alt="Gorro flamenco" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro flamenco</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="También en negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Vincha%20aureola%20de%20angel%2085028.jpg" alt="Vincha aureola de ángel" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha aureola de ángel</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Corona%20rey%20dorada%2049035.jpg" alt="Corona de rey dorada" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Corona de rey dorada</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Vincha%20medusa%2001928.jpg" alt="Vincha medusa" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha medusa</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Vincha%20enfermera%2078872.jpg" alt="Vincha enfermera" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha enfermera</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal has-gallery" href="#" data-specs="Disponible en varios colores|Colores: neón, blanco, negro, naranja, rosa, verde"><div class="pcard-ph"><div class="gtrack"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20neon%2035249.jpg" alt="Gorro funyi neón · neón" data-cap="neón" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20blanco%2035249.jpg" alt="Gorro funyi neón · blanco" data-cap="blanco" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20negro%2035249.jpg" alt="Gorro funyi neón · negro" data-cap="negro" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20naranja%2035249.jpg" alt="Gorro funyi neón · naranja" data-cap="naranja" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20rosa%2035249.jpg" alt="Gorro funyi neón · rosa" data-cap="rosa" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20funyi%20verde%2035249.jpg" alt="Gorro funyi neón · verde" data-cap="verde" width="600" height="600" loading="lazy"></div><button class="gnav gprev" type="button" aria-label="Foto anterior">&#8249;</button><button class="gnav gnext" type="button" aria-label="Foto siguiente">&#8250;</button><span class="gcap">neón</span><div class="gdots"><span class="gdot is-on"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span></div></div><div class="pcard-body"><h3>Gorro funyi neón</h3><span class="sub">neón, blanco, negro, naranja, rosa, verde</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20galera%20baja%2078445.jpg" alt="Gorro galera baja" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro galera baja</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Disponible en varios colores" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20trucker%20neon%2053883.jpg" alt="Gorro trucker neón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro trucker neón</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Amarillo, azul o verde" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Casco%20porta%20bebidas%2079268.jpg" alt="Casco porta bebidas" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Casco porta bebidas</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Casco%20bombero%2079244.jpg" alt="Casco de bombero" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Casco de bombero</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Casco%20us%20army%2053227.jpg" alt="Casco US Army" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Casco US Army</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Camuflado" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/5.%20Disfraces/Gorros%20y%20cascos/Casco%20militar%20camuflado%2053210.jpg" alt="Casco militar camuflado" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Casco militar</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Negro" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20bombin%20negro%2079534.jpg" alt="Gorro bombín negro" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro bombín</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Sombrero%20panama%2000006.jpg" alt="Sombrero panamá" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero panamá</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Colores surtidos" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Visera%20retro%208003395.jpg" alt="Visera retro colores surtidos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Visera retro</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Galera%20irlanda%2040499.jpg" alt="Galera irlanda" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Galera irlanda</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Sombrero%20de%20gaucho%2040512.jpg" alt="Sombrero de gaucho" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero de gaucho</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Rojo, negro, verde o verde oliva" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Gorro%20piluso%2048044.jpg" alt="Gorro piluso liso" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorro piluso liso</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a data-specs="Marrón" class="pcard reveal" href="#"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Sombreros%20y%20gorros/Sombrero%20bombin%20marron%2057435.jpg" alt="Sombrero bombín marrón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero bombín</h3><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ANTEOJOS ====== -->
+<section class="catsec" id="anteojos">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Anteojos</h2>
+      <p>Con luz, fluo, de estrella, corazón o pixel: el accesorio que arma la foto de la noche.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Luz: LED neón" data-tags="con-luz"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20con%20luz%20LED%20neon.jpeg" alt="Anteojos con luz LED neón" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Anteojos con luz LED neón</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Formas variadas|Colores surtidos"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20de%20fiesta%20de%20colores%20(formas).jpeg" alt="Anteojos de fiesta de colores" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Anteojos de fiesta de colores</h3><span class="sub">formas</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Anteojos" href="#" data-specs="Anteojos de sol|Diseño: liso|Colores surtidos"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20de%20sol%20de%20colores%20(lisos).jpeg" alt="Anteojos de sol de colores" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Anteojos de sol de colores</h3><span class="sub">lisos</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Color: fluo"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20party%20fluo.jpeg" alt="Anteojos party fluo" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Anteojos party fluo</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal has-gallery" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Forma: estrella|Colores: azul, fucsia, rojo, verde, celeste"><div class="pcard-ph"><div class="gtrack"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20estrella/Anteojo%20estrella%20azul.webp" alt="Anteojo estrella · azul" data-cap="azul" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20estrella/Anteojo%20estrella%20fucsia.webp" alt="Anteojo estrella · fucsia" data-cap="fucsia" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20estrella/Anteojo%20estrella%20rojo.webp" alt="Anteojo estrella · rojo" data-cap="rojo" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20estrella/Anteojo%20estrella%20verde.webp" alt="Anteojo estrella · verde" data-cap="verde" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20estrella/Anteojos%20estrella%20celeste.webp" alt="Anteojo estrella · celeste" data-cap="celeste" width="600" height="600" loading="lazy"></div><button class="gnav gprev" type="button" aria-label="Foto anterior">&#8249;</button><button class="gnav gnext" type="button" aria-label="Foto siguiente">&#8250;</button><span class="gcap">azul</span><div class="gdots"><span class="gdot is-on"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span></div></div><div class="pcard-body"><h3>Anteojo estrella</h3><span class="sub">azul, fucsia, rojo, verde, celeste</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal has-gallery" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Estilo: pixel|Colores: amarillo, azul, rojo, rosa"><div class="pcard-ph"><div class="gtrack"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20pixel/Anteojo%20pixel%20todos.webp" alt="Anteojo pixel · Todos los colores" data-cap="Todos los colores" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20pixel/Anteojo%20pixel%20amarillo.webp" alt="Anteojo pixel · amarillo" data-cap="amarillo" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20pixel/Anteojo%20pixel%20azul.webp" alt="Anteojo pixel · azul" data-cap="azul" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20pixel/Anteojo%20pixel%20rojo.webp" alt="Anteojo pixel · rojo" data-cap="rojo" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojo%20pixel/Anteojo%20pixel%20rosa.webp" alt="Anteojo pixel · rosa" data-cap="rosa" width="600" height="600" loading="lazy"></div><button class="gnav gprev" type="button" aria-label="Foto anterior">&#8249;</button><button class="gnav gnext" type="button" aria-label="Foto siguiente">&#8250;</button><span class="gcap">Todos los colores</span><div class="gdots"><span class="gdot is-on"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span></div></div><div class="pcard-body"><h3>Anteojo pixel</h3><span class="sub">amarillo, azul, rojo, rosa</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal has-gallery" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Forma: corazón|Colores: azul, celeste, rojo, rosa"><div class="pcard-ph"><div class="gtrack"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20corazon/Anteojo%20corazon%20todos.webp" alt="Anteojos corazón · Todos los colores" data-cap="Todos los colores" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20corazon/Anteojo%20corazon%20azul.webp" alt="Anteojos corazón · azul" data-cap="azul" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20corazon/Anteojo%20corazon%20celeste.webp" alt="Anteojos corazón · celeste" data-cap="celeste" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20corazon/Anteojo%20corazon%20rojo.webp" alt="Anteojos corazón · rojo" data-cap="rojo" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20corazon/Anteojo%20corazon%20rosa.webp" alt="Anteojos corazón · rosa" data-cap="rosa" width="600" height="600" loading="lazy"></div><button class="gnav gprev" type="button" aria-label="Foto anterior">&#8249;</button><button class="gnav gnext" type="button" aria-label="Foto siguiente">&#8250;</button><span class="gcap">Todos los colores</span><div class="gdots"><span class="gdot is-on"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span></div></div><div class="pcard-body"><h3>Anteojos corazón</h3><span class="sub">azul, celeste, rojo, rosa</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal has-gallery" data-cat="Anteojos" href="#" data-specs="Anteojos de fiesta|Forma: ovalada|Colores: celeste, naranja, rojo, verde"><div class="pcard-ph"><div class="gtrack"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20ovalados/Anteojo%20ovalado%20todos.webp" alt="Anteojos ovalados · Todos los colores" data-cap="Todos los colores" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20ovalados/Anteojo%20ovalado%20celeste.webp" alt="Anteojos ovalados · celeste" data-cap="celeste" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20ovalados/Anteojo%20ovalado%20naranja.webp" alt="Anteojos ovalados · naranja" data-cap="naranja" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20ovalados/Anteojo%20ovalado%20rojo.webp" alt="Anteojos ovalados · rojo" data-cap="rojo" width="600" height="600" loading="lazy"><img src="productos/1.%20Cotillon%20y%20fiestas/Anteojos/Anteojos%20ovalados/Anteojo%20ovalado%20verde.webp" alt="Anteojos ovalados · verde" data-cap="verde" width="600" height="600" loading="lazy"></div><button class="gnav gprev" type="button" aria-label="Foto anterior">&#8249;</button><button class="gnav gnext" type="button" aria-label="Foto siguiente">&#8250;</button><span class="gcap">Todos los colores</span><div class="gdots"><span class="gdot is-on"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span><span class="gdot"></span></div></div><div class="pcard-body"><h3>Anteojos ovalados</h3><span class="sub">celeste, naranja, rojo, verde</span><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MIS 15 ====== -->
+<section class="catsec" id="mis15">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Mis 15</h2>
+      <p>Gorras y sombreros capitán para la cumpleañera, listos para la foto de la noche.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" data-cat="Mis 15" href="#" data-specs="Blanco|Sombrero capitán fashion"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Mis%2015/Sombrero%20capitan%20mis%2015%20blanco%2046743.jpg" alt="Sombrero capitán mis 15 blanco" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero capitán mis 15</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Mis 15" href="#" data-specs="Rosa|Sombrero capitán fashion"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Mis%2015/Sombrero%20capitan%20mis%2015%20rosa%2046736.jpg" alt="Sombrero capitán mis 15 rosa" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero capitán mis 15</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Mis 15" href="#" data-specs="Gorra tipo cap"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Mis%2015/Gorra%20mis%2015%2058388.jpg" alt="Gorra mis 15" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorra mis 15</h3><span class="cta">Ver en la tienda →</span></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== NOVIAS ====== -->
+<section class="catsec" id="novias">
+  <div class="wrap">
+    <div class="catsec-head reveal">
+      <h2>Novias</h2>
+      <p>Todo para la despedida y la previa: gorras, viseras, vinchas y paraguas para la futura novia.</p>
+    </div>
+    <div class="pgrid">
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Sombrero capitán fashion"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Sombrero%20capitan%20novia%2046750.jpg" alt="Sombrero capitán novia" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Sombrero capitán novia</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Blanca"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Visera%20novia%2046774.jpg" alt="Visera novia blanca" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Visera novia</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Gorra tipo cap"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Gorra%20novia%2058371.jpg" alt="Gorra novia" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Gorra novia</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Con velo blanco|Detalle de perlas"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Vincha%20novia%20perlas%20con%20velo%2046699.jpg" alt="Vincha novia perlas con velo blanco" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha novia con velo</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Blanca con pinchos"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Vincha%20lujo%20blanca%20con%20pinchos%2058432.jpg" alt="Vincha lujo blanca con pinchos" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Vincha lujo con pinchos</h3><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Diámetro 40 cm|Papel y bambú"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Paraguas%20de%20papel%20y%20bambu%2040%20cm%2054632.jpg" alt="Paraguas de papel y bambú blanco 40 cm" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Paraguas de papel y bambú</h3><span class="sub">40 cm</span><span class="cta">Ver en la tienda →</span></div></a>
+      <a class="pcard reveal" data-cat="Novias" href="#" data-specs="Diámetro 60 cm|Papel y bambú"><div class="pcard-ph"><img src="productos/1.%20Cotillon%20y%20fiestas/Novias/Paraguas%20de%20papel%20y%20bambu%2060%20cm%2054649.jpg" alt="Paraguas de papel y bambú blanco 60 cm" width="600" height="600" loading="lazy"></div><div class="pcard-body"><h3>Paraguas de papel y bambú</h3><span class="sub">60 cm</span><span class="cta">Ver en la tienda →</span></div></a>
     </div>
   </div>
 </section>
@@ -183,7 +289,7 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
   <div class="wrap">
     <h2 class="reveal">Seguí explorando otros mundos</h2>
     <div class="otros-grid">
-      <a class="otros-card reveal" href="cotillon-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z"/><path d="M12 15l-1 2.5h2L12 21.5"/></svg>Cotillón</a>
+      <a class="otros-card reveal" href="globos-fiesta-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z"/><path d="M12 15l-1 2.5h2L12 21.5"/></svg>Cotillón</a>
       <a class="otros-card reveal" data-delay="1" href="cumpleanos-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14v8H5zM5 15.5c1.2.9 2.3-.9 3.5 0s2.3.9 3.5 0 2.3-.9 3.5 0 2.3.9 3.5 0M12 8.5V12M12 4.2c-.8.9-.8 2 0 2.6.8-.6.8-1.7 0-2.6z"/></svg>Cumpleaños</a>
       <a class="otros-card reveal" data-delay="2" href="reposteria-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10a5.5 5.5 0 0 1 11 0M5 10h14l-1.8 10H6.8zM9 14l.6 3M15 14l-.6 3"/></svg>Repostería</a>
       <a class="otros-card reveal" data-delay="3" href="decoracion-v2.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6.5 9.3V20h11V9.3M10 20v-5h4v5"/></svg>Decoración</a>
@@ -202,11 +308,11 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
     </div>
     <nav class="foot-col" aria-label="Mundos">
       <b>Mundos</b>
-      <a href="cotillon-v2.html">Cotillón y fiestas</a>
-      <a href="cumpleanos-v2.html">Línea de cumpleaños</a>
+      <a href="globos-fiesta-v2.html">Cotillón</a>
+      <a href="disfraces-v2.html">Disfraces y accesorios</a>
       <a href="reposteria-v2.html">Repostería</a>
       <a href="decoracion-v2.html">Decoración del hogar</a>
-      <a href="disfraces-v2.html">Disfraces</a>
+      <a href="cumpleanos-v2.html">Cumpleaños</a>
       <a href="combos-v2.html">Combos</a>
     </nav>
     <nav class="foot-col" aria-label="La casa">
@@ -231,7 +337,10 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 </footer>
 
 <script>window.addEventListener('load',function(){document.querySelectorAll('video[data-src]').forEach(function(v){v.src=v.getAttribute('data-src');if(v.play)v.play().catch(function(){});});});</script>
+<script src="assets/pos-codes.js"></script>
 <script src="assets/site.js"></script>
+<script src="assets/search.js"></script>
+<script src="assets/mundo-menu.js"></script>
 <script>
 /* Barra de categorías: resalta la sección visible al hacer scroll */
 (function(){

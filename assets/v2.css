@@ -123,7 +123,7 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .corner-logo img{width:44px; height:44px; object-fit:cover; display:block; border-radius:12px; background:#fff; box-shadow:var(--shadow-sm)}
 .corner-logo .brand{font-family:var(--font-display); font-weight:600; font-size:var(--fs1); color:var(--ink); white-space:nowrap}
 
-.nav-links{display:flex; align-items:center; gap:var(--s3)}
+.nav-links{display:flex; align-items:center; gap:var(--s3); align-self:stretch}
 .nav-links a{text-decoration:none; color:var(--ink); font-weight:600; font-size:15px; opacity:.8; transition:opacity .2s var(--ease), color .2s var(--ease)}
 .nav-links a:hover{opacity:1; color:var(--green-ink)}
 .nav-links a[aria-current="page"]{opacity:1; color:var(--green-ink); font-weight:800}
@@ -137,8 +137,17 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .nav-links .wa svg{width:18px; height:18px; flex:none}
 .nav-links .wa:hover{background:var(--green); color:#fff; transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(20,103,42,.6)}
 
+/* --- Botón de búsqueda global, inyectado por assets/search.js como un link más --- */
+.nav-search-btn{
+  display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; cursor:pointer;
+  font-family:inherit; font-weight:600; font-size:15px; color:var(--ink); opacity:.8; padding:0;
+  transition:opacity .2s var(--ease), color .2s var(--ease);
+}
+.nav-search-btn svg{width:18px; height:18px; flex:none}
+.nav-search-btn:hover{opacity:1; color:var(--green-ink)}
+
 /* --- Menú desplegable "Nuestros mundos" --- */
-.nav-item{position:relative; display:flex; align-items:center}
+.nav-item{position:relative; display:flex; align-items:center; align-self:stretch}
 .nav-item > a{display:inline-flex; align-items:center; gap:5px}
 .nav-item .caret{width:14px; height:14px; flex:none; transition:transform .2s var(--ease)}
 .nav-item:hover .caret, .nav-item:focus-within .caret{transform:rotate(180deg)}
@@ -163,6 +172,26 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 }
 .nav-dropdown a:hover{opacity:1; background:rgba(30,136,52,.08); color:var(--green-ink)}
 .nd-dot{width:9px; height:9px; flex:none; border-radius:50%; box-shadow:0 0 0 3px rgba(0,0,0,.04)}
+.nd-label{display:block; padding:8px 12px 4px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; opacity:.5}
+.nd-sep{height:1px; margin:4px 8px; background:var(--line)}
+
+/* --- Mega-menú: el desplegable "Nuestros mundos" en columnas con subcategorías
+   (assets/mundo-menu.js reestructura los mismos <a role="menuitem"> de siempre) --- */
+.nav-dropdown.nd-mega{
+  position:fixed; left:50%; top:var(--nav-h); transform:translateX(-50%) translateY(4px);
+  flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:0;
+  min-width:0; width:max-content; max-width:min(900px, 94vw);
+  padding:18px;
+}
+.nav-item:hover .nav-dropdown.nd-mega, .nav-item:focus-within .nav-dropdown.nd-mega{
+  transform:translateX(-50%) translateY(8px);
+}
+.nd-col{display:flex; flex-direction:column; gap:2px; min-width:150px; padding:0 16px; border-left:1px solid var(--line)}
+.nd-col:first-child{border-left:0; padding-left:0}
+.nd-col-head{font-weight:800; margin-bottom:2px}
+.nd-col-links{display:flex; flex-direction:column}
+.nd-col-links a{padding:6px 10px; font-size:13px; font-weight:600; opacity:.65}
+.nd-col-links a:hover{opacity:1}
 
 .nav-toggle{
   display:none; width:44px; height:44px; border:0; background:transparent; cursor:pointer;
@@ -199,6 +228,12 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
   .nav-links.open .nav-dropdown{pointer-events:auto}
   .nav-dropdown::before{display:none}
   .nav-dropdown a{padding:10px 12px}
+  .nav-dropdown.nd-mega{
+    position:static; transform:none; flex-direction:column; flex-wrap:nowrap;
+    width:auto; max-width:none; padding:0; gap:0;
+  }
+  .nd-col{border-left:0; padding:0; min-width:0}
+  .nd-col-links{padding-left:12px; margin:2px 0 8px 10px; border-left:2px solid var(--line)}
 }
 
 /* ===== Botones ===== */
@@ -290,8 +325,8 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .enter-cue:hover{opacity:1}
 .enter-cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
 /* Nav en blanco sobre el portal, oscuro al scrollear */
-.portal-page .nav .brand, .portal-page .nav .nav-links a, .portal-page .nav .nav-toggle{color:#fff}
-.portal-page .nav.solid .brand, .portal-page .nav.solid .nav-links a, .portal-page .nav.solid .nav-toggle{color:var(--ink)}
+.portal-page .nav .brand, .portal-page .nav .nav-links a, .portal-page .nav .nav-toggle, .portal-page .nav .nav-search-btn{color:#fff}
+.portal-page .nav.solid .brand, .portal-page .nav.solid .nav-links a, .portal-page .nav.solid .nav-toggle, .portal-page .nav.solid .nav-search-btn{color:var(--ink)}
 .portal-page .nav .nav-links .wa, .portal-page .nav.solid .nav-links .wa{color:#fff}
 /* El desplegable tiene fondo claro: sus enlaces siempre en texto oscuro */
 .portal-page .nav .nav-dropdown a{color:var(--ink)}
@@ -556,6 +591,46 @@ body.ficha-open{overflow:hidden}
   display:grid; place-items:center; transition:transform .18s var(--ease);
 }
 .ficha-close:hover{transform:rotate(90deg)}
+
+/* ===== Buscador global (overlay inyectado por assets/search.js) ===== */
+.search-overlay{
+  position:fixed; inset:0; z-index:160; display:none;
+  background:rgba(20,18,16,.55); backdrop-filter:blur(6px);
+  padding:var(--s3); padding-top:calc(var(--nav-h) + var(--s3));
+}
+.search-overlay.open{display:flex}
+body.search-open{overflow:hidden}
+.search-panel{
+  margin:0 auto; width:min(640px, 100%); max-height:70vh;
+  background:#fff; border-radius:var(--radius); box-shadow:var(--shadow-lg);
+  display:flex; flex-direction:column; overflow:hidden;
+  animation:ficha-in .25s var(--ease);
+}
+.search-field{display:flex; align-items:center; gap:10px; padding:var(--s2) var(--s3); border-bottom:1px solid var(--line); flex:none}
+.search-field .ic{width:20px; height:20px; color:var(--muted); flex:none}
+.search-input{flex:1; min-width:0; border:0; outline:0; font-family:inherit; font-size:16px; color:var(--ink); background:transparent}
+.search-close{border:0; background:transparent; cursor:pointer; color:var(--muted); font-size:16px; padding:6px; border-radius:50%; flex:none}
+.search-close:hover{background:var(--line); color:var(--ink)}
+.search-results{overflow-y:auto; padding:8px}
+.search-result{
+  display:flex; align-items:center; gap:12px; padding:8px; border-radius:14px;
+  text-decoration:none; color:inherit; transition:background .15s var(--ease);
+}
+.search-result img{width:52px; height:52px; object-fit:cover; border-radius:10px; background:var(--line); flex:none}
+.search-result .sr-body{display:flex; flex-direction:column; gap:3px; min-width:0}
+.search-result b{font-size:14.5px; font-weight:700; line-height:1.25}
+.search-result .sr-cat{font-size:11.5px; font-weight:700; color:var(--muted)}
+.search-result .sr-cat::before{content:'●'; color:var(--cat, var(--muted)); margin-right:5px; font-size:9px}
+.search-result:hover, .search-result.is-active{background:rgba(30,136,52,.08)}
+.search-empty{padding:var(--s5) var(--s3); text-align:center; color:var(--muted)}
+.search-empty b{display:block; color:var(--ink); font-size:var(--fs1); margin-bottom:4px}
+.search-loading{padding:var(--s5) var(--s3); text-align:center; color:var(--muted); margin:0}
+.search-suggest-heading{margin:4px 8px 8px; font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.02em}
+
+@media(max-width:820px){
+  .search-overlay{padding:0; padding-top:var(--nav-h)}
+  .search-panel{width:100%; max-height:none; height:calc(100% - var(--nav-h)); border-radius:0}
+}
 
 /* Combos: precio a la vista sobre la foto de la tarjeta */
 .pcard .pricetag{

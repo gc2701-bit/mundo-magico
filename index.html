@@ -214,38 +214,45 @@
 .mundos .head{text-align:center; margin-bottom:var(--s7)}
 .mundos .head h2{font-size:clamp(35px,3.6vw,44px)}
 .mundos .head .sub{margin:0 auto; font-size:18px}
-.mundo-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s3); perspective:1200px}
-@media(max-width:900px){ .mundo-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
-@media(max-width:560px){ .mundo-grid{grid-template-columns:1fr} }
+.mundo-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s3); perspective:1200px; max-width:820px; margin:0 auto}
+@media(max-width:560px){ .mundo-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 
 .mundo{
   position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
-  border-radius:var(--radius); overflow:hidden; background:#fff;
+  border-radius:calc(var(--radius) * 0.7); overflow:hidden; background:#fff;
   border:1px solid rgba(28,26,22,.06);
-  box-shadow:0 16px 32px -18px rgba(28,26,22,.18), 0 4px 12px -8px rgba(28,26,22,.08);
+  box-shadow:0 10px 20px -14px rgba(28,26,22,.18), 0 3px 8px -6px rgba(28,26,22,.08);
   transition:transform .3s var(--ease), box-shadow .3s var(--ease);
   will-change:transform;
 }
-.mundo:hover{transform:translateY(-8px); box-shadow:0 32px 56px -24px rgba(28,26,22,.28), 0 12px 24px -16px rgba(28,26,22,.14)}
+.mundo:hover{transform:translateY(-5px); box-shadow:0 20px 36px -18px rgba(28,26,22,.28), 0 8px 16px -12px rgba(28,26,22,.14)}
 
-.mundo .tile{height:216px; overflow:hidden; display:grid; place-items:center}
+.mundo .tile{height:148px; overflow:hidden; display:grid; place-items:center}
 .mundo .tile-img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s var(--ease)}
 .mundo:hover .tile-img{transform:scale(1.06)}
 
-.mundo .body{padding:var(--s3) var(--s3) var(--s4); display:flex; flex-direction:column; gap:4px; flex:1}
-.mundo h3{font-size:var(--fs2); margin:0}
-.mundo p{font-size:15px; color:var(--muted); margin:0 0 var(--s1); line-height:1.5}
-.mundo .go{font-size:14px; font-weight:800; display:inline-flex; align-items:center; gap:6px; margin-top:auto; transition:gap .2s var(--ease)}
-.mundo:hover .go{gap:12px}
+.mundo .body{padding:10px 12px 12px; display:flex; flex-direction:column; gap:2px; flex:1}
+.mundo h3{font-size:15px; margin:0}
+.mundo .go{font-size:12px; font-weight:800; display:inline-flex; align-items:center; gap:4px; margin-top:auto; transition:gap .2s var(--ease)}
+.mundo:hover .go{gap:8px}
 
 /* un color del logo por mundo */
 .mundo .body{border-top:5px solid var(--accent-line, #2f63cf)}
-.m-cotillon  .tile{background:#e9effc} .m-cotillon  .body{--accent-line:#2f63cf} .m-cotillon h3, .m-cotillon .go{color:#24509e}
+.m-globos    .tile{background:#e9effc} .m-globos    .body{--accent-line:#2f63cf} .m-globos h3, .m-globos .go{color:#24509e}
 .m-cumple    .tile{background:#fdeae8} .m-cumple    .body{--accent-line:#e23b30} .m-cumple h3, .m-cumple .go{color:#b3271d}
+.m-disfraces .tile{background:#232f58} .m-disfraces .body{--accent-line:#a23e8c} .m-disfraces h3, .m-disfraces .go{color:#a23e8c}
 .m-reposteria .tile{background:#fdf3d5} .m-reposteria .body{--accent-line:#ec6a9c} .m-reposteria h3, .m-reposteria .go{color:#bb3b6e}
 .m-deco      .tile{background:var(--green-soft)} .m-deco      .body{--accent-line:#6f9e5b} .m-deco h3, .m-deco .go{color:var(--green-ink)}
-.m-disfraces .tile{background:#232f58} .m-disfraces .body{--accent-line:#7c4dd6} .m-disfraces h3, .m-disfraces .go{color:#24509e}
 .m-combos    .tile{background:#fdeeda} .m-combos    .body{--accent-line:#f0913a} .m-combos h3, .m-combos .go{color:#9a5303}
+
+/* ===================== POR OCASIÓN ===================== */
+.ocasiones{padding:0 0 var(--s10); background:#f6f2e8}
+.ocasion-strip{display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3); max-width:960px; margin:0 auto; padding:var(--s4) var(--s3);
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 12px 28px -20px rgba(28,26,22,.18)}
+.ocasion-strip .oc-label{font-weight:800; font-size:14px; color:var(--muted)}
+.oc-pill{display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px; font-weight:700; font-size:15px;
+  text-decoration:none; color:#b3271d; background:#fdeae8; border:1px solid rgba(226,59,48,.18); transition:transform .15s var(--ease)}
+.oc-pill:hover{transform:translateY(-2px)}
 
 @media(prefers-reduced-motion:reduce){
   .mundo:hover{transform:translateY(-3px)}
@@ -392,11 +399,13 @@
     <div class="nav-item has-dropdown">
       <a href="#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
       <div class="nav-dropdown" role="menu">
-        <a href="cotillon-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón y fiestas</a>
-        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Línea de cumpleaños</a>
+        <span class="nd-label">Mundos</span>
+        <a href="globos-fiesta-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Cumpleaños</a>
+        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#a23e8c"></span>Disfraces y accesorios</a>
         <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
         <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
-        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#7c4dd6"></span>Disfraces</a>
+        <div class="nd-sep" role="separator"></div>
         <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
       </div>
     </div>
@@ -474,47 +483,42 @@
   <div class="wrap">
     <div class="head reveal">
       <div class="eyebrow">Nuestros mundos</div>
-      <h2>Seis mundos para celebrar</h2>
-      <p class="sub">Entrá a cada mundo y descubrí todo lo que tenemos para vos.</p>
+      <h2>Sumergite en nuestros mundos</h2>
+      <p class="sub">Todo lo que buscás, en un solo lugar.</p>
     </div>
     <div class="mundo-grid">
-      <a class="mundo m-cotillon reveal" href="cotillon-v2.html">
+      <a class="mundo m-globos reveal" href="globos-fiesta-v2.html">
         <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/cotillon-web.png" alt="" width="600" height="432" loading="lazy"></div>
         <div class="body">
-          <h3>Cotillón y fiestas</h3>
-          <p>Globos, guirnaldas y todo para que tu fiesta explote de color.</p>
+          <h3>Cotillón</h3>
           <span class="go">Entrar al mundo →</span>
         </div>
       </a>
       <a class="mundo m-cumple reveal" data-delay="1" href="cumpleanos-v2.html">
         <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/cumpleanos-web.png" alt="" width="600" height="432" loading="lazy"></div>
         <div class="body">
-          <h3>Línea de cumpleaños</h3>
-          <p>Líneas temáticas para que cada cumple infantil sea inolvidable.</p>
+          <h3>Cumpleaños</h3>
           <span class="go">Entrar al mundo →</span>
         </div>
       </a>
-      <a class="mundo m-reposteria reveal" data-delay="2" href="reposteria-v2.html">
+      <a class="mundo m-disfraces reveal" data-delay="2" href="disfraces-v2.html">
+        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/disfraces-web.png" alt="" width="600" height="432" loading="lazy"></div>
+        <div class="body">
+          <h3>Disfraces y accesorios</h3>
+          <span class="go">Entrar al mundo →</span>
+        </div>
+      </a>
+      <a class="mundo m-reposteria reveal" href="reposteria-v2.html">
         <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/reposteria-web.png" alt="" width="600" height="432" loading="lazy"></div>
         <div class="body">
           <h3>Repostería</h3>
-          <p>Velas, toppers y detalles dulces para tortas de revista.</p>
           <span class="go">Entrar al mundo →</span>
         </div>
       </a>
-      <a class="mundo m-deco reveal" href="decoracion-v2.html">
+      <a class="mundo m-deco reveal" data-delay="1" href="decoracion-v2.html">
         <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/decoracion-web.png" alt="" width="600" height="432" loading="lazy"></div>
         <div class="body">
           <h3>Decoración del hogar</h3>
-          <p>Detalles lindos y modernos para alegrar cada rincón de tu casa.</p>
-          <span class="go">Entrar al mundo →</span>
-        </div>
-      </a>
-      <a class="mundo m-disfraces reveal" data-delay="1" href="disfraces-v2.html">
-        <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/disfraces-web.png" alt="" width="600" height="432" loading="lazy"></div>
-        <div class="body">
-          <h3>Disfraces</h3>
-          <p>Personajes, máscaras y accesorios para transformarte en quien quieras.</p>
           <span class="go">Entrar al mundo →</span>
         </div>
       </a>
@@ -522,13 +526,23 @@
         <div class="tile" aria-hidden="true"><img class="tile-img" src="assets/mundos/combos-web.png" alt="" width="600" height="432" loading="lazy"></div>
         <div class="body">
           <h3>Combos</h3>
-          <p>Kits armados con todo lo necesario para tu festejo, listos para llevar.</p>
           <span class="go">Entrar al mundo →</span>
         </div>
       </a>
     </div>
   </div>
 </section>
+
+<!-- "Comprar por ocasión" oculto hasta tener más de una ocasión cargada (Halloween, Navidad, etc.)
+<section class="ocasiones" id="ocasiones">
+  <div class="wrap">
+    <div class="ocasion-strip reveal">
+      <span class="oc-label">Comprar por ocasión:</span>
+      <a class="oc-pill" href="cumpleanos-v2.html">🎂 Cumpleaños</a>
+    </div>
+  </div>
+</section>
+-->
 
 <!-- ====== BANDA · SERVICIOS ESPECIALES ====== -->
 <section class="banda-especial" aria-label="Eventos a medida y venta mayorista">
@@ -720,11 +734,11 @@
     </div>
     <nav class="foot-col" aria-label="Mundos">
       <b>Mundos</b>
-      <a href="cotillon-v2.html">Cotillón y fiestas</a>
-      <a href="cumpleanos-v2.html">Línea de cumpleaños</a>
+      <a href="globos-fiesta-v2.html">Cotillón</a>
+      <a href="disfraces-v2.html">Disfraces y accesorios</a>
       <a href="reposteria-v2.html">Repostería</a>
       <a href="decoracion-v2.html">Decoración del hogar</a>
-      <a href="disfraces-v2.html">Disfraces</a>
+      <a href="cumpleanos-v2.html">Cumpleaños</a>
       <a href="combos-v2.html">Combos</a>
     </nav>
     <nav class="foot-col" aria-label="La casa">
@@ -829,5 +843,7 @@ window.addEventListener('load', function(){
 })();
 </script>
 <script src="assets/site.js"></script>
+<script src="assets/search.js"></script>
+<script src="assets/mundo-menu.js"></script>
 </body>
 </html>
