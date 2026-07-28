@@ -7,6 +7,11 @@
  * presentes y se hace UNA sola llamada al RPC catalogo_publico, que devuelve
  * solo código, precio de lista y si hay stock.
  *
+ * Productos que vienen por talle/tamaño (ej. disfraces, floreros) usan
+ * data-talles="Chico:9283;Grande:4228" en vez de data-pos: un código de POS
+ * distinto por cada tamaño. Se pintan todos juntos, ej. "Chico $9.000 · Grande
+ * $12.000", mostrando solo los tamaños que ya tengan precio cargado en el POS.
+ *
  * Si un producto no está mapeado o no tiene precio cargado, la tarjeta queda
  * EXACTAMENTE como estaba (sin precio, consulta por WhatsApp) — nunca $0.
  *
@@ -42,17 +47,33 @@
     return mapa[k] || null;
   }
 
-  function pintar(card, precio, disponible) {
-    if (precio > 0) {
-      card.dataset.price = fmt.format(precio);
-      var body = card.querySelector('.pcard-body');
-      if (body && !body.querySelector('.pricetag')) {
-        var tag = document.createElement('span');
-        tag.className = 'pricetag';
-        tag.textContent = fmt.format(precio);
-        body.appendChild(tag);
-      }
+  function talles(card) {
+    var raw = card.dataset && card.dataset.talles;
+    if (!raw) return null;
+    var out = [];
+    raw.split(';').forEach(function (par) {
+      var idx = par.indexOf(':');
+      if (idx < 0) return;
+      var label = par.slice(0, idx).trim();
+      var code = par.slice(idx + 1).trim();
+      if (label && code) out.push({ label: label, code: code });
+    });
+    return out.length ? out : null;
+  }
+
+  function pintarTexto(card, texto) {
+    card.dataset.price = texto;
+    var body = card.querySelector('.pcard-body');
+    if (body && !body.querySelector('.pricetag')) {
+      var tag = document.createElement('span');
+      tag.className = 'pricetag';
+      tag.textContent = texto;
+      body.appendChild(tag);
     }
+  }
+
+  function pintar(card, precio, disponible) {
+    if (precio > 0) pintarTexto(card, fmt.format(precio));
     if (USAR_STOCK && !disponible) card.classList.add('sin-stock');
   }
 
@@ -69,7 +90,16 @@
   function aplicar() {
     var cards = Array.prototype.slice.call(document.querySelectorAll('.pcard'));
     var porCodigo = {};
+    var tallesPorCard = [];
     cards.forEach(function (card) {
+      var t = talles(card);
+      if (t) {
+        tallesPorCard.push({ card: card, talles: t });
+        t.forEach(function (item) {
+          (porCodigo[item.code] = porCodigo[item.code] || []).push(card);
+        });
+        return;
+      }
       var code = codigo(card);
       if (!code) return;
       (porCodigo[code] = porCodigo[code] || []).push(card);
@@ -88,15 +118,37 @@
     })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (filas) {
-        var pintados = 0;
+        var preciosPorCodigo = {};
         (filas || []).forEach(function (f) {
           var precio = Number(f.price);
           if (!(precio > 0) && DEMO) precio = Number(demo[f.code]) || 0;
+          preciosPorCodigo[f.code] = precio;
+        });
+
+        var pintados = 0;
+        var tarjetasConTalles = tallesPorCard.map(function (x) { return x.card; });
+
+        tallesPorCard.forEach(function (x) {
+          var partes = [];
+          x.talles.forEach(function (item) {
+            var precio = preciosPorCodigo[item.code];
+            if (precio > 0) partes.push(item.label + ' ' + fmt.format(precio));
+          });
+          if (partes.length) {
+            pintarTexto(x.card, partes.join(' · '));
+            pintados++;
+          }
+        });
+
+        (filas || []).forEach(function (f) {
           (porCodigo[f.code] || []).forEach(function (card) {
+            if (tarjetasConTalles.indexOf(card) !== -1) return;
+            var precio = preciosPorCodigo[f.code];
             pintar(card, precio, f.disponible);
             if (precio > 0) pintados++;
           });
         });
+
         if (DEMO && pintados) cartelDemo(pintados);
       })
       .catch(function () { /* sin conexión al POS: la página queda como estaba */ });
