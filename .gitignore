@@ -3,3 +3,6 @@
 
 # Backups de fotos originales antes de recortarlas (quedan solo localmente)
 productos/**/_orig/
+
+# Dependencias locales de las herramientas de .claude (binarios de sharp, etc.)
+.claude/node_modules/

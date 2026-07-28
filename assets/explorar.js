@@ -26,10 +26,7 @@
     { name: 'Cotillón',     page: 'globos-fiesta-v2.html', color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Globos, cortinas, guirnaldas y banderines.' },
     { name: 'Cumpleaños',   page: 'cumpleanos-v2.html',   color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Líneas infantiles con licencia, todas juntas.' },
     { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, sombreros, vinchas, coronas y anteojos.' },
-    // Repostería todavía no tiene tarjetas con foto (reposteria-v2.html usa
-    // ítems de ícono + texto): sin fotos no hay nada que mostrar en el reel.
-    // Reactivar cuando esa página tenga pgrid/pcard como las demás:
-    // { name: 'Repostería', page: 'reposteria-v2.html', color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4', tagline: 'Insumos para hornear y mesa dulce.' },
+    { name: 'Repostería',   page: 'reposteria-v2.html',   color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4',        tagline: 'Insumos para hornear y mesa dulce.' },
     { name: 'Decoración',   page: 'decoracion-v2.html',   color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa.' },
     { name: 'Combos',       page: 'combos-v2.html',       color: '#f0913a', video: null, tagline: 'La fiesta resuelta en un solo pack.' },
     { name: 'Especiales',   page: 'especiales-v2.html',   color: '#4aa3e0', video: null, tagline: 'Selección Argentina y ediciones especiales.' }

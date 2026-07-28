@@ -2,7 +2,7 @@
 //  - ESCALA por área del producto (todas ocupan lo mismo, ignora patillas finas)
 //  - CENTRA por centro de masa (las "estrellas"/masa del producto), no por el recuadro
 //  - lienzo cuadrado blanco
-const sharp = require('./pdf-extract/node_modules/sharp');
+const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
