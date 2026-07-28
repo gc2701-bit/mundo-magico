@@ -11,6 +11,11 @@ const TARGET_AREA_FRAC = 0.26;  // % del lienzo que ocupa la masa del producto
 const MAX_EXTENT = 0.94;        // tope: ancho/alto del producto no supera esto del lienzo
 const LUMA_DARK = 215;          // < esto = producto oscuro (marco negro, etc.)
 const SAT_MIN   = 36;           // saturación mínima para contar como color vívido
+const BG_DIST_MIN = 18;         // distancia de color minima respecto del fondo muestreado
+                                 // (agarra partes color crema/hueso/pastel que no son ni
+                                 // oscuras ni saturadas pero tampoco son el fondo real:
+                                 // sin esto, el recuadro detectado queda mas chico que el
+                                 // producto real y termina recortando ese lado al escalar)
 const MIN_RELIABLE_AREA = 0.05; // por debajo de esto la deteccion no es confiable
                                  // (producto blanco/palido sobre fondo blanco: tul, plumas, encaje).
                                  // En ese caso no escalamos a ciegas (se dispara y queda borroso):
@@ -22,11 +27,22 @@ async function analyze(input){
   const { data, info } = await sharp(input).resize(W, null, { fit:'inside' })
     .ensureAlpha().raw().toBuffer({ resolveWithObject:true });
   const { width:w, height:h, channels:c } = info;
+  // Fondo real de la foto (muestreado de las 4 esquinas): sirve de referencia
+  // para detectar partes palidas/color hueso del producto que no son ni
+  // oscuras ni saturadas pero tampoco calzan con el fondo.
+  const patch = Math.max(2, Math.round(Math.min(w,h)*0.02));
+  const corners = [[0,0],[w-patch,0],[0,h-patch],[w-patch,h-patch]];
+  let bgR=0,bgG=0,bgB=0,bgN=0;
+  for (const [cx0,cy0] of corners) for (let y=cy0;y<cy0+patch;y++) for (let x=cx0;x<cx0+patch;x++){
+    const i=(y*w+x)*c; bgR+=data[i]; bgG+=data[i+1]; bgB+=data[i+2]; bgN++;
+  }
+  bgR/=bgN; bgG/=bgN; bgB/=bgN;
   let area=0, sx=0, sy=0, minX=w, minY=h, maxX=-1, maxY=-1;
   for (let y=0; y<h; y++) for (let x=0; x<w; x++){
     const i=(y*w+x)*c, r=data[i], g=data[i+1], b=data[i+2], a=data[i+3];
     const luma = 0.299*r+0.587*g+0.114*b;
-    if (a>20 && (luma < LUMA_DARK || (Math.max(r,g,b)-Math.min(r,g,b)) > SAT_MIN)){
+    const distBg = Math.sqrt((r-bgR)**2+(g-bgG)**2+(b-bgB)**2);
+    if (a>20 && (luma < LUMA_DARK || (Math.max(r,g,b)-Math.min(r,g,b)) > SAT_MIN || distBg > BG_DIST_MIN)){
       area++; sx+=x; sy+=y;
       if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y;
     }
