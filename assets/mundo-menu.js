@@ -12,27 +12,30 @@
   // catbar de cada página (si cambian ahí, hay que actualizarlas acá también).
   var SUBCATS = {
     'globos-fiesta-v2.html': [
-      { label: 'Globos', href: '#globos' },
-      { label: 'Cortinas y telas', href: '#cortinas' },
-      { label: 'Guirnaldas y banderines', href: '#guirnaldas' },
-      { label: 'Luces y efectos', href: '#efectos' }
-    ],
-    'cumpleanos-v2.html': [
-      { label: 'Decorá el cumple', href: '#decorar' },
-      { label: 'La torta y sus velas', href: '#la-torta' },
-      { label: 'Líneas infantiles', href: '#licencias' }
-    ],
-    'disfraces-v2.html': [
-      { label: 'Los disfraces', href: '#disfraces' },
-      { label: 'Acto patrio', href: '#acto-patrio' },
-      { label: 'Para la fiesta', href: '#para-la-fiesta' },
+      { label: 'Luces y efectos', href: '#efectos' },
       { label: 'Sombreros y gorros', href: '#sombreros-gorros' },
       { label: 'Anteojos', href: '#anteojos' },
       { label: 'Mis 15', href: '#mis15' },
       { label: 'Novias', href: '#novias' }
     ],
+    'cumpleanos-v2.html': [
+      { label: 'Globos', href: '#globos' },
+      { label: 'Cortinas', href: '#cortinas' },
+      { label: 'Guirnaldas y banderines', href: '#guirnaldas' },
+      { label: 'Decorá el cumple', href: '#decorar' },
+      { label: 'La torta y sus velas', href: '#la-torta' },
+      { label: 'Líneas infantiles', href: '#licencias' }
+    ],
+    'disfraces-v2.html': [
+      { label: 'Accesorios', href: '#accesorios' },
+      { label: 'Los disfraces', href: '#disfraces' },
+      { label: 'Acto patrio', href: '#acto-patrio' }
+    ],
     'reposteria-v2.html': [
       { label: 'Para hornear', href: '#para-hornear' },
+      { label: 'Moldes', href: '#moldes' },
+      { label: 'Cortantes', href: '#cortantes' },
+      { label: 'Manga y picos', href: '#manga-y-picos' },
       { label: 'La mesa dulce', href: '#la-mesa-dulce' },
       { label: 'Para regalar', href: '#para-regalar' }
     ],

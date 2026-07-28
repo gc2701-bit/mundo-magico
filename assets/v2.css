@@ -707,3 +707,14 @@ body.search-open{overflow:hidden}
   .item:hover .item-ic, .mundo:hover .tile-img{ transform:none !important; }
   .reveal{ transform:none !important; }
 }
+
+/* ===== Grilla de productos en celular: 2 columnas fijas =====
+   Con auto-fill/minmax(200px) un celular angosto termina en 1 sola columna.
+   Forzamos 2 para que entren ~4 tarjetas por pantalla sin scrollear, sin que
+   la tarjeta quede tan chica como para que el texto se vea mal. */
+@media(max-width:640px){
+  .pgrid{grid-template-columns:repeat(2, 1fr); gap:var(--s1)}
+  .pcard-body{padding:10px}
+  .pcard h3{font-size:13px}
+  .pcard .sub, .pcard .cta{font-size:11px}
+}

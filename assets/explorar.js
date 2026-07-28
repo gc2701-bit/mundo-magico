@@ -23,9 +23,9 @@
   // final (no es un mundo permanente, es una edición estacional enlazada desde
   // todas las páginas).
   var CATS = [
-    { name: 'Cotillón',     page: 'globos-fiesta-v2.html', color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Globos, cortinas, guirnaldas y banderines.' },
-    { name: 'Cumpleaños',   page: 'cumpleanos-v2.html',   color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Líneas infantiles con licencia, todas juntas.' },
-    { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, sombreros, vinchas, coronas y anteojos.' },
+    { name: 'Cotillón',     page: 'globos-fiesta-v2.html', color: '#2f63cf', video: 'Header categories/Header-2-Cotillon.mp4', tagline: 'Guirnaldas, luces, sombreros y anteojos.' },
+    { name: 'Cumpleaños',   page: 'cumpleanos-v2.html',   color: '#e23b30', video: 'Header categories/Cumpleaños-2.mp4',       tagline: 'Globos, cortinas y líneas infantiles con licencia.' },
+    { name: 'Disfraces y accesorios', page: 'disfraces-v2.html', color: '#a23e8c', video: 'Header categories/Disfraces - web.mp4', tagline: 'Personajes, disfraces y accesorios de fiesta.' },
     { name: 'Repostería',   page: 'reposteria-v2.html',   color: '#ec6a9c', video: 'Header categories/Reposteria-3.mp4',        tagline: 'Insumos para hornear y mesa dulce.' },
     { name: 'Decoración',   page: 'decoracion-v2.html',   color: '#6f9e5b', video: 'Header categories/Deco-2.mp4',             tagline: 'Detalles lindos para tu casa.' },
     { name: 'Combos',       page: 'combos-v2.html',       color: '#f0913a', video: null, tagline: 'La fiesta resuelta en un solo pack.' },
