@@ -50,7 +50,10 @@
     overlay.innerHTML =
       '<div class="ficha">' +
         '<button class="ficha-close" type="button" aria-label="Cerrar">✕</button>' +
-        '<div class="gal"><div class="main"><img src="" alt=""></div>' +
+        '<div class="gal">' +
+          '<button class="ficha-nav ficha-prev" type="button" aria-label="Producto anterior">‹</button>' +
+          '<button class="ficha-nav ficha-next" type="button" aria-label="Producto siguiente">›</button>' +
+          '<div class="main"><img src="" alt=""></div>' +
           '<div class="thumbs" hidden></div></div>' +
         '<div class="info">' +
           '<span class="cat" hidden></span>' +
@@ -77,12 +80,42 @@
     var itemsEl = overlay.querySelector('.items');
     var waBtn = overlay.querySelector('.btn-wa');
     var closeBtn = overlay.querySelector('.ficha-close');
+    var prevProductBtn = overlay.querySelector('.ficha-prev');
+    var nextProductBtn = overlay.querySelector('.ficha-next');
+    var galEl = overlay.querySelector('.gal');
     var lastFocus = null;
+    var currentCard = null;
+    var allCards = Array.prototype.slice.call(pcards);
 
     var show = function (el, on) { el.hidden = !on; };
 
+    // Lista de tarjetas por las que se puede navegar: todas, salvo que el
+    // buscador de la categoría haya filtrado algunas (no tiene sentido
+    // deslizar hacia un producto que no coincide con la búsqueda).
+    function navList() {
+      return allCards.filter(function (c) { return !c.classList.contains('is-filtered-out'); });
+    }
+
+    function updateNavButtons() {
+      var list = navList();
+      var canNav = list.length > 1;
+      prevProductBtn.hidden = !canNav;
+      nextProductBtn.hidden = !canNav;
+    }
+
+    // dir: -1 anterior, +1 siguiente. Da la vuelta al llegar a una punta.
+    function goToProduct(dir) {
+      var list = navList();
+      var idx = list.indexOf(currentCard);
+      if (idx === -1 || list.length < 2) return;
+      var next = list[(idx + dir + list.length) % list.length];
+      openFicha(next);
+    }
+
     function openFicha(card) {
-      lastFocus = card;
+      lastFocus = lastFocus || card;
+      currentCard = card;
+      updateNavButtons();
       var titleEl = card.querySelector('h3');
       var name = titleEl ? titleEl.textContent.trim() : '';
       var subEl = card.querySelector('.sub');
@@ -192,6 +225,8 @@
       overlay.classList.remove('open');
       document.body.classList.remove('ficha-open');
       if (lastFocus) lastFocus.focus();
+      lastFocus = null;
+      currentCard = null;
     }
 
     pcards.forEach(function (card) {
@@ -223,10 +258,36 @@
     }
 
     closeBtn.addEventListener('click', closeFicha);
+    prevProductBtn.addEventListener('click', function () { goToProduct(-1); });
+    nextProductBtn.addEventListener('click', function () { goToProduct(1); });
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeFicha(); });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && overlay.classList.contains('open')) closeFicha();
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape') closeFicha();
+      else if (e.key === 'ArrowLeft') goToProduct(-1);
+      else if (e.key === 'ArrowRight') goToProduct(1);
     });
+
+    // Deslizar con el dedo (celular): swipe horizontal sobre la foto cambia
+    // de producto sin cerrar la ficha. Se ignora si el gesto empieza sobre la
+    // tira de miniaturas (esa ya tiene su propio scroll horizontal) o si el
+    // movimiento es más vertical que horizontal (para no robarle el scroll
+    // de la info al dedo).
+    var touchX = 0, touchY = 0, touchTracking = false;
+    galEl.addEventListener('touchstart', function (e) {
+      if (e.target.closest('.thumbs')) { touchTracking = false; return; }
+      touchTracking = true;
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+    }, { passive: true });
+    galEl.addEventListener('touchend', function (e) {
+      if (!touchTracking) return;
+      touchTracking = false;
+      var dx = e.changedTouches[0].clientX - touchX;
+      var dy = e.changedTouches[0].clientY - touchY;
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+      goToProduct(dx < 0 ? 1 : -1);
+    }, { passive: true });
     // Mantener el foco dentro de la ficha con Tab
     overlay.addEventListener('keydown', function (e) {
       if (e.key !== 'Tab') return;

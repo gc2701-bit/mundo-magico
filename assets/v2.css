@@ -621,6 +621,22 @@ body.ficha-open{overflow:hidden}
 }
 .ficha-close:hover{transform:rotate(90deg)}
 
+/* Flechas para pasar al producto anterior/siguiente sin cerrar la ficha */
+.ficha-nav{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+  width:44px; height:44px; border:0; border-radius:50%; cursor:pointer;
+  background:rgba(255,255,255,.95); box-shadow:var(--shadow);
+  font-size:26px; line-height:1; padding-bottom:2px; color:var(--ink);
+  display:grid; place-items:center; transition:background .2s var(--ease), transform .18s var(--ease);
+}
+.ficha-nav:hover{background:#fff; transform:translateY(-50%) scale(1.06)}
+.ficha-nav[hidden]{display:none}
+.ficha-prev{left:14px} .ficha-next{right:14px}
+@media(max-width:760px){
+  .ficha-prev{left:8px} .ficha-next{right:8px}
+  .ficha-nav{width:38px; height:38px; font-size:22px}
+}
+
 /* ===== Buscador global (overlay inyectado por assets/search.js) ===== */
 .search-overlay{
   position:fixed; inset:0; z-index:160; display:none;
@@ -690,6 +706,7 @@ body.search-open{overflow:hidden}
   .btn:hover, .wa-float:hover{transform:none}
   .ficha{animation:none}
   .ficha-close:hover{transform:none}
+  .ficha-nav:hover{transform:translateY(-50%)}
   *{scroll-behavior:auto}
   .page-loading-bar{transition:opacity .15s ease}
 }
