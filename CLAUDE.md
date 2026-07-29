@@ -1,0 +1,124 @@
+# Mundo Mágico — instrucciones del proyecto
+
+## Subir fotos de productos nuevos
+
+Cuando el usuario suba fotos nuevas a `/productos` y pida publicarlas, además de
+agregar la tarjeta (`pcard`) en la página correspondiente, **siempre** dejarla
+vinculada a su código de producto (el mismo que usa el POS/local), así queda
+buscable y trazable. Pasos:
+
+1. **Identificar el código.** Casi todos los archivos traen el código al final
+   del nombre (ej. `Anteojo blanco con strass 59521.jpeg` → código `59521`).
+   Si varias fotos son variantes de color del mismo producto, suelen compartir
+   el mismo código.
+2. **Agregar el `<a class="pcard reveal ...">` a mano** en la página `-v2.html`
+   que corresponda (ver "Dónde va cada categoría" abajo). Las páginas v2 NO se
+   generan automáticamente desde la carpeta `/productos`; las tarjetas están
+   escritas directamente en el HTML.
+   - Poner el código en `data-pos="<codigo>"` en el `<a>` de la tarjeta.
+   - Si el producto tiene varios colores con el mismo código, usar el patrón
+     de galería (`has-gallery`, `gtrack`, `<img data-cap="color">`, botones
+     `gnav gprev/gnext`, `gdots`) en vez de una tarjeta por color. Copiar la
+     estructura de una tarjeta con galería ya existente en esa misma página.
+   - Si son productos distintos con códigos distintos (aunque el nombre se
+     parezca), van como tarjetas separadas, cada una con su propio `data-pos`.
+   - Encodear la ruta de la imagen con `encodeURIComponent` por segmento
+     (espacios → `%20`, ñ → `%C3%B1`, etc.), igual que las rutas ya existentes.
+3. **Regenerar el snapshot de búsqueda** después de editar el HTML:
+   ```bash
+   node .claude/gen-explorar-data.js
+   ```
+   Esto reescribe `assets/explorar-data.js` leyendo las tarjetas `.pcard` de
+   las páginas — es lo que usa "Explorar" y el buscador cuando el sitio se
+   abre como archivo local.
+4. **Verificar en el navegador** que la tarjeta nueva aparece, que las fotos
+   cargan y que, si es galería, las flechas/puntos cambian de color bien.
+
+## `data-talles` (tamaños) vs. galería de colores
+
+No confundir las dos formas de "variantes" que usan las tarjetas — son cosas
+distintas y no se combinan en la misma tarjeta:
+
+- **Mismo producto, distintos tamaños** (ej. Florero Chico/Mediano/Grande, cada
+  tamaño con su propio código) → una sola tarjeta simple (sin galería), con
+  `data-talles="Chico:9283;Grande:4228"` (formato `Nombre:codigo;Nombre:codigo`).
+  No lleva `data-pos` porque no hay un único código.
+- **Mismo producto, mismo código, distintos colores** (ej. Anteojo estrella en
+  5 colores) → tarjeta con galería (`has-gallery`/`gtrack`/`gdots`) y un solo
+  `data-pos` compartido, como se explica arriba.
+
+Si un producto tiene tamaños Y colores a la vez, preguntar antes de mezclar
+los dos patrones — no hay un ejemplo existente para copiar a ciegas.
+
+## Mejorar la calidad o el fondo de una foto ya publicada
+
+No editar la imagen a mano (photoshop/recorte manual). Este proyecto tiene
+scripts con `sharp` para eso, que además hacen backup del original:
+
+- **Normalizar fondo/encuadre de una carpeta entera** (fondo blanco, mismo
+  tamaño relativo del producto, centrado):
+  ```bash
+  node .claude/normalize-products.js "productos/<carpeta>"
+  ```
+  Solo procesa `.webp` de esa carpeta y guarda el original sin tocar en una
+  subcarpeta `_orig/` (si ya existe un backup ahí, no lo pisa). Las fotos que
+  tengan "todos" en el nombre (vista de todos los colores juntos) se dejan
+  sin normalizar.
+- **Reemplazar una foto puntual por una versión de mejor resolución**: no hay
+  un comando genérico — `.claude/replace-quality.js` es un script de un solo
+  uso con una lista `PAIRS` hardcodeada de `[origen en "productos/Mejor
+  calidad/", destino a reemplazar]`. Para reutilizarlo: poner el archivo nuevo
+  en `productos/Mejor calidad/`, agregar el par al array `PAIRS`, y correr
+  `node .claude/replace-quality.js`. También hace backup en `_orig/` antes de
+  pisar el destino.
+
+## Dónde va cada categoría (páginas reales del sitio)
+
+La navegación usa las páginas `*-v2.html`, no las viejas sin `-v2`:
+
+- `globos-fiesta-v2.html` → Cotillón (sombreros/gorros, anteojos, antifaces y
+  máscaras, luces y efectos, mis 15, novias)
+- `cumpleanos-v2.html` → Cumpleaños (incluye Globos sueltos y en set, cortinas,
+  guirnaldas, decoración de cumple, tortas/velas, licencias)
+- `disfraces-v2.html`, `reposteria-v2.html`, `decoracion-v2.html`,
+  `combos-v2.html`, `especiales-v2.html`
+
+`.claude/gen-products.js` es un script viejo que apunta a páginas y a una
+numeración de carpetas de `/productos` que ya no coinciden con la estructura
+actual — no usarlo para publicar en las páginas v2.
+
+`assets/pos-codes.js` es un mapeo aparte (generado desde planillas/Word) que
+no hace falta tocar a mano al subir fotos nuevas; alcanza con el `data-pos`
+puesto directamente en la tarjeta.
+
+## Dar de baja un producto
+
+Cuando pidan sacar/discontinuar un producto de la web, no basta con borrar la
+tarjeta del HTML:
+
+1. Borrar el `<a class="pcard ...">` completo de la página `-v2.html`
+   correspondiente.
+2. Mover sus fotos de `/productos/...` a `_archive/` (no borrarlas del disco),
+   conservando el nombre de archivo, por si hay que restaurarlo después.
+3. Regenerar el snapshot de búsqueda:
+   ```bash
+   node .claude/gen-explorar-data.js
+   ```
+4. Si el producto tenía `data-pos`, revisar `assets/pos-codes.js` por si ese
+   código quedó referenciado ahí también (no es automático, es un mapeo
+   aparte — ver arriba).
+
+## Verificar en servidor local, no abriendo el HTML directo
+
+El sitio usa `fetch()` (buscador, Explorar) que el navegador bloquea bajo
+`file://`. Antes de dar por terminado un cambio, levantar el servidor local
+en vez de abrir el archivo a doble clic:
+
+```bash
+node .claude/static-server.js
+```
+
+(esto es lo mismo que hace `iniciar.bat`, que además abre
+`http://localhost:8000/index.html` solo). Verificar ahí — no en el archivo
+abierto directo — sobre todo para cualquier cosa que dependa del buscador,
+Explorar, o de que varias páginas se lean entre sí.
