@@ -328,12 +328,23 @@
     if (slides.length < 2) return;
     var dots = card.querySelectorAll('.gdot');
     var cap = card.querySelector('.gcap');
+
+    // Contador "1/3" en la esquina: hace evidente, sin pasar el mouse, que
+    // la foto es un carrusel con más de una imagen detrás.
+    var count = document.createElement('span');
+    count.className = 'gcount';
+    count.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h14V7"/></svg><b></b>';
+    card.querySelector('.pcard-ph').appendChild(count);
+    var countNum = count.querySelector('b');
+    countNum.textContent = '1/' + slides.length;
+
     var i = 0;
     var show = function (n) {
       i = (n + slides.length) % slides.length;
       track.style.transform = 'translateX(' + (-i * 100) + '%)';
       dots.forEach(function (d, idx) { d.classList.toggle('is-on', idx === i); });
       if (cap) cap.textContent = slides[i].getAttribute('data-cap') || '';
+      countNum.textContent = (i + 1) + '/' + slides.length;
     };
     var go = function (e, target) { e.preventDefault(); e.stopPropagation(); show(target); };
     var prev = card.querySelector('.gprev');
