@@ -105,10 +105,24 @@
     if (e.key === 'Escape' && overlay.classList.contains('open')) close();
   });
 
+  // Catálogo completo desde assets/catalogo.js: las tarjetas ocultadas (para
+  // sacarlas del snapshot estático) y los productos cargados 100% desde la
+  // web (catalogo_productos, que ni existen en ese snapshot). Si el módulo
+  // no está en esta página, o no responde, se busca igual sin ninguno de
+  // los dos — un resultado de más/de menos no es ni de cerca tan grave como
+  // que el buscador se quede mudo.
+  function conCatalogo(cb) {
+    if (!window.MMCatalogo) { cb({}); return; }
+    MMCatalogo.cargar(function (d) { cb(d || {}); });
+  }
+
   /* ---- Carga perezosa del snapshot global (solo la primera vez que se abre) ---- */
   function ensureIndex(cb) {
     if (index) return cb();
-    if (window.__EXPLORAR_DATA__) { index = buildIndex(window.__EXPLORAR_DATA__); return cb(); }
+    if (window.__EXPLORAR_DATA__) {
+      conCatalogo(function (catalogo) { index = buildIndex(window.__EXPLORAR_DATA__, catalogo); cb(); });
+      return;
+    }
     if (loading) return;
     loading = true;
     resultsEl.innerHTML = '<p class="search-loading">Cargando catálogo…</p>';
@@ -116,9 +130,11 @@
     s.src = 'assets/explorar-data.js';
     s.onload = function () {
       loading = false;
-      index = buildIndex(window.__EXPLORAR_DATA__ || {});
-      resultsEl.innerHTML = '';
-      cb();
+      conCatalogo(function (catalogo) {
+        index = buildIndex(window.__EXPLORAR_DATA__ || {}, catalogo);
+        resultsEl.innerHTML = '';
+        cb();
+      });
     };
     s.onerror = function () {
       loading = false;
@@ -127,13 +143,20 @@
     document.head.appendChild(s);
   }
 
-  function buildIndex(data) {
+  function buildIndex(data, catalogo) {
+    catalogo = catalogo || {};
+    var tarjetas = catalogo.tarjetas || {};
     var flat = [];
     var byPage = {};
     Object.keys(data).forEach(function (page) {
       var meta = PAGE_META[page] || { label: page.replace('-v2.html', ''), color: '#888' };
       byPage[page] = [];
       (data[page] || []).forEach(function (p) {
+        // Sacado de la web desde admin-catalogo.js: no tiene que aparecer
+        // en el buscador aunque el snapshot todavía lo tenga (gen-explorar-
+        // data.js sólo se regenera a mano — ver CLAUDE.md).
+        var ov = tarjetas[page + '~' + slugify(p.title)];
+        if (ov && ov.oculta) return;
         var hay = norm([p.title, (p.specs || []).join(' '), meta.label].join(' '));
         var basePage = p.href || page;
         var item = {
@@ -151,6 +174,27 @@
         flat.push(item);
         byPage[page].push(item);
       });
+    });
+
+    // Productos de catalogo_productos: no están en `data` (el snapshot sólo
+    // conoce el HTML), así que se suman en un segundo paso. El slug ya viene
+    // de la base — no hace falta recalcularlo con slugify() del título.
+    (catalogo.productos || []).forEach(function (p) {
+      var meta = PAGE_META[p.pagina] || { label: p.pagina.replace('-v2.html', ''), color: '#888' };
+      if (!byPage[p.pagina]) byPage[p.pagina] = [];
+      var item = {
+        title: p.titulo,
+        // p.fotos es [{src, cap}] (cap = nombre del color en una galería) —
+        // no un array de URLs sueltas.
+        thumb: (p.fotos && p.fotos[0] && p.fotos[0].src) || '',
+        href: p.pagina + '?p=' + encodeURIComponent(p.slug),
+        label: meta.label,
+        color: meta.color,
+        _titleNorm: norm(p.titulo),
+        _hay: norm([p.titulo, (p.specs || []).join(' '), meta.label].join(' '))
+      };
+      flat.push(item);
+      byPage[p.pagina].push(item);
     });
 
     // Sugerencias por defecto (buscador vacío): un par de productos de cada

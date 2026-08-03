@@ -1,0 +1,18 @@
+/* Página de recuperación de contraseña (recuperar.html). Toma los tokens de
+   v2.css y las clases de campo/botón de carrito.css + cuenta.css (.cart-field,
+   .cart-send, .cart-acc-error, .cart-acc-ok) para no reinventar el estilo de
+   formulario — sólo agrega el marco de tarjeta centrada. */
+
+.rec-wrap{
+  max-width:420px; margin:60px auto; padding:0 16px;
+  font-family:var(--font-body); color:var(--ink);
+}
+.rec-card{
+  padding:28px 24px; border:1px solid var(--line); border-radius:16px;
+  background:var(--surface); box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+.rec-card h1{ margin:0 0 8px; font:800 22px/1.25 var(--font-body); color:var(--ink); }
+.rec-card p{ margin:0 0 18px; font:400 14px/1.45 var(--font-body); color:var(--muted); }
+.rec-card .cart-send{ width:100%; }
+.rec-ok{ text-align:center; }
+.rec-ok a{ color:var(--green-ink); font-weight:700; }

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedidos · Mundo Mágico</title>
+<!-- Página interna del negocio: agrupa los pedidos para organizar el envío.
+     No tiene que aparecer en Google. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/carrito.css">
+<link rel="stylesheet" href="assets/cuenta.css">
+<link rel="stylesheet" href="assets/admin-pedidos.css">
+</head>
+<body>
+
+<div class="adm-wrap">
+  <div class="adm-head">
+    <h1>Pedidos</h1>
+    <p id="adm-sesion" class="adm-sesion-info" hidden></p>
+    <button type="button" class="adm-logout-btn" id="adm-logout-btn" hidden>Cerrar sesión</button>
+    <!-- Link a la pantalla del repartidor: se lo manda al repartidor por
+         WhatsApp, y sirve para que el admin vea qué está viendo él. -->
+    <p class="adm-head-links"><a href="ruta.html">Ver pantalla del repartidor</a></p>
+  </div>
+
+  <div id="adm-gate" class="adm-gate">
+    <p>Necesitás iniciar sesión con la cuenta del negocio para ver y organizar los pedidos.</p>
+    <button type="button" class="btn btn-primary" id="adm-login-btn">Iniciar sesión</button>
+  </div>
+
+  <div id="adm-panel" class="adm-panel" hidden>
+    <p class="adm-stats-hint">De la ventana de fechas elegida abajo, cuántos pedidos llegaron sin confirmar todavía si se concretó la venta:</p>
+    <div id="adm-stats" class="adm-stats"></div>
+
+    <div class="adm-controls">
+      <label class="adm-group">
+        <span>Agrupar por</span>
+        <select id="adm-agrupar">
+          <option value="fecha">Fecha de entrega</option>
+          <option value="metodo">Retiro / Envío</option>
+          <option value="zona">Zona</option>
+          <option value="estado">Estado</option>
+          <option value="plan">Plan de reparto (fecha y corredor)</option>
+          <option value="traslado">Traslado a sucursal</option>
+        </select>
+      </label>
+      <label class="adm-group">
+        <span>Filtrar por estado</span>
+        <select id="adm-filtro-estado">
+          <option value="">Todos</option>
+        </select>
+      </label>
+      <label class="adm-group">
+        <span>Desde</span>
+        <input type="date" id="adm-desde">
+      </label>
+      <label class="adm-group">
+        <span>Hasta</span>
+        <input type="date" id="adm-hasta">
+      </label>
+      <label class="adm-group adm-group-check">
+        <span>&nbsp;</span>
+        <span class="adm-check-inline"><input type="checkbox" id="adm-ver-archivados"> Ver archivados</span>
+      </label>
+      <button type="button" class="adm-refrescar" id="adm-refrescar">Actualizar</button>
+    </div>
+
+    <div id="adm-metricas-wrap"></div>
+
+    <p id="adm-resumen" class="adm-resumen">Cargando…</p>
+    <div id="adm-grupos"></div>
+    <div class="adm-cargar-mas-wrap">
+      <button type="button" class="adm-cargar-mas" id="adm-cargar-mas" hidden>Cargar más pedidos</button>
+      <button type="button" class="adm-archivar" id="adm-archivar">Archivar entregados/cancelados de hace más de 60 días</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+<script src="assets/supabase-js-2.111.0.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/envios.js"></script>
+<script src="assets/cuenta.js"></script>
+<script src="assets/admin-pedidos.js"></script>
+</body>
+</html>

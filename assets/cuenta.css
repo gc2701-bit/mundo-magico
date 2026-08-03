@@ -1,0 +1,203 @@
+/* Cuenta de cliente (Supabase Auth). Usa los mismos tokens de v2.css que el
+   carrito (--green, --ink, --radius…) y reutiliza sus clases genéricas
+   (.cart-field, .cart-send, .cart-x, .cart-head) para que el modal de cuenta
+   se vea como parte del mismo carrito, no como algo pegado aparte. */
+
+/* Mismo tratamiento fijo-centrado que .cart-pick, pero por encima: se abre
+   con el panel del pedido (.cart-panel) ya abierto detrás, y no tiene fondo
+   oscuro propio — usa el .cart-scrim que ya puso el carrito. */
+.cart-acc{
+  position:fixed; z-index:1500; left:50%; top:50%; transform:translate(-50%,-46%) scale(.97);
+  width:min(420px,calc(100% - 32px)); max-height:88vh; display:flex; flex-direction:column;
+  background:var(--surface); color:var(--ink); border-radius:var(--radius); overflow:hidden;
+  box-shadow:0 20px 60px rgba(28,26,22,.3);
+  opacity:0; pointer-events:none; transition:opacity .2s var(--ease), transform .2s var(--ease);
+}
+.cart-acc.is-on{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+
+/* Aviso chico de bienvenida (primera visita): mismo look que el modal de
+   cuenta pero angosto, sin pestañas — es sólo una invitación a crear cuenta,
+   el formulario en sí se abre aparte al tocar "Crear cuenta". */
+.cart-acc-bienvenida{ width:min(340px,calc(100% - 32px)); }
+.cart-acc-bienvenida .cart-acc-body{ text-align:center; padding-top:4px; }
+.cart-acc-bienvenida .cart-acc-body p{ margin:0 0 16px; color:var(--ink); font:400 14.5px/1.5 var(--font-body); }
+
+.cart-acc-tabs{
+  flex:none; display:flex; gap:6px; padding:0 22px 14px;
+  border-bottom:1px solid var(--line);
+}
+.cart-acc-tab{
+  flex:1; padding:9px 6px; border:0; border-radius:999px; cursor:pointer;
+  background:transparent; color:var(--muted);
+  font:600 13.5px/1 var(--font-body); transition:background .16s var(--ease), color .16s var(--ease);
+}
+.cart-acc-tab:hover{ color:var(--ink); }
+.cart-acc-tab.is-on{ background:var(--green-soft); color:var(--green-ink); }
+.cart-acc-tab:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+.cart-acc-body{ flex:1; overflow-y:auto; padding:18px 22px 22px; }
+.cart-acc-body .cart-field:last-of-type{ margin-bottom:16px; }
+.cart-acc-body .cart-send{ margin-top:4px; }
+.cart-turnstile{ margin:10px 0 4px; min-height:1px; }
+
+/* .cart-field (carrito.css) sólo pinta input/textarea — acá se suma el
+   <select> de "Sexo", el único que usa este modal. */
+.cart-field select{
+  width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:12px;
+  font:400 15px/1.4 var(--font-body); color:var(--ink); background:var(--surface);
+  appearance:auto;
+}
+.cart-field-hint{
+  display:block; margin-top:6px; color:var(--muted);
+  font:400 12px/1.4 var(--font-body);
+}
+
+/* --- Medidor de fuerza de la contraseña ----------------------------------
+   Sólo orienta al cliente mientras escribe; la regla que de verdad bloquea
+   el envío (mayúscula + carácter especial + 6 caracteres) está en
+   `hacerSignup()`, no acá. */
+.cart-pass-fuerza{ margin:-4px 0 16px; display:flex; align-items:center; gap:10px; }
+.cart-pass-bar{
+  flex:1; height:6px; border-radius:999px; background:var(--line); overflow:hidden;
+}
+.cart-pass-bar-fill{
+  height:100%; width:0; border-radius:999px;
+  transition:width .18s var(--ease), background .18s var(--ease);
+}
+.cart-pass-bar-fill.is-debil{ width:33%; background:var(--red); }
+.cart-pass-bar-fill.is-media{ width:66%; background:var(--orange); }
+.cart-pass-bar-fill.is-fuerte{ width:100%; background:var(--green); }
+.cart-pass-texto{ flex:none; width:44px; font:700 12px/1 var(--font-body); color:var(--muted); }
+
+.cart-field select:focus{
+  outline:0; border-color:var(--green); box-shadow:0 0 0 3px var(--green-soft);
+}
+
+.cart-acc-error{
+  margin:0 0 14px; padding:10px 13px; border-radius:10px;
+  background:rgba(196,60,48,.1); color:var(--red);
+  font:600 13.5px/1.4 var(--font-body);
+}
+.cart-acc-ok{
+  margin:0 0 14px; padding:10px 13px; border-radius:10px;
+  background:var(--green-soft); color:var(--green-ink);
+  font:600 13.5px/1.4 var(--font-body);
+}
+
+/* Botón de texto tipo link ("¿Olvidaste tu contraseña?", "Volver") dentro
+   del modal de cuenta. */
+.cart-acc-link{
+  display:block; margin:10px auto 0; padding:6px; border:none; background:none;
+  color:var(--muted); text-decoration:underline; cursor:pointer;
+  font:600 13px/1 var(--font-body);
+}
+.cart-acc-link:hover{ color:var(--ink); }
+
+/* Borrar cuenta (pestaña Datos de Ajustes): separado del resto con un borde
+   arriba, para que no quede al lado de "Guardar datos" como si fuera una
+   acción más del mismo peso. */
+.cart-acc-borrar{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+.cart-acc-borrar-btn{
+  width:100%; padding:11px 14px; border-radius:12px;
+  border:1px solid var(--red); background:none; color:var(--red);
+  cursor:pointer; font:700 14px/1 var(--font-body);
+}
+.cart-acc-borrar-btn:hover{ background:rgba(196,60,48,.08); }
+.cart-acc-borrar-btn:disabled{ opacity:.5; cursor:default; }
+
+/* --- Historial de pedidos (pestaña "Pedidos" de Ajustes) ----------------- */
+.ajustes-pedido{ padding:12px 0; border-bottom:1px solid var(--line); }
+.ajustes-pedido:last-child{ border-bottom:0; }
+.ajustes-pedido-fecha{ margin:0 0 6px; font:700 12.5px/1 var(--font-body); color:var(--muted); }
+.ajustes-pedido-items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+.ajustes-pedido-items li{ font:400 13.5px/1.4 var(--font-body); color:var(--ink); }
+.ajustes-pedido-meta{ margin:6px 0 0; font-size:12.5px; color:var(--muted); }
+.ajustes-pedido-estado{
+  display:inline-block; margin-top:8px; padding:3px 11px; border-radius:999px;
+  font:700 12px/1.6 var(--font-body); background:var(--line); color:var(--ink);
+}
+.ep-nuevo{ background:var(--green-soft); color:var(--green-ink); }
+.ep-confirmado, .ep-en_preparacion{ background:#fdf3d5; color:#9a7524; }
+.ep-en_transito{ background:#ece3f5; color:#6d4aa0; }
+.ep-listo{ background:#e9effc; color:#24509e; }
+.ep-en_reparto{ background:#dcf1ef; color:#0d7a72; }
+.ep-entregado{ background:var(--green-ink); color:#fff; }
+.ep-ausente{ background:#fdecd2; color:var(--orange); }
+.ep-reprogramado{ background:#f0e2d2; color:#8a5a2b; }
+.ep-cancelado{ background:rgba(226,59,48,.1); color:var(--red); }
+
+/* --- Indicador de sesión en el panel del pedido -------------------------- */
+.cart-sesion{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin:0 0 14px; padding:10px 13px; border-radius:10px;
+  background:var(--green-soft); color:var(--green-ink);
+  font:600 13px/1.4 var(--font-body);
+}
+.cart-sesion b{ font-weight:700; }
+.cart-sesion-out{
+  background:0; border:0; padding:0; cursor:pointer;
+  color:var(--green-ink); text-decoration:underline;
+  font:600 13px/1 var(--font-body);
+}
+.cart-sesion-out:hover{ color:var(--ink); }
+
+/* --- Ícono de cuenta en la barra de navegación ---------------------------
+   Mismo tamaño y trato que .cart-nav (assets/carrito.css), para que los dos
+   íconos se lean como una sola fila coherente y no como dos widgets pegados
+   por separado. Va ANTES del carrito en el orden visual (order:3, el
+   carrito pasa a order:4 — ver carrito.css). */
+.nav .cuenta-nav-wrap{ order:3; position:relative; flex:0 0 auto; }
+@media(max-width:820px){
+  .nav .cuenta-nav-wrap{ margin-left:auto; }
+  /* Si los dos empujan con auto, el navegador reparte el espacio libre por
+     mitades y quedan separados. Sólo el primero (este) tiene que absorberlo;
+     el carrito, que ya no es el primer ícono, se pega justo al lado. */
+  .nav .cuenta-nav-wrap ~ .cart-nav{ margin-left:0; }
+  /* La lupa (assets/v2.css) ya trae su propio margin-left:auto y en mobile
+     queda antes que este ícono en el orden visual — si a este también le
+     queda el auto, el espacio libre se reparte entre los dos y quedan
+     separados en vez de agrupados. Se cancela acá, igual que arriba con el
+     carrito, para que el grupo de íconos quede junto a la derecha. */
+  .nav .nav-search-mobile ~ .cuenta-nav-wrap{ margin-left:0; }
+}
+
+.cuenta-nav{
+  position:relative; flex:0 0 auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0;
+  border:0; border-radius:12px; background:transparent; cursor:pointer;
+  color:var(--ink); opacity:.8;
+  transition:opacity .2s var(--ease), color .2s var(--ease);
+}
+.cuenta-nav:hover{ opacity:1; color:var(--green-ink); }
+.cuenta-nav:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+.cuenta-nav svg{ width:23px; height:23px; }
+/* Con sesión activa, el ícono queda "prendido" — mismo lenguaje que el
+   carrito con algo cargado — y pasa a ser el acceso al perfil. */
+.cuenta-nav.is-on{ color:var(--green-ink); opacity:1; }
+.portal-page .nav .cuenta-nav{ color:#fff; }
+.portal-page .nav.solid .cuenta-nav{ color:var(--ink); }
+
+.cuenta-pop{
+  position:absolute; right:0; top:calc(100% + 8px); z-index:1300;
+  width:230px; padding:14px; border-radius:14px;
+  background:var(--surface); color:var(--ink);
+  box-shadow:0 14px 40px rgba(28,26,22,.22); border:1px solid var(--line);
+}
+.cuenta-pop-who{ margin:0 0 12px; }
+.cuenta-pop-who b{ display:block; font:600 14.5px/1.3 var(--font-body); color:var(--ink); }
+.cuenta-pop-who span{ display:block; margin-top:2px; font-size:12.5px; color:var(--muted); word-break:break-all; }
+.cuenta-pop-item{
+  display:block; width:100%; margin-bottom:6px; padding:9px 10px; border:0; border-radius:10px;
+  background:transparent; cursor:pointer; text-align:left; color:var(--ink);
+  font:600 13px/1.3 var(--font-body); transition:background .16s var(--ease), color .16s var(--ease);
+}
+.cuenta-pop-item:hover{ background:var(--green-soft); color:var(--green-ink); }
+.cuenta-pop-item:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+.cuenta-pop-out{
+  width:100%; margin-top:2px; padding:9px 10px; border:1px solid var(--line); border-radius:10px;
+  background:transparent; cursor:pointer; color:var(--ink);
+  font:600 13px/1 var(--font-body); transition:background .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease);
+}
+.cuenta-pop-out:hover{ background:var(--green-soft); border-color:var(--green-soft); color:var(--green-ink); }
+.cuenta-pop-out:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }

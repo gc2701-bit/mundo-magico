@@ -1,0 +1,393 @@
+/* Panel de administración de pedidos (admin-pedidos.html).
+   Usa los tokens de v2.css y reutiliza .btn/.cart-field-hint donde aplica,
+   para no inventar una paleta nueva sólo para esta pantalla interna. */
+
+.adm-wrap{ max-width:960px; margin:0 auto; padding:40px 20px 80px; }
+.adm-head{ margin-bottom:24px; }
+.adm-head h1{ margin:0 0 6px; font-size:clamp(28px,4vw,38px); }
+.adm-sesion-info{ margin:0; color:var(--muted); font-size:14px; }
+.adm-logout-btn{
+  margin:4px 0 0; padding:0; border:0; background:none; cursor:pointer;
+  color:var(--muted); font:600 13px/1.4 var(--font-body); text-decoration:underline;
+  transition:color .16s var(--ease);
+}
+.adm-logout-btn:hover{ color:var(--ink); }
+.adm-logout-btn:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+.adm-gate{
+  padding:40px 24px; text-align:center; border:1px dashed var(--line);
+  border-radius:var(--radius); background:var(--surface);
+}
+.adm-gate p{ margin:0 0 16px; color:var(--muted); }
+
+.adm-stats-hint{ margin:0 0 8px; font-size:13px; color:var(--muted); }
+.adm-stats{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+.adm-stat{
+  display:flex; align-items:center; gap:7px; padding:8px 14px;
+  border:1px solid var(--line); border-radius:999px; cursor:pointer;
+  background:var(--surface); color:var(--ink);
+  font:600 13px/1 var(--font-body); transition:border-color .16s var(--ease), background .16s var(--ease);
+}
+.adm-stat:hover{ border-color:var(--green); }
+.adm-stat b{ font:800 15px/1 var(--font-body); }
+.adm-stat.is-on{ border-color:var(--ink); background:var(--bg); }
+.adm-stat.ep-nuevo{ color:var(--green-ink); } .adm-stat.ep-nuevo b{ color:var(--green-ink); }
+.adm-stat.ep-confirmado, .adm-stat.ep-en_preparacion{ color:#9a7524; } .adm-stat.ep-confirmado b, .adm-stat.ep-en_preparacion b{ color:#9a7524; }
+.adm-stat.ep-en_transito{ color:#6d4aa0; } .adm-stat.ep-en_transito b{ color:#6d4aa0; }
+.adm-stat.ep-listo{ color:#24509e; } .adm-stat.ep-listo b{ color:#24509e; }
+.adm-stat.ep-en_reparto{ color:#0d7a72; } .adm-stat.ep-en_reparto b{ color:#0d7a72; }
+.adm-stat.ep-entregado{ color:var(--green-ink); } .adm-stat.ep-entregado b{ color:var(--green-ink); }
+.adm-stat.ep-ausente{ color:var(--orange); } .adm-stat.ep-ausente b{ color:var(--orange); }
+.adm-stat.ep-reprogramado{ color:#8a5a2b; } .adm-stat.ep-reprogramado b{ color:#8a5a2b; }
+.adm-stat.ep-cancelado{ color:var(--red); } .adm-stat.ep-cancelado b{ color:var(--red); }
+
+.adm-controls{
+  display:flex; flex-wrap:wrap; align-items:end; gap:14px;
+  margin-bottom:18px; padding:16px; border:1px solid var(--line);
+  border-radius:var(--radius); background:var(--surface);
+}
+.adm-group{ display:flex; flex-direction:column; gap:5px; }
+.adm-group span{ font:600 12.5px/1 var(--font-body); color:var(--muted); }
+.adm-group select, .adm-group input[type="date"]{
+  padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  font:400 14px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+  min-width:180px;
+}
+.adm-group-check{ justify-content:flex-end; }
+.adm-check-inline{
+  display:flex; align-items:center; gap:6px; min-width:0;
+  font:400 14px/1.3 var(--font-body); color:var(--ink); white-space:nowrap;
+}
+.adm-check-inline input{ width:auto; }
+
+/* --- E8: paginación y archivado ------------------------------------------ */
+.adm-cargar-mas-wrap{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.adm-cargar-mas, .adm-archivar{
+  padding:10px 16px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 13.5px/1 var(--font-body);
+}
+.adm-cargar-mas:hover{ border-color:var(--green); }
+.adm-archivar{ margin-left:auto; color:var(--muted); }
+.adm-archivar:hover{ border-color:var(--orange); color:var(--ink); }
+
+/* --- E9: métricas --------------------------------------------------------- */
+.adm-metricas-btn{
+  margin-bottom:16px; padding:9px 16px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 13.5px/1 var(--font-body);
+}
+.adm-metricas-btn:hover{ border-color:var(--green); }
+.adm-metricas{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:14px; margin-bottom:20px;
+}
+.adm-metrica{
+  padding:14px 16px; border:1px solid var(--line); border-radius:14px; background:var(--surface);
+}
+.adm-metrica-t{ margin:0 0 8px; font:700 14px/1.3 var(--font-display); color:var(--ink); }
+.adm-metrica p{ margin:0 0 4px; font-size:13px; color:var(--muted); }
+.adm-refrescar{
+  padding:9px 18px; border:1px solid var(--green); border-radius:10px;
+  background:var(--green-soft); color:var(--green-ink); cursor:pointer;
+  font:700 13.5px/1 var(--font-body); margin-left:auto;
+}
+.adm-refrescar:hover{ background:var(--green); color:#fff; }
+
+.adm-resumen{ margin:0 0 18px; color:var(--muted); font-size:14px; }
+
+.adm-grupo{ margin-bottom:28px; }
+.adm-grupo-t{
+  display:flex; align-items:center; gap:10px; margin:0 0 12px;
+  font:600 18px/1.2 var(--font-display); color:var(--ink);
+}
+.adm-grupo-n{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:24px; height:24px; padding:0 8px; border-radius:999px;
+  background:var(--green-soft); color:var(--green-ink);
+  font:700 12.5px/1 var(--font-body);
+}
+
+.adm-card{
+  padding:16px 18px; margin-bottom:10px; border:1px solid var(--line);
+  border-radius:16px; background:var(--surface);
+}
+.adm-card.is-traslado{ border-style:dashed; border-color:#6d4aa0; background:#faf8fc; }
+.adm-card-traslado-tag{
+  padding:3px 10px; border-radius:999px; background:#ece3f5; color:#6d4aa0;
+  font:700 11px/1.6 var(--font-body);
+}
+.adm-card-inmediato-tag{
+  padding:3px 10px; border-radius:999px; background:#fdecd2; color:#a05a1e;
+  font:700 11px/1.6 var(--font-body);
+}
+.adm-card-atrasado-tag{
+  padding:3px 10px; border-radius:999px; background:rgba(226,59,48,.1); color:var(--red);
+  font:700 11px/1.6 var(--font-body);
+}
+.adm-stat.is-atrasado{ color:var(--red); } .adm-stat.is-atrasado b{ color:var(--red); }
+.adm-head-links{ margin:4px 0 0; font:600 13px/1.4 var(--font-body); }
+.adm-head-links a{ color:var(--green-ink); }
+.adm-stat.is-accion{ border-style:dashed; color:var(--green-ink); } .adm-stat.is-accion b{ color:var(--green-ink); }
+
+/* --- Diálogo simple (reprogramar día) ------------------------------------ */
+.adm-dialogo-overlay{
+  position:fixed; inset:0; z-index:80; display:flex; align-items:center;
+  justify-content:center; padding:18px; background:rgba(20,25,20,.45);
+}
+.adm-dialogo{
+  width:100%; max-width:380px; padding:20px; border-radius:var(--radius);
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:0 18px 50px rgba(0,0,0,.22);
+}
+.adm-dialogo h3{ margin:0 0 6px; font:700 17px/1.3 var(--font-body); color:var(--ink); }
+.adm-dialogo-txt{ margin:0 0 14px; font:400 13.5px/1.5 var(--font-body); color:var(--muted); }
+.adm-dialogo-campo{
+  display:flex; flex-direction:column; gap:5px; margin-bottom:12px;
+  font:600 12.5px/1 var(--font-body); color:var(--muted);
+}
+.adm-dialogo-campo input, .adm-dialogo-campo select, .adm-dialogo-otro{
+  padding:9px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); color:var(--ink); font:500 14px/1 var(--font-body);
+}
+.adm-dialogo-otro{ width:100%; margin-bottom:12px; }
+.adm-dialogo-botones{ display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+.adm-dialogo-cancelar{
+  padding:9px 14px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); color:var(--muted); cursor:pointer;
+  font:600 13px/1 var(--font-body);
+}
+.adm-dialogo-ok{
+  padding:9px 14px; border:1px solid var(--orange); border-radius:10px;
+  background:var(--orange); color:#fff; cursor:pointer;
+  font:700 13px/1 var(--font-body);
+}
+.adm-dialogo-ok:hover{ filter:brightness(.95); }
+.adm-card-top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+.adm-card-top b{ font-size:15.5px; color:var(--ink); }
+.adm-card-tel{ font-size:13px; color:var(--green-ink); text-decoration:underline; }
+.adm-card-meta{ margin:0 0 8px; font-size:13px; color:var(--muted); }
+.adm-card-maps{ display:inline-block; margin:-4px 0 8px; font-size:12.5px; color:var(--blue); text-decoration:underline; }
+
+.adm-card-items{ list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:2px; }
+.adm-card-items li{ font-size:13.5px; color:var(--ink); }
+
+.adm-card-nota{
+  margin:0 0 10px; padding:8px 11px; border-radius:8px;
+  background:var(--bg); color:var(--ink); font-size:13px; font-style:italic;
+}
+
+.adm-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+.adm-card-creado{ font-size:12px; color:var(--muted); }
+
+.adm-card-estado-actual{
+  display:inline-block; padding:5px 10px; border-radius:999px;
+  font:700 12.5px/1.6 var(--font-body); background:var(--line); color:var(--ink);
+}
+.adm-card-estado-actual.ep-nuevo{ background:var(--green-soft); color:var(--green-ink); }
+.adm-card-estado-actual.ep-confirmado, .adm-card-estado-actual.ep-en_preparacion{ background:#fdf3d5; color:#9a7524; }
+.adm-card-estado-actual.ep-en_transito{ background:#ece3f5; color:#6d4aa0; }
+.adm-card-estado-actual.ep-listo{ background:#e9effc; color:#24509e; }
+.adm-card-estado-actual.ep-en_reparto{ background:#dcf1ef; color:#0d7a72; }
+.adm-card-estado-actual.ep-entregado{ background:var(--green-ink); color:#fff; }
+.adm-card-estado-actual.ep-ausente{ background:#fdecd2; color:var(--orange); }
+.adm-card-estado-actual.ep-reprogramado{ background:#f0e2d2; color:#8a5a2b; }
+.adm-card-estado-actual.ep-cancelado{ background:rgba(226,59,48,.1); color:var(--red); }
+
+/* --- Fila de pasos plausibles + corregir/motivo (admin-pedidos.js) ------- */
+.adm-card-paso-wrap{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+.adm-card-pasos{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.adm-card-paso{
+  padding:7px 14px; border:1px solid var(--green); border-radius:999px;
+  background:var(--green-soft); color:var(--green-ink); cursor:pointer;
+  font:700 12.5px/1 var(--font-body);
+}
+.adm-card-paso:hover{ background:var(--green); color:#fff; }
+.adm-card-paso:disabled{ opacity:.6; cursor:default; }
+.adm-card-corregir{
+  align-self:flex-start; padding:0; border:0; background:none; cursor:pointer;
+  font:600 12px/1 var(--font-body); color:var(--muted); text-decoration:underline;
+}
+.adm-card-motivo, .adm-card-corregir-sel{
+  padding:7px 10px; border:1px solid var(--line); border-radius:8px;
+  font:400 13px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+
+/* --- Historial (pedido_eventos) ------------------------------------------ */
+.adm-card-historia-wrap{ margin-top:8px; }
+.adm-card-historia-btn{
+  padding:0; border:0; background:none; cursor:pointer;
+  font:600 12px/1 var(--font-body); color:var(--muted); text-decoration:underline;
+}
+.adm-card-historia{
+  margin-top:8px; padding:10px 12px; border-radius:10px;
+  background:var(--bg); display:flex; flex-direction:column; gap:4px;
+}
+.adm-card-historia-item{ margin:0; font-size:12.5px; color:var(--muted); }
+
+/* --- E5: orden de parada + repartidor (sólo modo "plan") ----------------- */
+.adm-card-ruta{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:8px; }
+.adm-card-flechas{ display:flex; gap:4px; }
+.adm-card-flecha{
+  width:28px; height:28px; display:grid; place-items:center;
+  border:1px solid var(--line); border-radius:8px; background:var(--surface);
+  cursor:pointer; font-size:13px; line-height:1;
+}
+.adm-card-flecha:hover{ border-color:var(--green); }
+.adm-card-flecha:disabled{ opacity:.5; cursor:default; }
+.adm-card-repartidor{
+  padding:6px 10px; border:1px solid var(--line); border-radius:8px;
+  font:400 13px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+.adm-card-firma{ display:none; } /* sólo aparece en @media print, más abajo */
+
+/* Sugerir/asignar fecha+franja de envío (el cliente ya no la elige). */
+.adm-card-fecha{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.adm-card-fecha-label{ font-size:12.5px; color:var(--muted); }
+.adm-card-fecha-in, .adm-card-fecha-franja{
+  padding:6px 10px; border:1px solid var(--line); border-radius:8px;
+  font:400 13px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+.adm-card-fecha-guardar{
+  padding:6px 12px; border:1px solid var(--green); border-radius:8px;
+  background:var(--green); color:#fff; font:600 13px/1.3 var(--font-body); cursor:pointer;
+}
+.adm-card-fecha-guardar:disabled{ opacity:.6; cursor:default; }
+
+/* --- Tamaño del pedido: lo clasifica quien lo arma, no el cliente ------- */
+.adm-card-tamano-sel{
+  margin-top:8px; padding:6px 10px; border:1px solid var(--line); border-radius:8px;
+  font:400 13px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+
+/* --- E7: avisos por WhatsApp --------------------------------------------- */
+.adm-card-avisar{
+  margin-top:8px; padding:7px 14px; border:1px solid #25d366; border-radius:8px;
+  background:rgba(37,211,102,.1); color:#128c4a; cursor:pointer;
+  font:700 12.5px/1 var(--font-body);
+}
+.adm-card-avisar:hover{ background:#25d366; color:#fff; }
+.adm-avisar-lote{
+  margin:-4px 0 14px; padding:6px 12px; border:1px solid var(--line); border-radius:8px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 12.5px/1 var(--font-body);
+}
+.adm-avisar-lote:hover{ border-color:#25d366; }
+
+/* --- E5: cupo, ruta e impresión por grupo -------------------------------- */
+.adm-grupo-acciones{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:-6px 0 14px; }
+.adm-grupo-cupo{
+  padding:5px 12px; border-radius:999px; background:var(--green-soft);
+  color:var(--green-ink); font:700 12px/1.6 var(--font-body);
+}
+.adm-grupo-cupo.is-ambar{ background:#fdf3d5; color:#9a7524; }
+.adm-grupo-cupo.is-lleno{ background:rgba(226,59,48,.1); color:var(--red); }
+.adm-grupo-mapa{
+  font:600 12.5px/1 var(--font-body); color:var(--blue); text-decoration:underline;
+}
+.adm-grupo-mapa-btn{
+  padding:6px 12px; border:1px solid var(--line); border-radius:8px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 12.5px/1 var(--font-body);
+}
+.adm-grupo-mapa-btn:hover{ border-color:var(--blue); }
+
+/* --- Mapa embebido del recorrido (uno o más tramos, sin API key) --------- */
+.adm-grupo-mapa-wrap{ display:flex; flex-direction:column; gap:14px; margin:-2px 0 14px; }
+.adm-grupo-mapa-caja{ border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.adm-grupo-mapa-tramo-t{
+  margin:0; padding:8px 12px; border-bottom:1px solid var(--line);
+  background:var(--bg); color:var(--muted); font:600 12.5px/1 var(--font-body);
+}
+.adm-grupo-mapa-frame{ display:block; width:100%; height:360px; border:0; }
+.adm-imprimir, .adm-reprogramar, .adm-copiar-ruta{
+  padding:6px 12px; border:1px solid var(--line); border-radius:8px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 12.5px/1 var(--font-body);
+}
+.adm-imprimir:hover, .adm-copiar-ruta:hover{ border-color:var(--green); }
+.adm-reprogramar:hover{ border-color:var(--orange); }
+
+/* --- Hoja de ruta imprimible ---------------------------------------------
+   .adm-oculto-impresion esconde en pantalla Y al imprimir los grupos que no
+   son el que se está imprimiendo; body.adm-modo-ruta + @media print
+   esconden todo lo que no es la hoja (header, controles, stats, acciones
+   de estado/historial, que no tienen sentido en papel). */
+.adm-oculto-impresion{ display:none; }
+
+@media print{
+  .adm-modo-ruta .adm-head,
+  .adm-modo-ruta .adm-stats-hint,
+  .adm-modo-ruta .adm-stats,
+  .adm-modo-ruta .adm-controls,
+  .adm-modo-ruta .adm-resumen,
+  .adm-modo-ruta .adm-grupo-acciones,
+  .adm-modo-ruta .adm-grupo-mapa-wrap,
+  .adm-modo-ruta .adm-card-paso-wrap,
+  .adm-modo-ruta .adm-card-historia-wrap,
+  .adm-modo-ruta .adm-card-ruta,
+  .adm-modo-ruta .adm-card-tel,
+  .adm-modo-ruta .adm-card-maps,
+  .adm-modo-ruta .adm-card-avisar,
+  .adm-modo-ruta .adm-avisar-lote{ display:none !important; }
+
+  .adm-modo-ruta .adm-card-firma{ display:block; margin-top:10px; font-size:13px; }
+  .adm-modo-ruta .adm-card{ break-inside:avoid; border:1px solid #999; }
+  .adm-modo-ruta .adm-grupo-t{ font-size:20px; }
+}
+
+@media(max-width:560px){
+  .adm-controls{ flex-direction:column; align-items:stretch; }
+  .adm-group select{ min-width:0; width:100%; }
+  .adm-refrescar{ margin-left:0; }
+}
+
+/* admin-envios.html: editor de configuración (zonas, tarifas, franjas,
+   sucursales, cupos, bloqueos, repartidores). */
+.adm-cfg-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+.adm-cfg-tab{
+  padding:8px 16px; border:1px solid var(--line); border-radius:999px;
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  font:600 13px/1 var(--font-body); transition:border-color .16s var(--ease), background .16s var(--ease);
+}
+.adm-cfg-tab:hover{ border-color:var(--green); }
+.adm-cfg-tab.is-on{ border-color:var(--ink); background:var(--bg); }
+
+.adm-cfg-tabla{ display:flex; flex-direction:column; gap:10px; }
+.adm-cfg-fila{
+  display:flex; flex-wrap:wrap; align-items:end; gap:12px;
+  padding:14px 16px; border:1px solid var(--line); border-radius:14px;
+  background:var(--surface);
+}
+.adm-cfg-fila-nueva{ border-style:dashed; border-color:var(--green); }
+
+.adm-cfg-campo{ display:flex; flex-direction:column; gap:5px; min-width:110px; }
+.adm-cfg-campo span{ font:600 12px/1 var(--font-body); color:var(--muted); }
+.adm-cfg-campo input, .adm-cfg-campo select, .adm-cfg-campo textarea{
+  padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+  font:400 13.5px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+.adm-cfg-campo input[type="checkbox"]{ width:18px; height:18px; padding:0; align-self:flex-start; }
+.adm-cfg-campo textarea{ min-width:280px; resize:vertical; }
+.adm-cfg-ro{ padding:8px 0; font:600 13.5px/1.3 var(--font-body); color:var(--ink); }
+
+.adm-cfg-acciones{ display:flex; gap:8px; margin-left:auto; }
+.adm-cfg-guardar{
+  padding:8px 16px; border:1px solid var(--green); border-radius:8px;
+  background:var(--green-soft); color:var(--green-ink); cursor:pointer;
+  font:700 13px/1 var(--font-body);
+}
+.adm-cfg-guardar:hover{ background:var(--green); color:#fff; }
+.adm-cfg-guardar:disabled{ opacity:.6; cursor:default; }
+.adm-cfg-borrar{
+  padding:8px 16px; border:1px solid var(--red); border-radius:8px;
+  background:rgba(226,59,48,.08); color:var(--red); cursor:pointer;
+  font:700 13px/1 var(--font-body);
+}
+.adm-cfg-borrar:hover{ background:var(--red); color:#fff; }
+
+@media(max-width:560px){
+  .adm-cfg-fila{ flex-direction:column; align-items:stretch; }
+  .adm-cfg-campo{ min-width:0; }
+  .adm-cfg-acciones{ margin-left:0; }
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración de envíos · Mundo Mágico</title>
+<!-- Página interna del negocio: edita las tablas de las que lee assets/envios.js.
+     No tiene que aparecer en Google. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/carrito.css">
+<link rel="stylesheet" href="assets/cuenta.css">
+<link rel="stylesheet" href="assets/admin-pedidos.css">
+</head>
+<body>
+
+<div class="adm-wrap">
+  <div class="adm-head">
+    <h1>Configuración de envíos</h1>
+    <p id="adm-sesion" class="adm-sesion-info" hidden></p>
+    <button type="button" class="adm-logout-btn" id="adm-logout-btn" hidden>Cerrar sesión</button>
+  </div>
+
+  <div id="adm-gate" class="adm-gate">
+    <p>Necesitás iniciar sesión con la cuenta del negocio para editar la configuración de envíos.</p>
+    <button type="button" class="btn btn-primary" id="adm-login-btn">Iniciar sesión</button>
+  </div>
+
+  <div id="adm-noadmin" class="adm-gate" hidden>
+    <p>Esta cuenta no es admin, así que no puede editar esta configuración
+      (las políticas de la base la rechazarían igual: esto es sólo para no
+      mostrar un editor que no vas a poder usar).</p>
+  </div>
+
+  <div id="adm-panel" class="adm-panel" hidden>
+    <div class="adm-cfg-tabs" id="adm-cfg-tabs"></div>
+    <p id="adm-cfg-msg" class="adm-resumen"></p>
+    <div id="adm-cfg-contenido"></div>
+  </div>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+<script src="assets/supabase-js-2.111.0.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/envios.js"></script>
+<script src="assets/cuenta.js"></script>
+<script src="assets/admin-envios.js"></script>
+</body>
+</html>

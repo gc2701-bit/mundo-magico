@@ -1,0 +1,70 @@
+PRODUCTOS A REVISAR EN EL POS  (44)
+Pregunta para cada uno: el articulo existe y tiene PRECIO MINORISTA cargado?
+
+VELAS DE CUMPLEANOS  (12)
+   31409      Velas número estilo globo - del 0 al 9 · multicolor, doradas y platea
+   21757      Velas largas bicolor
+   21696      Velas largas bicolor
+   21793      Velas largas bicolor
+   21672      Velas largas impresas
+   21658      Velas largas impresas
+   21818      Velas largas metalizadas
+   21832      Velas largas metalizadas
+   21856      Velas largas metalizadas
+   75789      Velas finitas torneadas
+   75772      Velas finitas torneadas
+   75734      Velas finitas torneadas
+
+CORTINAS METALIZADAS  (5)
+   6048       Cortina metalizada - dorado, rosa, verde, rojo
+   22738      Cortina metalizada - azul, turquesa, negro, rosa gold
+   6048       Cortina metalizada - celeste, rojo, verde, plata, dorado
+   22738      Cortina metalizada - rojo, dorado, fucsia
+   (sin codigo)  Cortina metalizada - rosa, rosa gold, púrpura, negro, azul
+
+TOPPERS Y ADORNOS DE TORTA  (5)
+   9132       Topper de torta mariposas - de colores
+   9132       Topper mariposas Feliz Cumpleaños
+   07071      Topper Feliz Cumpleaños glitter - rosa, plata, negro
+   32175      Adorno Feliz Cumpleaños con flor - rosa y celeste
+   32715      Adorno Feliz Cumpleaños con moño - plata y dorado
+
+LICENCIAS (MANTEL/VASOS/PLATOS/PINATA)  (5)
+   (sin codigo)  Piñata de cartón - Frozen
+   (sin codigo)  Piñata de Cartón - Encanto
+   (sin codigo)  Mantel - Intensamente
+   (sin codigo)  Vasos Polipapel - Merlina
+   (sin codigo)  Mantel - Merlina
+
+GUIRNALDAS  (3)
+   12011      Guirnalda Feliz Cumpleaños pastel - tonos pastel
+   20972      Guirnalda banderines Feliz Cumpleaños - metalizado y glitter
+   20934      Guirnalda banderines Feliz Cumpleaños - colores lisos
+
+PLATOS  (3)
+   (sin codigo)  Platos Cartón - Merlina
+   (sin codigo)  Platos descartables plásticos
+   (sin codigo)  Plato celeste estrella
+
+OTROS  (3)
+   00632      Chalecos reflectivos - de seguridad
+   (sin codigo)  Cofias de paisana de paño - naranja, celeste, verde
+   (sin codigo)  Cotillón completo de la Selección - gorros, vinchas, anteojos, cornetas y más
+
+FLOREROS  (2)
+   (sin codigo)  Florero Cónico Alto
+   (sin codigo)  Florero Copón
+
+AEROSOLES  (2)
+   6863       Nieve artificial en aerosol
+   3997       Serpentina en aerosol
+
+SOMBREROS Y CORONAS  (2)
+   79275      Gorro flamenco
+   49035      Corona de rey dorada
+
+PANEL SHIMMER  (1)
+   05677      Panel shimmer de lentejuelas - holografico, cobre, dorado
+
+ALAS  (1)
+   (sin codigo)  Alas de ángel - tul

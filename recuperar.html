@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elegir contraseña nueva · Mundo Mágico</title>
+<!-- Sólo se llega acá desde el link del correo de recuperación (ver
+     resetPasswordForEmail en assets/cuenta.js). No tiene que aparecer en
+     Google ni en la navegación del sitio. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/carrito.css">
+<link rel="stylesheet" href="assets/cuenta.css">
+<link rel="stylesheet" href="assets/recuperar.css">
+</head>
+<body>
+
+<div class="rec-wrap">
+  <div class="rec-card">
+
+    <div id="rec-esperando">
+      <h1>Un momento…</h1>
+      <p>Confirmando el link de recuperación.</p>
+    </div>
+
+    <div id="rec-invalido" hidden>
+      <h1>Este link ya no es válido</h1>
+      <p>Puede haber expirado o ya haberse usado. Volvé a la web y pedí uno
+        nuevo desde "Olvidé mi contraseña", en el ícono de tu cuenta.</p>
+    </div>
+
+    <div id="rec-form" hidden>
+      <h1>Elegí tu contraseña nueva</h1>
+      <p id="rec-form-desc">Esta va a ser tu nueva contraseña para entrar a tu cuenta.</p>
+      <label class="cart-field">
+        <span>Contraseña nueva</span>
+        <input type="password" id="rec-pass">
+      </label>
+      <small class="cart-field-hint" id="rec-hint"></small>
+      <label class="cart-field">
+        <span>Confirmar contraseña</span>
+        <input type="password" id="rec-pass-conf">
+      </label>
+      <p class="cart-acc-error" id="rec-error" hidden></p>
+      <button type="button" class="cart-send" id="rec-btn">Guardar contraseña</button>
+    </div>
+
+    <div id="rec-listo" class="rec-ok" hidden>
+      <h1>Listo</h1>
+      <p>Tu contraseña se actualizó. Ya podés volver a la web.</p>
+      <a href="index.html">Ir a Mundo Mágico</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/supabase-js-2.111.0.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/cuenta.js"></script>
+<script src="assets/recuperar.js"></script>
+</body>
+</html>

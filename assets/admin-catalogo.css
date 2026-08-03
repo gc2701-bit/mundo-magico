@@ -1,0 +1,254 @@
+/* Edición del catálogo en el lugar. Mismos tokens que v2.css/carrito.css
+   (--green, --ink, --radius, --line, --muted, --surface) para que se vea
+   como parte del sitio, no como un widget pegado aparte. Todo lo de acá
+   sólo existe si hay sesión de admin — ver assets/admin-catalogo.js. */
+
+/* --- Barra flotante con el interruptor de "Modo edición" ----------------- */
+.mm-admin-bar{
+  position:fixed; left:16px; bottom:16px; z-index:1100;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  max-width:calc(100vw - 32px);
+  padding:10px 14px; border-radius:999px;
+  background:var(--ink); color:#fff;
+  box-shadow:0 10px 30px -8px rgba(28,26,22,.5);
+  font:600 13.5px/1 var(--font-body);
+}
+.mm-admin-bar[hidden]{ display:none; }
+.mm-admin-bar-label{ opacity:.85; }
+.mm-admin-switch{
+  position:relative; width:38px; height:22px; padding:2px; border:0; border-radius:999px;
+  background:rgba(255,255,255,.25); cursor:pointer; flex:none;
+  transition:background .16s var(--ease);
+}
+.mm-admin-switch::after{
+  content:''; position:absolute; top:2px; left:2px; width:18px; height:18px;
+  border-radius:50%; background:#fff; transition:transform .16s var(--ease);
+}
+.mm-admin-switch.is-on{ background:var(--green); }
+.mm-admin-switch.is-on::after{ transform:translateX(16px); }
+.mm-admin-switch:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+/* Sólo con el modo edición prendido — mismo criterio que el lápiz de cada
+   tarjeta, ver más abajo. */
+.mm-admin-add{
+  display:none; border:0; border-radius:999px; padding:8px 14px;
+  background:var(--green-ink); color:#fff; cursor:pointer;
+  font:600 13px/1 var(--font-body); white-space:nowrap;
+}
+body.mm-admin-edit .mm-admin-add{ display:inline-flex; align-items:center; }
+.mm-admin-add:hover{ filter:brightness(1.08); }
+/* Azul en vez de verde: distinto tipo de alta (subcategoría, no producto),
+   para no confundirlos de un vistazo en la barra. */
+.mm-admin-add-subcat{ background:var(--blue); }
+/* Oscuro y no verde/azul a propósito: no es un alta, es ir a buscar algo
+   que ya se sacó de la web — un tercer color evita que se confunda con
+   "+ Agregar producto" o "+ Agregar subcategoría" en la misma barra. */
+.mm-admin-add-ocultos{ background:var(--ink); }
+
+/* --- Lápiz sobre cada tarjeta ---------------------------------------------
+   Mismo trato que .pcard-fav (carrito.css) pero en la esquina opuesta, y
+   sólo visible con el modo edición prendido: un admin que sólo quiere mirar
+   el catálogo no tiene que convivir con lápices en cada tarjeta. */
+.pcard-edit{
+  display:none; position:absolute; top:8px; left:8px; z-index:2;
+  width:32px; height:32px; padding:0; border:0; border-radius:50%;
+  align-items:center; justify-content:center;
+  background:rgba(255,255,255,.92); color:var(--ink); cursor:pointer;
+  box-shadow:0 2px 8px rgba(28,26,22,.18);
+  transition:background .15s var(--ease), transform .15s var(--ease);
+}
+body.mm-admin-edit .pcard-edit{ display:inline-flex; }
+.pcard-edit:hover{ background:#fff; transform:scale(1.06); }
+.pcard-edit:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+.pcard-edit svg{ width:16px; height:16px; }
+
+/* --- Lápiz junto al título de cada subcategoría --------------------------
+   Sólo cambia el layout de .catsec-head (a fila, para poner el lápiz al
+   lado del título) con el modo edición prendido — para cualquier visitante
+   normal .catsec-head sigue siendo el bloque de siempre. */
+body.mm-admin-edit .catsec-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.mm-seccion-edit{
+  display:none; flex:none; width:26px; height:26px; padding:0;
+  border:1px solid var(--line); border-radius:50%; align-items:center; justify-content:center;
+  background:var(--surface); color:var(--muted); cursor:pointer;
+  transition:color .15s var(--ease), border-color .15s var(--ease);
+}
+body.mm-admin-edit .mm-seccion-edit{ display:inline-flex; }
+.mm-seccion-edit:hover{ color:var(--ink); border-color:var(--ink); }
+.mm-seccion-edit:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+.mm-seccion-edit svg{ width:13px; height:13px; }
+
+/* Agotado: cinta simple sobre la foto — no tapa el precio ni el nombre. */
+.pcard[data-agotado] .pcard-ph{ position:relative; }
+.pcard[data-agotado] .pcard-ph::after{
+  content:'Sin stock'; position:absolute; left:0; right:0; bottom:0;
+  padding:6px 10px; text-align:center;
+  background:rgba(28,26,22,.72); color:#fff;
+  font:700 12.5px/1 var(--font-body); letter-spacing:.02em;
+}
+.pcard[data-agotado] .pcard-ph img{ filter:grayscale(.6); opacity:.75; }
+
+/* --- Popover de edición ---------------------------------------------------
+   Mismo tratamiento fijo-centrado que .cart-acc (cuenta.css), con su propio
+   fondo oscuro: no depende de que el carrito esté cargado en la página. */
+.mm-admin-scrim{
+  position:fixed; inset:0; z-index:1490; background:rgba(28,26,22,.5);
+  opacity:0; pointer-events:none; transition:opacity .2s var(--ease);
+}
+.mm-admin-scrim.is-on{ opacity:1; pointer-events:auto; }
+
+.mm-pop{
+  position:fixed; z-index:1500; left:50%; top:50%; transform:translate(-50%,-46%) scale(.97);
+  width:min(420px,calc(100% - 32px)); max-height:88vh; display:flex; flex-direction:column;
+  background:var(--surface); color:var(--ink); border-radius:var(--radius); overflow:hidden;
+  box-shadow:0 20px 60px rgba(28,26,22,.3);
+  opacity:0; pointer-events:none; transition:opacity .2s var(--ease), transform .2s var(--ease);
+}
+.mm-pop.is-on{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+
+.mm-pop-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:18px 20px; border-bottom:1px solid var(--line);
+}
+.mm-pop-head h3{ margin:0; font:600 18px/1.25 var(--font-display); color:var(--ink); }
+.mm-pop-x{
+  background:0; border:0; cursor:pointer; padding:6px; line-height:1;
+  font-size:24px; color:var(--muted); border-radius:8px; flex:none;
+}
+.mm-pop-x:hover{ color:var(--ink); }
+
+.mm-pop-body{ flex:1; overflow-y:auto; padding:16px 20px; }
+
+.mm-pop-nota{ margin:0 0 14px; font-size:12.5px; line-height:1.5; color:var(--muted); }
+.mm-pop-nota.mm-alerta{ color:var(--orange, #b06a1a); }
+
+.mm-field{ display:block; margin:0 0 12px; }
+.mm-field > span{ display:block; margin:0 0 5px; font:600 12.5px/1 var(--font-body); color:var(--muted); }
+.mm-field input[type=number], .mm-field input[type=text], .mm-field select, .mm-field textarea{
+  width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:10px;
+  font:500 15px/1.3 var(--font-body); color:var(--ink); background:var(--surface);
+}
+.mm-field textarea{ resize:vertical; font-family:var(--font-body); }
+.mm-field input:focus, .mm-field select:focus, .mm-field textarea:focus{
+  outline:0; border-color:var(--green); box-shadow:0 0 0 3px var(--green-soft);
+}
+.mm-field input[type=file]{ font:500 13px/1.3 var(--font-body); color:var(--ink); }
+
+/* Vista previa de la foto ya procesada (1080×1080, fondo blanco) antes de
+   subirla — así el admin ve el recorte final, no el original que sacó. */
+.mm-alta-preview{
+  display:block; width:100%; max-width:220px; aspect-ratio:1; object-fit:contain;
+  margin:0 0 14px; border:1px solid var(--line); border-radius:12px; background:#fff;
+}
+
+/* --- "Agregar producto": fotos elegidas (una o varias, según el tipo) --- */
+.mm-alta-fotos{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 14px; }
+.mm-alta-foto-item{
+  display:flex; flex-direction:column; gap:6px; align-items:center;
+  width:110px; padding:8px; border:1px solid var(--line); border-radius:12px;
+}
+.mm-alta-foto-item .mm-alta-preview{
+  width:100%; max-width:none; margin:0; border-radius:8px;
+}
+.mm-alta-foto-item input[type=text], .mm-alta-foto-item input[type=number]{
+  width:100%; padding:5px 7px; border:1px solid var(--line); border-radius:8px;
+  font:500 12px/1.3 var(--font-body); text-align:center;
+}
+.mm-alta-foto-item .mm-pop-x{ font-size:16px; padding:2px; }
+
+/* --- "Agregar producto": filas de talles/tamaños ------------------------- */
+.mm-alta-talles{ display:flex; flex-direction:column; gap:8px; margin:0 0 10px; }
+.mm-alta-talle-fila{
+  display:grid; grid-template-columns:1.3fr 1fr 1fr auto; gap:8px; align-items:center;
+}
+.mm-alta-talle-fila input{
+  padding:8px 9px; border:1px solid var(--line); border-radius:9px;
+  font:500 13.5px/1.3 var(--font-body); color:var(--ink); background:var(--surface); min-width:0;
+}
+.mm-alta-talle-fila .mm-pop-x{ font-size:18px; padding:2px; }
+
+/* --- Mover a otro mundo: colapsado por defecto, distinto del botón verde
+   de Guardar para que no se confunda con "guardar los demás cambios". --- */
+.mm-mover-toggle{
+  display:block; width:100%; margin:4px 0 14px; padding:11px;
+  border:1px dashed var(--line); border-radius:10px; background:transparent;
+  font:600 13.5px/1 var(--font-body); color:var(--muted); cursor:pointer;
+  text-align:center; transition:border-color .15s var(--ease), color .15s var(--ease);
+}
+.mm-mover-toggle:hover{ border-color:var(--ink); color:var(--ink); }
+.mm-mover-toggle:disabled{ opacity:.4; cursor:default; }
+.mm-mover-toggle:disabled:hover{ border-color:var(--line); color:var(--muted); }
+
+/* Subir/bajar en el editor de subcategoría: los dos botones lado a lado, no
+   uno abajo del otro como el resto de .mm-mover-toggle (que son de a uno). */
+.mm-subcat-mover{ display:flex; gap:10px; margin:0 0 14px; }
+.mm-subcat-mover .mm-mover-toggle{ flex:1; margin:0; }
+.mm-mover-panel[hidden]{ display:none; }
+.mm-mover-panel{ margin:0 0 14px; padding:14px; border:1px solid var(--line); border-radius:12px; }
+.mm-mover-btn{ background:var(--ink); }
+.mm-mover-btn:hover{ filter:brightness(1.15); }
+
+/* Borrar un producto de catalogo_productos es permanente (a diferencia de
+   "Sacar de la web"): color de alerta para que no se confunda con Guardar. */
+.mm-borrar-btn{
+  display:block; width:100%; margin:4px 0 0; padding:11px;
+  border:1px solid var(--red); border-radius:10px; background:transparent;
+  font:600 13.5px/1 var(--font-body); color:var(--red); cursor:pointer;
+  text-align:center; transition:background .15s var(--ease), color .15s var(--ease);
+}
+.mm-borrar-btn:hover{ background:var(--red); color:#fff; }
+
+.mm-check{
+  display:flex; align-items:center; gap:8px; margin:0 0 14px;
+  font:600 13.5px/1 var(--font-body); color:var(--ink); cursor:pointer;
+}
+
+.mm-colores{ display:flex; flex-wrap:wrap; gap:4px 14px; margin:0 0 14px; }
+.mm-colores .mm-check{ margin:0; }
+
+.mm-filas{ display:flex; flex-direction:column; gap:10px; margin:0 0 14px; }
+.mm-fila{
+  display:grid; grid-template-columns:1fr auto; gap:6px 10px; align-items:center;
+  padding:10px; border:1px solid var(--line); border-radius:12px;
+}
+.mm-fila-nombre{ grid-column:1/3; font:700 13.5px/1.3 var(--font-body); color:var(--ink); }
+.mm-fila-codigo{ font-size:12px; color:var(--muted); }
+
+/* --- Productos ocultos: nombre y botón lado a lado (mismo .mm-fila, sin
+   el grid-column:1/3 de la lista de talles) ------------------------------ */
+.mm-ocultos-nombre{ font:600 13.5px/1.3 var(--font-body); color:var(--ink); min-width:0; }
+.mm-ocultos-vacio{ margin:0; }
+.mm-ocultos-btn{
+  flex:none; width:auto; padding:7px 12px; border:1px solid var(--line); border-radius:999px;
+  background:transparent; color:var(--ink); font:600 12.5px/1 var(--font-body); cursor:pointer;
+  white-space:nowrap; transition:border-color .15s var(--ease), color .15s var(--ease);
+}
+.mm-ocultos-btn:hover{ border-color:var(--green); color:var(--green-ink); }
+.mm-ocultos-btn:disabled{ opacity:.5; cursor:default; }
+
+.mm-combo-comp{
+  display:flex; justify-content:space-between; gap:10px; padding:6px 0;
+  font-size:13.5px; color:var(--ink); border-bottom:1px solid var(--line);
+}
+.mm-combo-comp:last-child{ border-bottom:0; }
+.mm-combo-comp b{ font-variant-numeric:tabular-nums; }
+.mm-combo-suma{ margin:8px 0 14px; font:700 13.5px/1 var(--font-body); color:var(--muted); text-align:right; }
+
+.mm-pop-foot{ flex:none; padding:14px 20px 18px; border-top:1px solid var(--line); }
+.mm-pop-clave{ margin:0 0 12px; font-size:11.5px; color:var(--muted); word-break:break-all; }
+.mm-pop-error{
+  margin:0 0 12px; padding:10px 13px; border-radius:10px;
+  background:rgba(196,60,48,.1); color:var(--red); font:600 13px/1.4 var(--font-body);
+}
+.mm-pop-ok{
+  margin:0 0 12px; padding:10px 13px; border-radius:10px;
+  background:var(--green-soft); color:var(--green-ink); font:600 13px/1.4 var(--font-body);
+}
+.mm-pop-guardar{
+  display:flex; align-items:center; justify-content:center; width:100%;
+  padding:13px; border:0; border-radius:12px; cursor:pointer;
+  font:700 14.5px/1 var(--font-body); color:#fff; background:var(--green-ink);
+  transition:filter .18s var(--ease);
+}
+.mm-pop-guardar:hover{ filter:brightness(.94); }
+.mm-pop-guardar:disabled{ opacity:.6; cursor:default; }

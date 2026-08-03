@@ -1,0 +1,33 @@
+# Headers de seguridad (Netlify los aplica a partir de este archivo).
+#
+# La CSP de acá abajo permite 'unsafe-inline' en script-src y style-src
+# porque varias páginas (index.html, cumpleanos-v2.html, etc.) tienen
+# <script> y style="..." inline — sacarlos requeriría mover ese código a
+# archivos .js/.css aparte, página por página, y no es parte de este cambio.
+# Igual la CSP suma protección real donde más importa:
+#   - connect-src: aunque un script inyectado lograra ejecutar, no podría
+#     mandar el token de sesión (localStorage) a un servidor de un atacante
+#     — sólo puede hablar con Supabase (precios, pedidos, cuentas, catálogo
+#     editable — ver CLAUDE.md) y Nominatim (envio-form.js, geocoding de
+#     direcciones). Google Sheets salió de acá cuando los precios se
+#     migraron a Supabase. wa.me y los links de Maps se abren con
+#     window.open (navegación de pestaña, no fetch), así que no hace falta
+#     sumarlos acá.
+#   - frame-ancestors 'self': nadie puede meter el sitio en un iframe ajeno
+#     (clickjacking).
+#   - object-src 'none': cierra Flash/plugins viejos como vector.
+#
+# Google Analytics y Microsoft Clarity (assets/analytics.js) necesitan estar
+# permitidos en script-src (de dónde bajan el tag) Y en connect-src (a dónde
+# mandan los eventos). Si falta cualquiera de los dos, las estadísticas dejan
+# de llegar sin ningún error visible en la página — el sitio se ve perfecto y
+# los números quedan en cero. El pixel de GA entra por img-src https:.
+#
+# Si en algún momento se sacan los inline scripts/styles, endurecer sacando
+# 'unsafe-inline' de script-src y style-src.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://kyuilrlewynqrzebouww.supabase.co https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms; frame-src https://maps.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()

@@ -6,3 +6,18 @@ productos/**/_orig/
 
 # Dependencias locales de las herramientas de .claude (binarios de sharp, etc.)
 .claude/node_modules/
+
+# Copias de seguridad puntuales hechas a mano
+*.bak-*
+
+# Artefactos de trabajo de la migracion de precios: la fuente de verdad ahora
+# es Supabase (ver CLAUDE.md). Quedan en el disco pero no se publican — el
+# sitio se sirve entero desde el repo y no tienen por que viajar ahi.
+precios.XLS
+revision-precios.xlsx
+cards_dump.json
+match_results.json
+match_results2.json
+confirmed_items.json
+productos-sin-codigo.txt
+lighthouse-err.log

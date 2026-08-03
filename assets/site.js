@@ -51,9 +51,15 @@
       '<div class="ficha">' +
         '<button class="ficha-close" type="button" aria-label="Cerrar">✕</button>' +
         '<div class="gal">' +
-          '<button class="ficha-nav ficha-prev" type="button" aria-label="Producto anterior">‹</button>' +
-          '<button class="ficha-nav ficha-next" type="button" aria-label="Producto siguiente">›</button>' +
-          '<div class="main"><img src="" alt=""></div>' +
+          // Las flechas de ADENTRO de la foto cambian de color/foto del mismo
+          // producto. Las de cambiar de producto están afuera del cuadro (al
+          // final de este mismo innerHTML): antes las dos eran la misma flecha
+          // en el mismo lugar, y tocar "siguiente" esperando otro color te
+          // sacaba del producto.
+          '<div class="main"><img src="" alt="">' +
+            '<button class="gal-nav gal-prev" type="button" aria-label="Foto anterior" hidden>‹</button>' +
+            '<button class="gal-nav gal-next" type="button" aria-label="Foto siguiente" hidden>›</button>' +
+          '</div>' +
           '<div class="thumbs" hidden></div></div>' +
         '<div class="info">' +
           '<span class="cat" hidden></span>' +
@@ -62,12 +68,23 @@
           '<p class="desc" hidden></p>' +
           '<ul class="specs" hidden></ul>' +
           '<div class="items" hidden></div>' +
-          '<a class="btn-wa" href="#" target="_blank" rel="noopener">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm4.52 11.97c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>' +
-            'Consultar por WhatsApp</a>' +
+          // El cajón del pedido. La ficha NO sabe qué es un carrito: deja el
+          // lugar y avisa cuando se abre (ver window.MMFicha, más abajo). Si
+          // nadie se anota —porque se borró carrito.js de la página— queda
+          // vacío y el CSS lo esconde (.ficha-cart:empty).
+          '<div class="ficha-cart"></div>' +
+          // Acá había un "Consultar por WhatsApp". Se sacó: la acción de la
+          // ficha es armar el pedido, y dos salidas compitiendo mandaban a la
+          // gente a preguntar producto por producto, que es justo lo que el
+          // carrito vino a evitar. Para una consulta suelta sigue estando el
+          // botón flotante de WhatsApp, que está en todas las páginas.
           '<p class="aviso">Sin vueltas: te respondemos en el horario del local 😉</p>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      // Fuera de .ficha a propósito: pasar al producto siguiente es salir de
+      // este producto, y leerlo por fuera del cuadro lo dice sin explicarlo.
+      '<button class="ficha-nav ficha-prev" type="button" aria-label="Producto anterior">‹</button>' +
+      '<button class="ficha-nav ficha-next" type="button" aria-label="Producto siguiente">›</button>';
     document.body.appendChild(overlay);
 
     var mainImg = overlay.querySelector('.gal .main img');
@@ -78,16 +95,46 @@
     var descEl = overlay.querySelector('.desc');
     var specsEl = overlay.querySelector('.specs');
     var itemsEl = overlay.querySelector('.items');
-    var waBtn = overlay.querySelector('.btn-wa');
+    var slotEl = overlay.querySelector('.ficha-cart');
     var closeBtn = overlay.querySelector('.ficha-close');
     var prevProductBtn = overlay.querySelector('.ficha-prev');
     var nextProductBtn = overlay.querySelector('.ficha-next');
+    var galPrevBtn = overlay.querySelector('.gal-prev');
+    var galNextBtn = overlay.querySelector('.gal-next');
     var galEl = overlay.querySelector('.gal');
     var lastFocus = null;
     var currentCard = null;
     var allCards = Array.prototype.slice.call(pcards);
+    var ganchos = [];        // quién se hace cargo del cajón del pedido
 
     var show = function (el, on) { el.hidden = !on; };
+
+    /* --- Las fotos del producto abierto ------------------------------------
+     * Hay cuatro maneras de cambiar de foto —las flechas de adentro, las
+     * miniaturas, el dedo, y elegir un color en el bloque del pedido— y todas
+     * pasan por acá. Cuando cada una se manejaba sola, elegir un color dejaba
+     * marcada la miniatura de la foto anterior. */
+    var fotos = [], capsFoto = [], fotoIdx = 0, nombreActual = '';
+
+    function mostrarFoto(src, alt) {
+      mainImg.src = src || '';
+      mainImg.alt = alt || nombreActual;
+      // Se compara contra mainImg.src, que el navegador ya resolvió a absoluta:
+      // el carrito manda la ruta relativa escrita en el HTML y las miniaturas
+      // guardan la absoluta, así que crudas no coinciden nunca.
+      var actual = mainImg.src;
+      thumbsBox.querySelectorAll('button').forEach(function (x) {
+        x.classList.toggle('is-on', x.dataset.src === actual);
+      });
+      return actual;
+    }
+
+    function irAFoto(i) {
+      if (!fotos.length) return;
+      fotoIdx = (i + fotos.length) % fotos.length;
+      mostrarFoto(fotos[fotoIdx],
+        nombreActual + (capsFoto[fotoIdx] ? ' — ' + capsFoto[fotoIdx] : ''));
+    }
 
     // Lista de tarjetas por las que se puede navegar: todas, salvo que el
     // buscador de la categoría haya filtrado algunas (no tiene sentido
@@ -116,6 +163,10 @@
       lastFocus = lastFocus || card;
       currentCard = card;
       updateNavButtons();
+      // Qué se puede elegir de este producto lo sabe assets/producto.js, que se
+      // carga antes. La ficha lo usa para no repetir en la ficha técnica lo que
+      // ya se muestra como selector.
+      var modelo = window.MMProducto ? MMProducto.leer(card) : null;
       var titleEl = card.querySelector('h3');
       var name = titleEl ? titleEl.textContent.trim() : '';
       var subEl = card.querySelector('.sub');
@@ -140,14 +191,17 @@
 
       // Ficha técnica: cada dato en su propia línea (uno debajo del otro).
       // En combos, la lista "El combo trae" ya cumple ese rol, así que no la repetimos.
+      //
+      // Se salta el renglón que abajo se volvió un selector: repetir "Talles:
+      // 1, 3" justo arriba de los botones de talle es ruido, y el día que uno
+      // de los dos quede desactualizado pasa a ser una contradicción.
       specsEl.innerHTML = '';
       var showSpecs = false;
-      if (!card.dataset.items && card.dataset.specs) {
-        card.dataset.specs.split('|').forEach(function (line) {
-          var t = line.trim();
-          if (!t) return;
+      if (!card.dataset.items && modelo) {
+        modelo.specs.forEach(function (s) {
+          if (s.yaEsSelector) return;
           var li = document.createElement('li');
-          li.textContent = t;
+          li.textContent = s.text;
           specsEl.appendChild(li);
           showSpecs = true;
         });
@@ -174,52 +228,45 @@
       }
 
       // Imágenes: galería de la tarjeta, o la única foto
-      var imgs = [], caps = [];
+      fotos = []; capsFoto = []; nombreActual = name;
       var galImgs = card.querySelectorAll('.gtrack img');
       if (galImgs.length) {
-        galImgs.forEach(function (im) { imgs.push(im.src); caps.push(im.getAttribute('data-cap') || ''); });
+        galImgs.forEach(function (im) { fotos.push(im.src); capsFoto.push(im.getAttribute('data-cap') || ''); });
       } else {
         var one = card.querySelector('.pcard-ph img');
-        if (one) { imgs.push(one.src); caps.push(one.getAttribute('alt') || ''); }
+        if (one) { fotos.push(one.src); capsFoto.push(one.getAttribute('alt') || ''); }
       }
 
-      mainImg.src = imgs[0] || '';
-      mainImg.alt = name + (caps[0] ? ' — ' + caps[0] : '');
-
       thumbsBox.innerHTML = '';
-      show(thumbsBox, imgs.length > 1);
-      imgs.forEach(function (src, i) {
+      show(thumbsBox, fotos.length > 1);
+      fotos.forEach(function (src, i) {
         var b = document.createElement('button');
         b.type = 'button';
-        if (i === 0) b.className = 'is-on';
-        b.setAttribute('aria-label', 'Ver foto ' + (caps[i] || (i + 1)));
+        b.dataset.src = src;
+        b.setAttribute('aria-label', 'Ver foto ' + (capsFoto[i] || (i + 1)));
         var im = document.createElement('img');
         im.src = src; im.alt = ''; im.loading = 'lazy';
         b.appendChild(im);
-        b.addEventListener('click', function () {
-          mainImg.src = src;
-          mainImg.alt = name + (caps[i] ? ' — ' + caps[i] : '');
-          thumbsBox.querySelectorAll('button').forEach(function (x) { x.classList.remove('is-on'); });
-          b.classList.add('is-on');
-        });
+        b.addEventListener('click', function () { irAFoto(i); });
         thumbsBox.appendChild(b);
       });
+      // Las flechas de adentro sólo tienen sentido si hay más de una foto.
+      show(galPrevBtn, fotos.length > 1);
+      show(galNextBtn, fotos.length > 1);
+      irAFoto(0);
 
-      waBtn.href = waLink(card.dataset.wamsg ||
-        ('¡Hola Mundo Mágico! Me interesa "' + name + '"' + (price ? ' (' + price + ')' : '') + '. ¿Me pasás más info?'));
-      // El click de waBtn está atado una sola vez (más abajo, fuera de esta
-      // función): guardamos acá qué producto es el que se ve ahora mismo.
-      waBtn.dataset.trackName = name;
-      waBtn.dataset.trackCat = cat;
+      // El bloque del pedido se rearma en CADA apertura (también al cambiar de
+      // producto con las flechas): el slot llega siempre vacío, así ninguna
+      // elección se arrastra de un producto al siguiente.
+      slotEl.innerHTML = '';
+      ganchos.forEach(function (fn) {
+        try { fn(card, slotEl, window.MMFicha); } catch (err) { if (window.console) console.error(err); }
+      });
 
       overlay.classList.add('open');
       document.body.classList.add('ficha-open');
       closeBtn.focus();
     }
-
-    waBtn.addEventListener('click', function () {
-      trackGA('ficha_whatsapp_click', { item_name: waBtn.dataset.trackName, item_cat: waBtn.dataset.trackCat });
-    });
 
     function closeFicha() {
       overlay.classList.remove('open');
@@ -260,6 +307,8 @@
     closeBtn.addEventListener('click', closeFicha);
     prevProductBtn.addEventListener('click', function () { goToProduct(-1); });
     nextProductBtn.addEventListener('click', function () { goToProduct(1); });
+    galPrevBtn.addEventListener('click', function () { irAFoto(fotoIdx - 1); });
+    galNextBtn.addEventListener('click', function () { irAFoto(fotoIdx + 1); });
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeFicha(); });
     document.addEventListener('keydown', function (e) {
       if (!overlay.classList.contains('open')) return;
@@ -268,11 +317,13 @@
       else if (e.key === 'ArrowRight') goToProduct(1);
     });
 
-    // Deslizar con el dedo (celular): swipe horizontal sobre la foto cambia
-    // de producto sin cerrar la ficha. Se ignora si el gesto empieza sobre la
-    // tira de miniaturas (esa ya tiene su propio scroll horizontal) o si el
-    // movimiento es más vertical que horizontal (para no robarle el scroll
-    // de la info al dedo).
+    // Deslizar con el dedo (celular) sobre la foto: cambia de FOTO, igual que
+    // las flechas que están ahí adentro. Antes cambiaba de producto, que era lo
+    // mismo que hacían esas flechas; ahora pasar de producto vive afuera del
+    // cuadro y el dedo sobre la foto hace lo que la foto sugiere.
+    // Se ignora si el gesto empieza sobre la tira de miniaturas (esa ya tiene
+    // su propio scroll horizontal) o si el movimiento es más vertical que
+    // horizontal (para no robarle el scroll de la info al dedo).
     var touchX = 0, touchY = 0, touchTracking = false;
     galEl.addEventListener('touchstart', function (e) {
       if (e.target.closest('.thumbs')) { touchTracking = false; return; }
@@ -286,16 +337,72 @@
       var dx = e.changedTouches[0].clientX - touchX;
       var dy = e.changedTouches[0].clientY - touchY;
       if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
-      goToProduct(dx < 0 ? 1 : -1);
+      irAFoto(fotoIdx + (dx < 0 ? 1 : -1));
     }, { passive: true });
-    // Mantener el foco dentro de la ficha con Tab
+    // Mantener el foco dentro de la ficha con Tab.
+    //
+    // Se filtran los ocultos: .focus() sobre algo escondido no hace nada, así
+    // que si el primero o el último de la lista está oculto el Tab se traba y
+    // no se puede salir del último control. Pasa seguido: las flechas ‹ › se
+    // esconden cuando hay un solo producto, el botón de WhatsApp se esconde
+    // cuando el bloque del pedido está puesto, y cada − N + del pedido arranca
+    // oculto mientras la cantidad es cero.
     overlay.addEventListener('keydown', function (e) {
       if (e.key !== 'Tab') return;
-      var f = overlay.querySelectorAll('button, a[href]');
+      var f = Array.prototype.filter.call(
+        overlay.querySelectorAll('button, a[href]'),
+        function (n) { return !n.hidden && !n.disabled && n.offsetParent !== null; });
+      if (!f.length) return;
       var first = f[0], last = f[f.length - 1];
       if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
       else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
     });
+
+    /* --- Enganche del pedido ------------------------------------------------
+     * La ficha ofrece un cajón y avisa cada vez que se abre; quien quiera
+     * hacerse cargo de la acción principal se anota con alAbrir(). Hoy el único
+     * que se anota es assets/carrito.js. El contrato son estas funciones y no
+     * el HTML de adentro: si mañana cambia el marcado de la ficha, el carrito
+     * no se entera.
+     *
+     * verFoto existe para que el que llenó el cajón pueda cambiar la foto
+     * grande al tocar un color, sin ir a tocar el DOM de la ficha por su
+     * cuenta. El precio no hace falta moverlo: el de arriba es el resumen de la
+     * tarjeta ("desde $X") y cada opción muestra el suyo en su lugar. */
+    window.MMFicha = {
+      alAbrir: function (fn) {
+        if (typeof fn !== 'function' || ganchos.indexOf(fn) > -1) return;
+        ganchos.push(fn);
+        // Si ya hay una ficha abierta en este momento, se la damos ahora mismo
+        // en vez de esperar a que el cliente la cierre y la vuelva a abrir.
+        if (currentCard) openFicha(currentCard);
+      },
+      abrir: function (card) { if (card) openFicha(card); },
+      cerrar: closeFicha,
+      tarjeta: function () { return currentCard; },
+      abierta: function () { return overlay.classList.contains('open'); },
+      // Elegir un color en el bloque del pedido mueve la foto grande. Se
+      // reengancha el índice para que las flechas de adentro sigan desde ahí y
+      // no desde donde estaban antes de elegir.
+      verFoto: function (src, alt) {
+        var resuelta = mostrarFoto(src, alt);
+        var i = fotos.indexOf(resuelta);
+        if (i > -1) fotoIdx = i;
+      },
+      // Para tarjetas que no estaban en el HTML cuando este script corrió
+      // (productos de catalogo_productos, insertados después por
+      // assets/catalogo-productos.js): pcards/allCards son un snapshot
+      // tomado una sola vez arriba, así que sin esto la tarjeta nunca abre
+      // ficha y nunca entra en el prev/next de "Producto siguiente".
+      registrar: function (card) {
+        if (allCards.indexOf(card) === -1) allCards.push(card);
+        card.addEventListener('click', function (e) {
+          e.preventDefault();
+          openFicha(card);
+        });
+      }
+    };
+    document.dispatchEvent(new CustomEvent('mm:ficha'));
   }
 
   /* --- Ficha técnica en la tarjeta: convierte data-specs en una lista
@@ -320,8 +427,12 @@
     else body.insertBefore(ul, body.firstChild);
   });
 
-  /* --- Galería de producto: flechas/puntos para ver cada color --- */
-  document.querySelectorAll('.pcard.has-gallery').forEach(function (card) {
+  /* --- Galería de producto: flechas/puntos para ver cada color ---
+   * Separada en su propia función (y expuesta como window.MMGaleria.registrar)
+   * para que assets/catalogo-productos.js pueda armar la misma navegación en
+   * una tarjeta de galería insertada DESPUÉS de que este bucle ya corrió —
+   * mismo motivo que MMFicha.registrar más arriba. */
+  function armarGaleria(card) {
     var track = card.querySelector('.gtrack');
     if (!track) return;
     var slides = track.querySelectorAll('img');
@@ -354,7 +465,9 @@
     dots.forEach(function (d, idx) {
       d.addEventListener('click', function (e) { go(e, idx); });
     });
-  });
+  }
+  document.querySelectorAll('.pcard.has-gallery').forEach(armarGaleria);
+  window.MMGaleria = { registrar: armarGaleria };
 
   /* --- Buscador por categoría: filtra las tarjetas de la página en vivo --- */
   var searchInput = document.getElementById('catSearch');

@@ -100,6 +100,14 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .ic{width:24px; height:24px; flex:none; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
 
 /* ===== Accesibilidad ===== */
+/* El atributo hidden esconde SIEMPRE. Sin esto, cualquier regla que ponga un
+   display (por ejemplo `.ficha .specs{display:flex}`) le gana a hidden y el
+   elemento se sigue viendo: así quedaba visible el viejo botón de WhatsApp de
+   la ficha, y así los bloques vacíos (precio, descripción, ficha técnica)
+   seguían ocupando su margen aunque no tuvieran nada adentro. Estaba parchado
+   selector por selector (.ficha .thumbs[hidden], .ficha-nav[hidden], …); esto
+   lo arregla de una vez. */
+[hidden]{display:none !important}
 :focus-visible{outline:3px solid var(--green); outline-offset:3px; border-radius:6px}
 *{-webkit-tap-highlight-color:rgba(0,0,0,.06)}
 .skip-link{
@@ -181,6 +189,10 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
   position:fixed; left:50%; top:var(--nav-h); transform:translateX(-50%) translateY(4px);
   flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:0;
   min-width:0; width:max-content; max-width:min(900px, 94vw);
+  /* Con subcategorías creadas desde el panel de admin, una columna puede
+     crecer más de lo que entra en pantalla — sin este tope el menú se corta
+     contra el borde de abajo sin forma de ver el resto. */
+  max-height:calc(100vh - var(--nav-h) - 24px); overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding:18px;
 }
 .nav-item:hover .nav-dropdown.nd-mega, .nav-item:focus-within .nav-dropdown.nd-mega{
@@ -479,12 +491,27 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .pcard-body{display:flex; flex-direction:column; gap:3px; padding:var(--s2); flex:1}
 .pcard h3{font-family:var(--font-body); font-weight:800; font-size:15px; line-height:1.3; margin:0}
 .pcard .sub{font-size:12px; color:var(--muted); line-height:1.35; text-transform:capitalize}
-/* Ficha técnica: cada dato del producto en su propia línea (uno debajo del otro) */
+/* Recortada a 2 líneas: una descripción larga en UNA tarjeta estiraba toda
+   la fila de la grilla (todas las tarjetas de esa fila quedan tan altas
+   como la más alta), aunque el resto tuviera texto corto. La info completa
+   sigue estando — se abre en la ficha del producto al tocar la tarjeta. */
+.pcard .sub, .pcard .pdesc{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+/* Ficha técnica: cada dato del producto en su propia línea (uno debajo del
+   otro). Es la razón real por la que las tarjetas quedaban con alturas muy
+   dispares: site.js reemplaza la descripción por esta lista, y algunas
+   tienen 4 o 5 líneas (Presentación, Forma, Estampa, Colores...) mientras
+   otras tienen 1 — con display:flex por fila, la fila entera de la grilla
+   se estira a la altura de la tarjeta más larga. Solo se muestran las
+   primeras 2; la lista completa sigue estando en la ficha del producto. */
 .pcard .specs{list-style:none; margin:2px 0 0; padding:0; display:flex; flex-direction:column; gap:2px; font-size:12px; color:var(--muted); line-height:1.4; text-transform:none}
 .pcard .specs li{display:block; margin:0}
-.pcard .cta{font-size:13px; font-weight:700; color:var(--accent-deep); margin-top:auto; padding-top:var(--s1);
-  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
-.pcard:hover .cta{gap:9px}
+.pcard .specs li:nth-child(n+3){display:none}
+/* "Ver en la tienda →" ya no se muestra: la tarjeta entera abre la ficha al
+   tocarla (ver el listener en site.js sobre cada .pcard), así que el aviso
+   de texto no hacía falta para que funcionara — solo ocupaba espacio. */
+.pcard .cta{display:none}
 @media(prefers-reduced-motion:reduce){ .pcard:hover{transform:none} .pcard-ph img{transition:none} }
 
 /* ===== Galería dentro de la tarjeta ===== */
@@ -584,7 +611,10 @@ body.ficha-open{overflow:hidden}
 @media(max-width:760px){ .ficha{grid-template-columns:1fr} }
 
 .ficha .gal{background:#fff; position:relative; display:flex; flex-direction:column; min-width:0}
-.ficha .gal .main{flex:1; aspect-ratio:1/1; overflow:hidden}
+/* position:relative para que las flechas de la foto (.gal-nav, que viven
+   adentro) se centren sobre la FOTO y no sobre .gal, que además incluye la
+   tira de miniaturas y las dejaría corridas hacia abajo. */
+.ficha .gal .main{flex:1; aspect-ratio:1/1; overflow:hidden; position:relative}
 .ficha .gal .main img{width:100%; height:100%; object-fit:contain; display:block}
 .ficha .thumbs{display:flex; gap:8px; padding:10px; overflow-x:auto; background:#f3f0e8}
 .ficha .thumbs[hidden]{display:none}
@@ -614,6 +644,11 @@ body.ficha-open{overflow:hidden}
 .ficha .specs{list-style:none; margin:0 0 var(--s3); padding:0; display:flex; flex-direction:column; gap:7px}
 .ficha .specs li{display:flex; gap:9px; line-height:1.45; font-size:15px; color:var(--muted)}
 .ficha .specs li::before{content:"•"; color:var(--accent, var(--green)); font-weight:800; flex:none}
+/* El cajón donde el carrito pone "agregar al pedido" (ver assets/site.js).
+   Vacío no ocupa lugar: si la página no carga carrito.js, la ficha queda como
+   antes sin que site.js tenga que enterarse de nada. El estilo de lo que va
+   adentro vive en assets/carrito.css, así borrar el carrito borra su CSS. */
+.ficha-cart:empty{display:none}
 .ficha .btn-wa{
   margin-top:auto; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:10px;
   background:var(--green); color:#fff; border:0; padding:0 var(--s3); height:56px; border-radius:16px;
@@ -632,21 +667,45 @@ body.ficha-open{overflow:hidden}
 }
 .ficha-close:hover{transform:rotate(90deg)}
 
-/* Flechas para pasar al producto anterior/siguiente sin cerrar la ficha */
+/* Flechas para pasar al producto anterior/siguiente. Van FUERA del cuadro
+   blanco (son hijas del overlay, no de .ficha): cambiar de producto es salir
+   de este producto, y verlas por fuera lo dice sin que haya que explicarlo.
+   Adentro de la foto quedaron las de cambiar de color (.gal-nav), que antes
+   eran estas mismas y confundían las dos cosas.
+   position:fixed y no absolute porque el overlay scrollea cuando la ficha es
+   más alta que la pantalla: así no se van hacia arriba con el contenido. */
 .ficha-nav{
-  position:absolute; top:50%; transform:translateY(-50%); z-index:5;
-  width:44px; height:44px; border:0; border-radius:50%; cursor:pointer;
-  background:rgba(255,255,255,.95); box-shadow:var(--shadow);
-  font-size:26px; line-height:1; padding-bottom:2px; color:var(--ink);
+  position:fixed; top:50%; transform:translateY(-50%); z-index:155;
+  width:48px; height:48px; border:0; border-radius:50%; cursor:pointer;
+  background:rgba(255,255,255,.92); box-shadow:var(--shadow-lg);
+  font-size:28px; line-height:1; padding-bottom:2px; color:var(--ink);
   display:grid; place-items:center; transition:background .2s var(--ease), transform .18s var(--ease);
 }
 .ficha-nav:hover{background:#fff; transform:translateY(-50%) scale(1.06)}
-.ficha-nav[hidden]{display:none}
-.ficha-prev{left:14px} .ficha-next{right:14px}
+.ficha-prev{left:max(14px, calc(50vw - 500px))}
+.ficha-next{right:max(14px, calc(50vw - 500px))}
 @media(max-width:760px){
-  .ficha-prev{left:8px} .ficha-next{right:8px}
+  /* Acá el cuadro ocupa casi todo el ancho: no hay "afuera", así que quedan
+     pegadas al borde de la pantalla, apenas montadas sobre el cuadro. */
+  .ficha-prev{left:6px} .ficha-next{right:6px}
   .ficha-nav{width:38px; height:38px; font-size:22px}
 }
+
+/* Flechas de la foto: cambian de color/foto DENTRO del mismo producto. */
+.gal-nav{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:4;
+  width:36px; height:36px; border:0; border-radius:50%; cursor:pointer;
+  background:rgba(255,255,255,.86); box-shadow:var(--shadow);
+  font-size:22px; line-height:1; padding-bottom:2px; color:var(--ink);
+  display:grid; place-items:center;
+  /* Siempre visibles, no sólo al pasar el mouse: en celular no hay hover, y
+     son la única señal de que ese producto tiene más de un color. Aparecer
+     recién al tocar sería esconder justo la parte que hay que descubrir. */
+  opacity:.88; transition:opacity .18s var(--ease), background .18s var(--ease);
+}
+.ficha .gal:hover .gal-nav, .gal-nav:focus-visible{opacity:1}
+.gal-nav:hover{background:#fff}
+.gal-prev{left:10px} .gal-next{right:10px}
 
 /* ===== Buscador global (overlay inyectado por assets/search.js) ===== */
 .search-overlay{
@@ -688,12 +747,24 @@ body.search-open{overflow:hidden}
   .search-panel{width:100%; max-height:none; height:calc(100% - var(--nav-h)); border-radius:0}
 }
 
-/* Combos: precio a la vista sobre la foto de la tarjeta */
-.pcard .pricetag{
-  position:absolute; top:12px; right:12px; z-index:2;
+/* Precio: dos lugares distintos según de dónde viene, con el mismo look.
+   - Combos (.pcard-ph > .pricetag): precio fijo escrito a mano en el HTML,
+     encima de la foto. .pcard-ph es position:relative, así que el overlay
+     ancla bien ahí y no tiene el problema de abajo.
+   - El resto (.pcard-body > .pricetag): lo calcula assets/precios.js desde
+     la planilla, va DEBAJO de la foto en flujo normal — nunca
+     position:absolute. Estuvo así antes y se rompía: al terminar la
+     animación .reveal (que anima con transform) el precio perdía el
+     "ancla" de posicionamiento que ese transform le daba de prestado, y
+     saltaba a pegarse contra el borde de otro contenedor de la página. */
+.pricetag{
   background:var(--yellow, #f5c518); color:var(--ink);
   font-family:var(--font-display); font-weight:700; font-size:15px;
   padding:5px 14px; border-radius:999px; box-shadow:var(--shadow-sm);
+}
+.pcard-ph > .pricetag{ position:absolute; top:12px; right:12px; z-index:2; }
+.pcard-body > .pricetag{
+  display:inline-block; align-self:flex-start; margin:2px 0 1px;
 }
 
 /* ===== Barra de carga (navegación entre páginas) =====

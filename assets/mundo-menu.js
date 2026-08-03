@@ -22,8 +22,8 @@
       { label: 'Globos', href: '#globos' },
       { label: 'Cortinas', href: '#cortinas' },
       { label: 'Guirnaldas y banderines', href: '#guirnaldas' },
-      { label: 'Decorá el cumple', href: '#decorar' },
-      { label: 'La torta y sus velas', href: '#la-torta' },
+      { label: 'Toppers', href: '#toppers' },
+      { label: 'Velas', href: '#velas' },
       { label: 'Líneas infantiles', href: '#licencias' }
     ],
     'disfraces-v2.html': [
@@ -71,9 +71,45 @@
     return h;
   }
 
+  // Crea (si hace falta) la flechita + el cajón de links de una columna, y
+  // devuelve el cajón. Antes esto sólo pasaba si SUBCATS ya traía algo para
+  // esa página al cargar — ahora también lo necesita una página que hoy no
+  // tiene ninguna subcategoría pero a la que le crean la primera desde el
+  // panel de admin (ej. combos-v2.html).
+  function boxDe(col, headRow, a) {
+    var box = col.querySelector('.nd-col-links');
+    if (box) return box;
+
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'nd-col-toggle';
+    toggle.setAttribute('aria-label', 'Ver subcategorías de ' + a.textContent.trim());
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    headRow.appendChild(toggle);
+
+    box = document.createElement('div');
+    box.className = 'nd-col-links';
+    col.appendChild(box);
+
+    toggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      var open = col.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    return box;
+  }
+
+  // page (con ".html") → { col, headRow, a, existentes: {slug: true} } —
+  // lo que arma el bucle de abajo, para poder completarlo después con lo
+  // que traiga la base.
+  var columnas = {};
+
   items.forEach(function (a) {
     var page = a.getAttribute('href');
-    var subs = SUBCATS[normalizeKey(page)];
+    var key = normalizeKey(page);
+    var subs = SUBCATS[key];
 
     var col = document.createElement('div');
     col.className = 'nd-col';
@@ -85,34 +121,77 @@
     headRow.appendChild(a);
     col.appendChild(headRow);
 
+    var existentes = {};
     if (subs && subs.length) {
-      // Flechita: en mobile las subcategorías arrancan colapsadas (ver
-      // v2.css) y se despliegan al tocarla, sin robarle el toque al link
-      // del mundo que sigue llevando directo a la página.
-      var toggle = document.createElement('button');
-      toggle.type = 'button';
-      toggle.className = 'nd-col-toggle';
-      toggle.setAttribute('aria-label', 'Ver subcategorías de ' + a.textContent.trim());
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
-      headRow.appendChild(toggle);
-
-      var box = document.createElement('div');
-      box.className = 'nd-col-links';
+      var box = boxDe(col, headRow, a);
       subs.forEach(function (s) {
         var sub = document.createElement('a');
         sub.href = page + s.href;
         sub.textContent = s.label;
         sub.setAttribute('role', 'menuitem');
         box.appendChild(sub);
-      });
-      col.appendChild(box);
-
-      toggle.addEventListener('click', function (e) {
-        e.preventDefault();
-        var open = col.classList.toggle('is-open');
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        // s.href es "#slug" — mismo slug que guarda catalogo_subcategorias
+        // para una subcategoría migrada desde el HTML (ver
+        // .claude/gen-subcategorias-sql.js), así se puede cruzar con lo que
+        // traiga MMCatalogo más abajo sin duplicar la entrada.
+        existentes[s.href.slice(1)] = true;
       });
     }
+
+    columnas[key] = { page: page, col: col, headRow: headRow, a: a, existentes: existentes };
   });
+
+  // Las subcategorías creadas desde el panel de admin (Modo edición) no
+  // están en SUBCATS — viven sólo en catalogo_subcategorias — así que sin
+  // esto el desplegable de "Nuestros mundos" nunca las lista, aunque ya
+  // tengan su propia sección y su link en la catbar de la página (ver
+  // sincronizarCatbar() en assets/precios.js). Se completa async porque
+  // MMCatalogo.cargar() siempre resuelve async (ver assets/catalogo.js).
+  //
+  // ESPERAR a DOMContentLoaded para recién ahí llamar a MMCatalogo.cargar()
+  // no es cosmético: este script corre ANTES que assets/cuenta.js en el
+  // <head>/<body> de cada página (cuenta.js crea el cliente de Supabase,
+  // window.MMCuenta). Si esto llamara a cargar() de una, sería la PRIMERA
+  // llamada de toda la carga de la página — MMCatalogo.resolver() vería
+  // window.MMCuenta todavía sin existir, resolvería un catálogo vacío
+  // (sin productos ni subcategorías de la web), y esa respuesta vacía
+  // queda cacheada en memoria para el resto de la visita: hasta
+  // catalogo-productos.js, que sí espera a DOMContentLoaded, recibiría esa
+  // misma respuesta ya resuelta y ninguno de los productos/subcategorías
+  // cargados desde el panel llegaría a mostrarse en toda la página.
+  function completarConSubcategorias() {
+    if (!window.MMCatalogo) return;
+    MMCatalogo.cargar(function (datos) {
+      var subcategorias = datos.subcategorias || {};
+      var porPagina = {};
+      for (var id in subcategorias) {
+        var s = subcategorias[id];
+        (porPagina[s.pagina] || (porPagina[s.pagina] = [])).push(s);
+      }
+      for (var key in porPagina) {
+        var info = columnas[key];
+        if (!info) continue; // mundo sin entrada en el nav (no debería pasar)
+        var lista = porPagina[key].slice().sort(function (x, y) {
+          return (x.orden - y.orden) || x.nombre.localeCompare(y.nombre);
+        });
+        var nuevas = lista.filter(function (s) { return !info.existentes[s.slug]; });
+        if (!nuevas.length) continue;
+        var box = boxDe(info.col, info.headRow, info.a);
+        nuevas.forEach(function (s) {
+          var sub = document.createElement('a');
+          // "cat-" + slug: mismo id que crearSeccion() le da a una sección
+          // nacida 100% del navegador (nunca "el slug tal cual", que es
+          // sólo para las migradas desde el HTML — esas ya están en
+          // info.existentes y se filtraron arriba).
+          sub.href = info.page + '#cat-' + s.slug;
+          sub.textContent = s.nombre;
+          sub.setAttribute('role', 'menuitem');
+          box.appendChild(sub);
+          info.existentes[s.slug] = true;
+        });
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', completarConSubcategorias);
+  else completarConSubcategorias();
 })();

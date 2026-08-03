@@ -1,6 +1,68 @@
 # Mundo Mágico — instrucciones del proyecto
 
+## El catálogo se edita desde la propia web (precio, stock, subcategorías, productos)
+
+Precio, stock, subcategorías y productos nuevos **ya no se editan en el
+código ni en una Google Sheet** (ver `plantilla-precios/COMO-USAR.md` para el
+porqué): se editan desde el sitio mismo, con una cuenta de admin y "Modo
+edición" prendido (barra flotante abajo a la izquierda). Antes de tocar a
+mano una tarjeta o un precio por este pedido del usuario, primero preguntar
+si no es más simple indicarle que lo haga desde ese panel.
+
+Lo que ese panel ya permite, todo sin volver a publicar el sitio:
+
+- Precio y "sin stock" por código del POS (y sin stock de un color puntual,
+  en una galería que comparte un solo código).
+- Corregir un código mal cargado en el HTML sin tocar el HTML
+  (`codigo_override`).
+- Mover una tarjeta a otra subcategoría del mismo mundo, o crear una nueva.
+- "Sacar de la web" (reversible — no borra la tarjeta del HTML, ver más abajo
+  la diferencia con dar de baja de verdad).
+- "Mover a otro mundo": convierte la tarjeta en un producto editable
+  (`catalogo_productos`) en el mundo destino y oculta la original.
+- "+ Agregar producto": carga uno de cero con foto desde el celular o la
+  compu (se ajusta sola a 1080×1080 con fondo blanco), título, precio,
+  código, subcategoría y ficha técnica.
+
+**Archivos clave:** `supabase/catalogo_*.sql` (esquema), `assets/catalogo.js`
+(de dónde salen los datos), `assets/precios.js` (pinta el precio y resuelve
+el código), `assets/admin-catalogo.js` (toda la edición y la subida de
+fotos), `assets/catalogo-productos.js` (dibuja los productos de
+`catalogo_productos` en la página). Explorar (`assets/explorar.js`) y el
+buscador (`assets/search.js`) ya suman estos productos además de las
+tarjetas del HTML.
+
+**Límite real de "+ Agregar producto" hoy:** sólo una foto por producto —
+para algo con varios colores (galería) o varios talles/tamaños con código
+propio, seguí usando el flujo manual de "Subir fotos de productos nuevos" de
+abajo.
+
+## Actualizar el SDK de Supabase (assets/supabase-js-*.min.js)
+
+El sitio NO carga `@supabase/supabase-js` desde un CDN: se descargó una
+versión exacta a `assets/supabase-js-<version>.min.js` y todas las páginas
+apuntan a ese archivo local. Es a propósito — un CDN sin versión fija y sin
+`integrity` es la puerta más fácil para inyectar código en una página donde
+los clientes escriben su contraseña. El costo es que no se actualiza solo.
+
+Para subir de versión:
+1. Bajar el build UMD exacto:
+   ```bash
+   curl -s https://cdn.jsdelivr.net/npm/@supabase/supabase-js@<version>/dist/umd/supabase.js -o assets/supabase-js-<version>.min.js
+   ```
+2. Borrar el archivo de la versión vieja.
+3. Actualizar el `<script src="assets/supabase-js-...">` en las 14 páginas
+   que lo cargan (todas las `-v2.html`, `index.html`, `explorar.html`,
+   `admin-pedidos.html`, `admin-envios.html`, `ruta.html`).
+4. Probar en `node .claude/static-server.js` que el login/registro sigan
+   funcionando antes de dar por terminado.
+
 ## Subir fotos de productos nuevos
+
+Si el producto es de una sola foto (sin galería de colores ni talles con
+código propio), es más simple cargarlo con **"+ Agregar producto"** desde el
+panel de admin del sitio (ver arriba) — no hace falta tocar el HTML ni
+regenerar nada. Lo de abajo es el flujo manual, para todo lo demás.
 
 Cuando el usuario suba fotos nuevas a `/productos` y pida publicarlas, además de
 agregar la tarjeta (`pcard`) en la página correspondiente, **siempre** dejarla
@@ -92,6 +154,13 @@ no hace falta tocar a mano al subir fotos nuevas; alcanza con el `data-pos`
 puesto directamente en la tarjeta.
 
 ## Dar de baja un producto
+
+Si lo que hace falta es algo reversible y ya (una promo que se acabó, un
+producto que quizás vuelva), es más simple usar **"Sacar de la web"** desde
+el panel de admin del sitio (ver arriba) — no toca el HTML, se puede volver a
+mostrar con un clic. Lo de abajo es para una baja DE VERDAD (el HTML sigue
+sirviéndose igual, así que "Sacar de la web" no alcanza si el producto no
+puede seguir existiendo ni en el código fuente):
 
 Cuando pidan sacar/discontinuar un producto de la web, no basta con borrar la
 tarjeta del HTML:

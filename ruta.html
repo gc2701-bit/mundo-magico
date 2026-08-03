@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi ruta de hoy · Mundo Mágico</title>
+<!-- Página del repartidor: se usa en el celular, en la calle. No tiene que
+     aparecer en Google. La seguridad no está acá sino en la base: esta
+     página sólo puede llamar a mi_ruta_hoy() y repartidor_marcar(), que
+     filtran por la cuenta logueada (ver supabase/envios_10_repartidor.sql). -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/carrito.css">
+<link rel="stylesheet" href="assets/cuenta.css">
+<link rel="stylesheet" href="assets/admin-pedidos.css">
+<link rel="stylesheet" href="assets/ruta.css">
+</head>
+<body>
+
+<div class="ruta-wrap">
+  <div class="ruta-head">
+    <h1>Mi ruta de hoy</h1>
+    <p id="ruta-sesion" class="adm-sesion-info" hidden></p>
+    <button type="button" class="adm-logout-btn" id="ruta-logout-btn" hidden>Cerrar sesión</button>
+  </div>
+
+  <div id="ruta-gate" class="adm-gate">
+    <p>Iniciá sesión con tu cuenta de repartidor para ver las entregas de hoy.</p>
+    <button type="button" class="btn btn-primary" id="ruta-login-btn">Iniciar sesión</button>
+  </div>
+
+  <div id="ruta-norep" class="adm-gate" hidden>
+    <p>Esta cuenta no está registrada como repartidor activo. Pedile al local
+      que la habilite (o revisá si iniciaste sesión con la cuenta correcta).</p>
+  </div>
+
+  <div id="ruta-panel" hidden>
+    <p id="ruta-resumen" class="ruta-resumen">Cargando…</p>
+    <div id="ruta-lista"></div>
+  </div>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+<script src="assets/supabase-js-2.111.0.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/envios.js"></script>
+<script src="assets/cuenta.js"></script>
+<script src="assets/ruta.js"></script>
+</body>
+</html>

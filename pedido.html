@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedido · Mundo Mágico</title>
+<!-- Página interna de trabajo: la abre el empleado desde el chat, no tiene que
+     aparecer en Google ni competir con las páginas del catálogo. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/carrito.css">
+</head>
+<body>
+
+<div class="ped-wrap">
+  <div class="ped-head">
+    <h1>Pedido del cliente</h1>
+    <p id="ped-sub">Cargando…</p>
+  </div>
+  <div id="ped-out"></div>
+</div>
+
+<script>
+/* Muestra un pedido armado en la web, con fotos, para que quien atiende el
+ * WhatsApp lo revise de un vistazo antes de confirmar.
+ *
+ * El pedido NO está guardado en ningún lado: viaja codificado en el # del
+ * link que mandó el cliente. Eso evita tener que montar y mantener una base
+ * de datos para algo que sólo se lee una vez, y hace que el link siga
+ * funcionando aunque nadie haya tocado el servidor.
+ *
+ * Como el pedido llega del lado del cliente, todo lo que se dibuja se inserta
+ * con textContent y las fotos se aceptan sólo si son rutas relativas del
+ * propio catálogo: si alguien edita el link a mano, lo peor que consigue es
+ * romper su propia pantalla, nunca inyectar contenido ni cargar imágenes de
+ * otro sitio.
+ */
+(function () {
+  var sub = document.getElementById('ped-sub');
+  var out = document.getElementById('ped-out');
+
+  // ?vista=cliente: mismo visor que abre el empleado desde el chat, pero
+  // sin el bloque "Para confirmar" (instrucciones internas de sistema/stock
+  // que no le sirven al cliente) — lo usa el botón "Ver pedido completo"
+  // del panel del carrito (assets/carrito.js) para revisar antes de mandar.
+  var vistaCliente = new URLSearchParams(location.search).get('vista') === 'cliente';
+  if (vistaCliente) {
+    document.title = 'Tu pedido · Mundo Mágico';
+    document.querySelector('.ped-head h1').textContent = 'Tu pedido';
+  }
+
+  function decodificar(h) {
+    var b = h.replace(/^#/, '').replace(/-/g, '+').replace(/_/g, '/');
+    while (b.length % 4) b += '=';
+    return JSON.parse(decodeURIComponent(escape(atob(b))));
+  }
+
+  function fotoSegura(src) {
+    if (typeof src !== 'string' || !src) return '';
+    // Sólo rutas relativas al catálogo: nada de http://, //otro-sitio ni
+    // javascript:/data:.
+    if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.indexOf('//') === 0) return '';
+    if (src.indexOf('..') !== -1) return '';
+    return src;
+  }
+
+  function nada(msj) {
+    sub.textContent = '';
+    var d = document.createElement('div');
+    d.className = 'ped-bad';
+    d.textContent = msj;
+    out.appendChild(d);
+  }
+
+  var crudo;
+  try {
+    crudo = decodificar(location.hash);
+  } catch (e) {
+    crudo = null;
+  }
+
+  // Formato viejo: un array pelado de items. Formato nuevo (E3): {i: items,
+  // e: entrega}. Este guard ya existía para el formato viejo — así que los
+  // links ya compartidos por WhatsApp antes de esta migración siguen
+  // funcionando exactamente igual.
+  var datos, entrega;
+  if (Array.isArray(crudo)) { datos = crudo; entrega = null; }
+  else if (crudo && Array.isArray(crudo.i)) { datos = crudo.i; entrega = crudo.e || null; }
+  else { datos = null; }
+
+  if (!Array.isArray(datos) || !datos.length) {
+    nada('Este link no tiene ningún pedido. Pedile al cliente que lo mande de nuevo desde la web.');
+    return;
+  }
+
+  var unidades = 0, renglones = 0, sinCodigo = 0;
+  var ul = document.createElement('ul');
+  ul.className = 'ped-list';
+
+  datos.forEach(function (it) {
+    var q = parseInt(it.q, 10);
+    if (!(q > 0)) q = 1;
+    var titulo = String(it.t || 'Producto');
+    unidades += q;
+    renglones++;
+    if (!it.c) sinCodigo++;
+
+    var li = document.createElement('li');
+    li.className = 'ped-item';
+
+    var src = fotoSegura(it.i);
+    if (src) {
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = '';
+      img.loading = 'lazy';
+      li.appendChild(img);
+    }
+
+    var box = document.createElement('div');
+    box.className = 'ped-item-in';
+
+    var h = document.createElement('h3');
+    h.textContent = titulo;
+    box.appendChild(h);
+
+    if (it.v) {
+      var p = document.createElement('p');
+      p.textContent = String(it.v);
+      box.appendChild(p);
+    }
+    if (it.c) {
+      var c = document.createElement('span');
+      c.className = 'ped-code';
+      c.textContent = String(it.c);
+      box.appendChild(c);
+    }
+
+    var qn = document.createElement('div');
+    qn.className = 'ped-q';
+    qn.textContent = q + 'x';
+
+    li.appendChild(box);
+    li.appendChild(qn);
+    ul.appendChild(li);
+  });
+
+  sub.textContent = renglones + ' producto(s) · ' + unidades + ' unidad(es) en total';
+  out.appendChild(ul);
+
+  // Bloque "Entrega": sólo aparece en links armados después de E3 (formato
+  // {i, e}). Todo con textContent, igual que el resto de la página — el
+  // pedido llega del lado del cliente y nunca se inserta como HTML.
+  if (entrega) {
+    var ent = document.createElement('div');
+    ent.className = 'ped-meta';
+    var et = document.createElement('h2');
+    et.textContent = 'Entrega';
+    ent.appendChild(et);
+
+    var lineas = [];
+    if (entrega.nombre) lineas.push('Nombre: ' + entrega.nombre);
+    if (entrega.telefono) lineas.push('Teléfono: ' + entrega.telefono);
+    if (entrega.metodoEntrega === 'envio') {
+      lineas.push('Envío a ' + (entrega.zonaNombre || 'zona sin especificar') +
+        (entrega.direccion ? ' — ' + entrega.direccion : ''));
+      if (entrega.entreCalles) lineas.push('Entre calles: ' + entrega.entreCalles);
+      if (entrega.pisoDepto) lineas.push('Piso/depto: ' + entrega.pisoDepto);
+      if (entrega.receptorNombre) {
+        lineas.push('Lo recibe: ' + entrega.receptorNombre +
+          (entrega.receptorTelefono ? ' (' + entrega.receptorTelefono + ')' : ''));
+      }
+      if (entrega.costoEnvio) lineas.push('Costo de envío: $' + entrega.costoEnvio + ' (más el total de los productos)');
+      if (!entrega.fechaEntrega) {
+        // entrega.entregaPropia viaja con el link (ver leer() en
+        // envio-form.js): muestra lo que era cierto CUANDO SE HIZO el
+        // pedido. Ausente en links viejos, de antes de este campo — ahí se
+        // asume true (el comportamiento que tenían en ese momento).
+        lineas.push(entrega.entregaPropia !== false
+          ? 'Entrega estimada: 1 a 3 días hábiles (te confirmamos el día y el horario por WhatsApp — de 9 a 13 o de 17 a 21)'
+          : 'Envío: lo coordina y paga el cliente (remis/Uber Moto/Uber Envíos) — retira en el local.');
+      }
+    } else {
+      lineas.push('Retiro en ' + (entrega.sucursalNombre || 'el local'));
+    }
+    if (entrega.fechaEntrega) lineas.push('Para cuándo: ' + entrega.fechaEntrega.split('-').reverse().join('/'));
+    if (entrega.franjaNombre) lineas.push('Franja: ' + entrega.franjaNombre);
+    if (entrega.bultos) lineas.push('Tamaño del pedido: ' + entrega.bultos);
+
+    lineas.forEach(function (linea) {
+      var p = document.createElement('p');
+      p.textContent = '· ' + linea;
+      ent.appendChild(p);
+    });
+    out.appendChild(ent);
+  }
+
+  // El bloque "Para confirmar" es para quien atiende el WhatsApp del
+  // negocio (busca códigos en el sistema, etc.) — no tiene sentido
+  // mostrárselo al cliente que sólo está revisando su propio pedido.
+  if (!vistaCliente) {
+    var meta = document.createElement('div');
+    meta.className = 'ped-meta';
+    var t = document.createElement('h2');
+    t.textContent = 'Para confirmar';
+    meta.appendChild(t);
+
+    [
+      'Buscá cada código en el sistema y verificá que haya stock en algún local.',
+      'Respondele al cliente por el mismo chat con el total y la forma de pago.',
+      sinCodigo
+        ? sinCodigo + ' producto(s) vinieron sin código: buscalos por nombre en el sistema.'
+        : 'Todos los productos vinieron con código de sistema.'
+    ].forEach(function (linea) {
+      var p = document.createElement('p');
+      p.textContent = '· ' + linea;
+      meta.appendChild(p);
+    });
+
+    out.appendChild(meta);
+  }
+})();
+</script>
+
+</body>
+</html>

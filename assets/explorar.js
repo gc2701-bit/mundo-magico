@@ -6,8 +6,6 @@
 (function () {
   'use strict';
 
-  var WA = '5493813006343';
-
   // Envoltorio de assets/analytics.js: ese script se carga antes que este en
   // explorar.html, pero por las dudas (bloqueadores de ads, orden distinto)
   // no explota si trackEvent todavía no existe.
@@ -204,10 +202,72 @@
       // Al abrir el archivo local (file://) fetch está bloqueado y no llega nada:
       // usamos el snapshot embebido en assets/explorar-data.js como respaldo.
       if (!products.length) products = loadFromSnapshot();
-      hideLoading();
-      if (!products.length) { showEmpty(); return; }
-      render();
+      aplicarOcultos(function () {
+        hideLoading();
+        if (!products.length) { showEmpty(); return; }
+        render();
+      });
     });
+  }
+
+  // Dos cosas a la vez, las dos con lo que ya cargó assets/catalogo.js:
+  //   1. Sacar del reel las tarjetas del HTML que un admin ocultó — se aplica
+  //      DESPUÉS de armar `products`, sea del fetch en vivo o del snapshot,
+  //      así no aparecen por ninguno de los dos caminos.
+  //   2. Sumar los productos cargados 100% desde la web (catalogo_productos,
+  //      ver assets/catalogo-productos.js) — esos NO están en el HTML que
+  //      fetch() trae, así que parsePage() nunca los va a encontrar por su
+  //      cuenta.
+  // Si el módulo no está en esta página o no responde, se sigue sin filtrar
+  // ni sumar nada: mismo criterio de siempre, "no pude revisarlo" nunca debe
+  // leerse como "está mal".
+  function aplicarOcultos(cb) {
+    if (!window.MMCatalogo) { cb(); return; }
+    MMCatalogo.cargar(function (d) {
+      var tarjetas = (d && d.tarjetas) || {};
+      products = products.filter(function (p) {
+        var ov = tarjetas[p.id];
+        return !(ov && ov.oculta);
+      });
+      products = products.concat(productosDeBase(d));
+      cb();
+    });
+  }
+
+  var fmtPlata = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+  // catalogo_productos → la misma forma que ya usa finalizeProduct(). A
+  // diferencia de una tarjeta del HTML (que llega SIN precio a Explorar,
+  // porque precios.js lo pinta recién en el navegador y fetch() trae el
+  // HTML crudo), acá sí tenemos d.precios en la mano — es la primera vez
+  // que Explorar puede mostrar un precio real para este tipo de producto.
+  function productosDeBase(d) {
+    var precios = (d && d.precios) || {};
+    var out = [];
+    ((d && d.productos) || []).forEach(function (p) {
+      var cat = null;
+      for (var i = 0; i < CATS.length; i++) if (CATS[i].page === p.pagina) { cat = CATS[i]; break; }
+      if (!cat) return;
+      // p.fotos es [{src, cap}] — cap es el nombre del color en una galería
+      // (antes se guardaba como array de URLs sueltas; esto ya no aplica a
+      // ningún producto vivo hoy, pero se soporta el shape viejo igual por
+      // las dudas de que quede algo cacheado).
+      var images = (p.fotos || []).map(function (f) {
+        var esTexto = typeof f === 'string';
+        return { src: esTexto ? f : (f.src || ''), cap: esTexto ? '' : (f.cap || ''), alt: p.titulo };
+      });
+      if (!images.length) return;
+      var monto = p.codigo ? (precios[p.codigo] || 0) : 0;
+      out.push(finalizeProduct(cat, {
+        title: p.titulo,
+        images: images,
+        specs: p.specs || [],
+        price: monto > 0 ? fmtPlata.format(monto) : '',
+        tags: p.tags || [],
+        pos: p.codigo || ''
+      }));
+    });
+    return out;
   }
 
   // Respaldo sin red: arma los productos desde window.__EXPLORAR_DATA__
@@ -263,7 +323,12 @@
 
       out.push(finalizeProduct(cat, {
         title: title, images: images, specs: specs, price: price, tags: tags,
-        wamsg: card.getAttribute('data-wamsg') || ''
+        wamsg: card.getAttribute('data-wamsg') || '',
+        // Código del POS cargado a mano en la tarjeta. Lo usa el carrito para
+        // que el pedido llegue con código; sin esto los productos que sólo lo
+        // tienen en data-pos (y no en el nombre de la foto) lo perderían al
+        // pasar por Explorar.
+        pos: card.getAttribute('data-pos') || ''
       }));
     });
     return out;
@@ -282,6 +347,7 @@
       specs: o.specs || [],
       tags: o.tags || [],
       price: o.price || '',
+      pos: o.pos || '',
       wamsg: wamsg
     };
   }
@@ -495,7 +561,11 @@
     var slide = document.createElement('section');
     slide.className = 'slide';
     slide.style.setProperty('--cat', p.cat.color);
-    slide._product = p;   // se hidrata al acercarse al viewport
+    slide._product = p;   // se hidrata al acercarse al viewport, y assets/carrito.js lo lee de acá
+    // Agregarlo al pedido es la señal de interés más fuerte que puede dar el
+    // cliente: pesa más que mirar las fotos, compartir o consultar. La avisa
+    // carrito.js por evento, así ninguno de los dos archivos depende del otro.
+    slide.addEventListener('mm:pedido', function () { Affinity.bumpProduct(p, 8); });
     return slide;
   }
 
@@ -621,17 +691,18 @@
     var actions = document.createElement('div');
     actions.className = 'slide-actions';
 
-    var cta = document.createElement('a');
-    cta.className = 'wa-cta';
-    cta.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(p.wamsg);
-    cta.target = '_blank';
-    cta.rel = 'noopener';
-    cta.innerHTML = waIcon() + 'Consultar por WhatsApp';
-    cta.addEventListener('click', function () {
-      Affinity.bumpProduct(p, 6);
-      trackGA('explorar_whatsapp_click', { item_name: p.title, item_cat: p.cat && p.cat.name });
+    // Lleva a la ficha del producto en su página de categoría (mismo deep
+    // link ?p=slug que usa el buscador — ver site.js): abre directo la ficha
+    // en vez de dejar a la persona en el principio de la grilla entera.
+    var ir = document.createElement('a');
+    ir.className = 'wa-cta';
+    ir.href = p.cat.page + '?p=' + encodeURIComponent(slug(p.title));
+    ir.innerHTML = 'Ir al producto';
+    ir.addEventListener('click', function () {
+      Affinity.bumpProduct(p, 4);
+      trackGA('explorar_ir_producto_click', { item_name: p.title, item_cat: p.cat && p.cat.name });
     });
-    actions.appendChild(cta);
+    actions.appendChild(ir);
 
     var share = document.createElement('button');
     share.type = 'button';
@@ -971,10 +1042,6 @@
     return (s || '').replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
-  }
-
-  function waIcon() {
-    return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.13a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 1 1 6.97 3.86Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>';
   }
 
   function shareIcon() {
