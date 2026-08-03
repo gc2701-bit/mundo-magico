@@ -294,6 +294,22 @@
     return paginaDeUrl() + '~' + slug(h3 ? h3.textContent.trim() : '');
   }
 
+  // Una tarjeta dibujada por catalogo-productos.js NO es una tarjeta del
+  // HTML: su fila es la de catalogo_productos, donde "sacar de la web" es
+  // `publicado` y el precio sale de su propio código. El override de
+  // catalogo_tarjetas se busca por (página, slug del <h3>), así que
+  // aplicárselo la haría heredar el de CUALQUIER tarjeta del HTML que tenga
+  // el mismo título.
+  //
+  // No es hipotético: al convertir una tarjeta en producto dejándola en su
+  // mundo (admin-catalogo.js), la original queda oculta y el producto nuevo
+  // conserva el título — misma clave. Sin este corte, el producto recién
+  // creado nacía invisible.
+  function overrideDe(card, tarjetas) {
+    if (card.hasAttribute('data-mm-producto-id')) return undefined;
+    return tarjetas[claveDe(card)];
+  }
+
   /* ------------------------------------------------------ subcategorías */
   // Mover una tarjeta a la subcategoría que le asignó admin-catalogo.js.
   // Solo dentro del MISMO mundo: una subcategoría es siempre de una sola
@@ -349,7 +365,7 @@
     var cards = document.querySelectorAll('.pcard');
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
-      var tarjetaOv = tarjetas[claveDe(card)];
+      var tarjetaOv = overrideDe(card, tarjetas);
       var subId = tarjetaOv && tarjetaOv.subcategoriaId;
       if (!subId) continue;
       var sub = subcategorias[subId];
@@ -503,7 +519,7 @@
     var n = 0;
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
-      var tarjetaOv = tarjetas[claveDe(card)];
+      var tarjetaOv = overrideDe(card, tarjetas);
       var talles = P.leerTalles(card);
       if (talles) {
         if (pintarTalles(card, talles, R)) n++;
