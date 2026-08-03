@@ -20,6 +20,11 @@ Lo que ese panel ya permite, todo sin volver a publicar el sitio:
   la diferencia con dar de baja de verdad).
 - "Mover a otro mundo": convierte la tarjeta en un producto editable
   (`catalogo_productos`) en el mundo destino y oculta la original.
+- "Convertir en producto editable": lo mismo, pero dejándola en su mundo y su
+  subcategoría. Es la salida para lo único que el popover de una tarjeta del
+  HTML no sabe hacer — **agregarle fotos** —, porque las fotos de una tarjeta
+  escrita a mano viven en el HTML y no en la base. Se lleva todas las fotos
+  de la galería con su color y su código.
 - "+ Agregar producto": carga uno de cero con foto desde el celular o la
   compu (se ajusta sola a 1080×1080 con fondo blanco), título, precio,
   código, subcategoría y ficha técnica.
@@ -32,10 +37,16 @@ fotos), `assets/catalogo-productos.js` (dibuja los productos de
 buscador (`assets/search.js`) ya suman estos productos además de las
 tarjetas del HTML.
 
-**Límite real de "+ Agregar producto" hoy:** sólo una foto por producto —
-para algo con varios colores (galería) o varios talles/tamaños con código
-propio, seguí usando el flujo manual de "Subir fotos de productos nuevos" de
-abajo.
+**Qué admite un producto de `catalogo_productos`:** varias fotos con nombre,
+código y precio por color (`galeria-multi`), galería de código compartido,
+talles, o una sola foto. El mismo formulario de "+ Agregar producto" sirve
+para editarlo después.
+
+**Dónde sigue haciendo falta tocar el HTML:** para sumarle fotos a una
+tarjeta que está escrita en el HTML hay que convertirla primero (ver arriba).
+Si preferís que siga viviendo en el código —porque es una tarjeta que querés
+versionada y no en la base— entonces sí, seguí el flujo manual de "Subir
+fotos de productos nuevos" de abajo.
 
 ## Actualizar el SDK de Supabase (assets/supabase-js-*.min.js)
 

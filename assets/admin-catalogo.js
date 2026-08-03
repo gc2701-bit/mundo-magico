@@ -352,6 +352,12 @@
     // varios códigos a la vez y convertirlos en una sola fila de
     // catalogo_productos (un código, un precio) perdería esa estructura.
     if (info.tipo === 'simple') construirMoverMundo(info, card, clave);
+    // Convertir en editable también sirve para la galería multi — es justo
+    // el caso donde falta poder sumar un color con su propio código. Talles y
+    // combos quedan afuera por lo mismo que "Mover a otro mundo".
+    if (info.tipo === 'simple' || info.tipo === 'galeria-multi') {
+      construirConvertir(info, card, clave, tarjetaOv);
+    }
   }
 
   /* --------------------------------------- productos ocultos de este mundo
@@ -812,6 +818,140 @@
       var msg = (err && err.message) || '';
       if (/duplicate key|unique/i.test(msg)) msg = 'Ya hay un producto con ese nombre en el mundo destino.';
       mostrarError(msg || 'No se pudo mover. Probá de nuevo.');
+      boton.disabled = false;
+    });
+  }
+
+  /* --- Convertir en producto editable (sin sacarla de su mundo) ----------
+   * El popover de una tarjeta del HTML sabe tocar precio, stock, código y
+   * subcategoría, pero no puede agregarle una foto: las fotos de una tarjeta
+   * escrita a mano viven en el HTML, no en la base. Esto la pasa a
+   * catalogo_productos — el mismo camino que "Mover a otro mundo", pero
+   * dejándola donde está — y a partir de ahí se edita con el formulario de
+   * "+ Agregar producto" (abrirEditarProducto), que sí sabe sumar colores con
+   * su propio código, pasarla a talles y sacar fotos.
+   *
+   * A diferencia de moverAMundo se lleva TODAS las fotos de la galería, con
+   * su color y su código: convertir una galería de seis colores y que
+   * aparecieran cinco menos sería una pérdida silenciosa.
+   */
+
+  function codigoDeFoto(im) {
+    // Mismo orden de prioridad que producto.js: el data-pos escrito a mano
+    // manda, y si no está vale el que resolvió precios.js (en las galerías
+    // multi sale casi siempre del número al final del nombre del archivo).
+    return (im.getAttribute('data-pos') || im.getAttribute('data-pos-ok') || '').trim();
+  }
+
+  function fotosDeTarjeta(card, conCodigoPropio) {
+    function rutaDe(im) {
+      try { return decodeURIComponent(im.getAttribute('src') || ''); }
+      catch (e) { return im.getAttribute('src') || ''; }
+    }
+    var imgs = $$('.gtrack img', card);
+    if (!imgs.length) {
+      var ruta = rutaPrincipal(card);
+      return ruta ? [{ src: ruta, cap: '' }] : [];
+    }
+    return imgs.map(function (im) {
+      var foto = { src: rutaDe(im), cap: (im.getAttribute('data-cap') || '').trim() };
+      // El código propio por foto es lo que distingue una galería multi de
+      // una de código compartido. Repetirlo acá en una compartida la dejaría
+      // cargada como multi, y editar el precio pasaría a ser seis ediciones
+      // en vez de una.
+      if (conCodigoPropio) foto.codigo = codigoDeFoto(im);
+      return foto;
+    });
+  }
+
+  function subcategoriaDeTarjeta(card, clave, tarjetaOv) {
+    // Lo guardado en catalogo_tarjetas manda: es donde la dejó un admin.
+    if (tarjetaOv && tarjetaOv.subcategoriaId) return tarjetaOv.subcategoriaId;
+    // Si nunca se tocó, la sección del HTML donde está parada. El id del
+    // <section class="catsec"> es el mismo slug que se migró a
+    // catalogo_subcategorias (.claude/gen-subcategorias-sql.js), así que
+    // alcanza con buscarla por (pagina, slug).
+    var sec = card.closest ? card.closest('.catsec') : null;
+    if (!sec || !sec.id) return null;
+    var datos = MMCatalogo.datos();
+    if (!datos || !datos.subcategorias) return null;
+    var hallada = null;
+    Object.keys(datos.subcategorias).forEach(function (id) {
+      var s = datos.subcategorias[id];
+      if (s.pagina === clave.pagina && s.slug === sec.id) hallada = id;
+    });
+    return hallada;
+  }
+
+  function construirConvertir(info, card, clave, tarjetaOv) {
+    var multi = info.tipo === 'galeria-multi';
+    var fotos = fotosDeTarjeta(card, multi);
+    if (!fotos.length) return; // sin foto no hay nada que convertir
+
+    var toggle = el('button', 'mm-mover-toggle', 'Convertir en producto editable…');
+    toggle.type = 'button';
+    var panel = el('div', 'mm-mover-panel');
+    panel.hidden = true;
+
+    panel.appendChild(el('p', 'mm-pop-nota',
+      'Para poder agregarle fotos de otros colores, ponerle un código a cada uno o pasarla a talles. ' +
+      'Queda en este mismo mundo y en su subcategoría, con ' +
+      (fotos.length === 1 ? 'su foto.' : 'sus ' + fotos.length + ' fotos.')));
+
+    panel.appendChild(el('p', 'mm-pop-nota mm-alerta',
+      'Después de convertirla se edita desde su propio lápiz y deja de leerse del HTML. ' +
+      'La original queda oculta, no borrada: se puede volver a mostrar y borrar la copia si hace falta.'));
+
+    var btn = el('button', 'mm-pop-guardar mm-mover-btn', 'Convertir');
+    btn.type = 'button';
+    btn.addEventListener('click', function () {
+      convertirEnProducto(info, card, clave, tarjetaOv, fotos, multi, btn);
+    });
+    panel.appendChild(btn);
+
+    toggle.addEventListener('click', function () { panel.hidden = !panel.hidden; });
+    popBody.appendChild(toggle);
+    popBody.appendChild(panel);
+  }
+
+  function convertirEnProducto(info, card, clave, tarjetaOv, fotos, multi, boton) {
+    mostrarError(''); mostrarOk('');
+    boton.disabled = true;
+
+    var specsAttr = card.getAttribute('data-specs') || '';
+    var specs = specsAttr ? specsAttr.split('|').map(function (s) { return s.trim(); }).filter(Boolean) : null;
+
+    var nuevo = {
+      pagina: clave.pagina,
+      subcategoria_id: subcategoriaDeTarjeta(card, clave, tarjetaOv),
+      titulo: info.titulo,
+      slug: slug(info.titulo),
+      // En una galería multi el código vive en cada foto, no en el producto
+      // (mismo criterio que usa el formulario al guardar, ver tipo).
+      codigo: multi ? null : (info.codigo || null),
+      specs: specs,
+      fotos: fotos,
+      orden: 0,
+      publicado: true
+    };
+
+    sb.from('catalogo_productos').insert(nuevo).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      return guardarTarjeta(clave.pagina, clave.slug, { oculta: true });
+    }).then(function () {
+      // A diferencia de moverAMundo, el producto nuevo va EN ESTA página:
+      // hay que redibujarlo acá o desaparece hasta recargar.
+      MMCatalogo.refrescar(function () {
+        if (window.MMCatalogoProductos && MMCatalogoProductos.repintar) MMCatalogoProductos.repintar();
+        if (window.MMPrecios && MMPrecios.repintar) MMPrecios.repintar();
+      });
+      mostrarOk('Convertida. Abrí su lápiz para agregarle fotos y códigos.');
+      boton.disabled = false;
+      setTimeout(cerrarPopover, 1200);
+    }).catch(function (err) {
+      var msg = (err && err.message) || '';
+      if (/duplicate key|unique/i.test(msg)) msg = 'Ya hay un producto cargado con ese nombre en este mundo.';
+      mostrarError(msg || 'No se pudo convertir. Probá de nuevo.');
       boton.disabled = false;
     });
   }
