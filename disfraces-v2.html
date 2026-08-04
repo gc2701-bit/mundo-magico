@@ -98,10 +98,14 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
       <button class="catsearch-clear" type="button" aria-label="Limpiar búsqueda" hidden>✕</button>
     </div>
   </div>
-  <div class="catbar-inner">
-    <a href="#accesorios">Accesorios</a>
-    <a href="#disfraces">Los disfraces</a>
-    <a href="#acto-patrio">Acto patrio</a>
+  <div class="catbar-scroll">
+    <button class="catbar-arrow catbar-arrow-prev" type="button" aria-label="Ver categorías anteriores" hidden>&#8249;</button>
+    <div class="catbar-inner">
+      <a href="#accesorios">Accesorios</a>
+      <a href="#disfraces">Los disfraces</a>
+      <a href="#acto-patrio">Acto patrio</a>
+    </div>
+    <button class="catbar-arrow catbar-arrow-next" type="button" aria-label="Ver más categorías" hidden>&#8250;</button>
   </div>
 </nav>
 
@@ -244,10 +248,11 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 <script src="assets/search.js"></script>
 <script src="assets/mundo-menu.js"></script>
 <script>
-/* Barra de categorías: resalta la sección visible al hacer scroll */
+/* Barra de categorías: resalta la sección visible al hacer scroll, y se puede arrastrar con el mouse */
 (function(){
   var bar = document.querySelector('.catbar');
   if(!bar) return;
+  var inner = bar.querySelector('.catbar-inner');
   var offset = 150;
   // links/secs se recalculan en cada scroll (no una sola vez al cargar):
   // sincronizarCatbar() en precios.js agrega links nuevos de forma async
@@ -255,14 +260,69 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
   // script corre — con una lista fija esos links nunca se marcaban activos.
   function onScroll(){
     var links = [].slice.call(bar.querySelectorAll('a[href^="#"]'));
-    var secs = links.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); });
-    var y = window.scrollY + offset, idx = 0;
-    secs.forEach(function(s, i){ if(s && s.offsetTop <= y) idx = i; });
-    links.forEach(function(a, i){ a.classList.toggle('is-active', i === idx); });
+    // Ordenar por la posición real de cada sección en la página, no por el
+    // orden de los links en la barra: sincronizarCatbar() siempre agrega un
+    // link nuevo al FINAL de la barra, aunque ordenarSecciones() haya puesto
+    // su <section> más arriba según su "orden" — sin este sort, el resaltado
+    // podía terminar pegado al link equivocado. Las secciones ocultas
+    // (ocultarSeccionesVacias()) se descartan: su offsetTop es 0 y confundía
+    // el cálculo aunque no se vieran.
+    var pares = links.map(function(a){
+      return { a: a, sec: document.getElementById(a.getAttribute('href').slice(1)) };
+    }).filter(function(p){ return p.sec && !p.sec.hidden; });
+    pares.sort(function(x, y){ return x.sec.offsetTop - y.sec.offsetTop; });
+    var y = window.scrollY + offset, activo = null;
+    pares.forEach(function(p){ if(p.sec.offsetTop <= y) activo = p.a; });
+    links.forEach(function(a){ a.classList.toggle('is-active', a === activo); });
   }
   window.addEventListener('scroll', onScroll, { passive:true });
   window.addEventListener('resize', onScroll, { passive:true });
   onScroll();
+
+  /* En la compu, arrastrar con el mouse para ver las categorías que no entran en la fila */
+  if(inner){
+    var down = false, dragged = false, startX = 0, startScroll = 0;
+    inner.addEventListener('pointerdown', function(e){
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      down = true; dragged = false; startX = e.clientX; startScroll = inner.scrollLeft;
+    });
+    inner.addEventListener('pointermove', function(e){
+      if(!down) return;
+      var dx = e.clientX - startX;
+      if(!dragged && Math.abs(dx) < 4) return;
+      dragged = true;
+      inner.classList.add('is-dragging');
+      inner.scrollLeft = startScroll - dx;
+    });
+    function endDrag(){ down = false; inner.classList.remove('is-dragging'); }
+    inner.addEventListener('pointerup', endDrag);
+    inner.addEventListener('pointercancel', endDrag);
+    inner.addEventListener('pointerleave', endDrag);
+    inner.addEventListener('click', function(e){
+      if(dragged){ e.stopPropagation(); e.preventDefault(); dragged = false; }
+    }, true);
+  }
+
+  /* Flechas para deslizar con un click, además del arrastre de arriba —
+     sólo se muestran si de verdad hay categorías que no entran en la fila. */
+  var prevBtn = bar.querySelector('.catbar-arrow-prev');
+  var nextBtn = bar.querySelector('.catbar-arrow-next');
+  if(inner && prevBtn && nextBtn){
+    function actualizarFlechas(){
+      var desborda = inner.scrollWidth > inner.clientWidth + 1;
+      prevBtn.hidden = !desborda || inner.scrollLeft <= 0;
+      nextBtn.hidden = !desborda || inner.scrollLeft >= inner.scrollWidth - inner.clientWidth - 1;
+    }
+    prevBtn.addEventListener('click', function(){ inner.scrollBy({ left: -inner.clientWidth * 0.7, behavior:'smooth' }); });
+    nextBtn.addEventListener('click', function(){ inner.scrollBy({ left: inner.clientWidth * 0.7, behavior:'smooth' }); });
+    inner.addEventListener('scroll', actualizarFlechas, { passive:true });
+    window.addEventListener('resize', actualizarFlechas, { passive:true });
+    // sincronizarCatbar() en precios.js agrega links nuevos de forma async —
+    // sin este observer, una categoría nueva podía hacer desbordar la fila
+    // sin que las flechas se enteraran hasta el próximo resize/scroll.
+    if('MutationObserver' in window) new MutationObserver(actualizarFlechas).observe(inner, { childList:true });
+    actualizarFlechas();
+  }
 })();
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>

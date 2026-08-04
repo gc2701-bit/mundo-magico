@@ -404,14 +404,37 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
   background:rgba(253,251,245,.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);
 }
+/* .catbar-scroll envuelve .catbar-inner + las flechas: el max-width/centrado
+   que antes tenía .catbar-inner se muda acá, porque ahora .catbar-inner
+   tiene que ocupar todo el ancho disponible ENTRE las dos flechas. */
+.catbar-scroll{ position:relative; max-width:var(--wrap); margin:0 auto; }
 .catbar-inner{
-  max-width:var(--wrap); margin:0 auto;
   display:flex; gap:var(--s1); align-items:center;
   padding:11px var(--s3); overflow-x:auto;
   scrollbar-width:none; -ms-overflow-style:none;
   -webkit-overflow-scrolling:touch;
 }
 .catbar-inner::-webkit-scrollbar{display:none}
+
+/* Flechas para deslizar con un click, además de poder arrastrar — sólo se
+   muestran (ver catbar-arrow[hidden] y el JS de cada página) cuando la
+   fila realmente desborda y hay algo más para ese lado. */
+.catbar-arrow{
+  position:absolute; top:0; bottom:0; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  width:34px; border:0; padding:0; cursor:pointer;
+  font-size:20px; line-height:1; color:var(--ink);
+  transition:opacity .15s var(--ease);
+}
+.catbar-arrow[hidden]{ display:none; }
+.catbar-arrow-prev{
+  left:0;
+  background:linear-gradient(to right, rgba(253,251,245,.98) 55%, rgba(253,251,245,0));
+}
+.catbar-arrow-next{
+  right:0;
+  background:linear-gradient(to left, rgba(253,251,245,.98) 55%, rgba(253,251,245,0));
+}
 .catbar a{
   flex:0 0 auto; text-decoration:none; white-space:nowrap;
   font-weight:700; font-size:14px; color:var(--muted);
