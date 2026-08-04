@@ -122,6 +122,10 @@
     col.appendChild(headRow);
 
     var existentes = {};
+    // slug de sección → su <a>, sólo para las migradas del HTML — es lo que
+    // permite después ocultarla si el censo de subcategorias-html.js dice
+    // que se quedó sin ninguna tarjeta visible (ver ocultarMigradasVacias).
+    var linksHtml = {};
     if (subs && subs.length) {
       var box = boxDe(col, headRow, a);
       subs.forEach(function (s) {
@@ -135,10 +139,11 @@
         // .claude/gen-subcategorias-sql.js), así se puede cruzar con lo que
         // traiga MMCatalogo más abajo sin duplicar la entrada.
         existentes[s.href.slice(1)] = true;
+        linksHtml[s.href.slice(1)] = sub;
       });
     }
 
-    columnas[key] = { page: page, col: col, headRow: headRow, a: a, existentes: existentes };
+    columnas[key] = { page: page, col: col, headRow: headRow, a: a, existentes: existentes, linksHtml: linksHtml };
   });
 
   // Las subcategorías creadas desde el panel de admin (Modo edición) no
@@ -160,12 +165,12 @@
   // misma respuesta ya resuelta y ninguno de los productos/subcategorías
   // cargados desde el panel llegaría a mostrarse en toda la página.
   // Sólo tiene sentido para una subcategoría 100% nacida en la base (nunca
-  // para una migrada del HTML, ver la nota grande más abajo): como no viene
-  // de ninguna <section> propia, TODO lo que tiene adentro quedó anotado en
-  // la base al asignársela (subcategoria_id, en catalogo_productos o en el
-  // override de catalogo_tarjetas) — así que si no hay ningún producto
-  // publicado ni ninguna tarjeta sin ocultar con ese id, está vacía de
-  // verdad, en cualquier mundo donde se mire.
+  // para una migrada del HTML, esa la resuelve ocultarMigradasVacias() con
+  // otro dato): como no viene de ninguna <section> propia, TODO lo que
+  // tiene adentro quedó anotado en la base al asignársela (subcategoria_id,
+  // en catalogo_productos o en el override de catalogo_tarjetas) — así que
+  // si no hay ningún producto publicado ni ninguna tarjeta sin ocultar con
+  // ese id, está vacía de verdad, en cualquier mundo donde se mire.
   function tieneAlgoVisible(subId, datos) {
     var productos = datos.productos || [];
     for (var i = 0; i < productos.length; i++) {
@@ -176,6 +181,42 @@
       if (tarjetas[clave].subcategoriaId === subId && !tarjetas[clave].oculta) return true;
     }
     return false;
+  }
+
+  // Para una subcategoría MIGRADA del HTML sí hay forma de saber si está
+  // vacía, pero hace falta un dato que este script no tiene por su cuenta:
+  // qué tarjetas tiene cada <section> según el propio HTML (la mayoría
+  // nunca pasan por catalogo_tarjetas, así que no alcanza con mirar la
+  // base sola — ver tieneAlgoVisible arriba). assets/subcategorias-html.js
+  // (generado por .claude/gen-subcategorias-html.js) trae ese censo fijo;
+  // acá sólo se cruza contra el "oculta" en vivo de cada una. Si TODAS las
+  // tarjetas censadas de una sección están ocultas, se apaga su link — y
+  // si más tarde alguna vuelve a mostrarse (o se agrega un producto nuevo a
+  // esa subcategoría), el próximo cargado de la página la vuelve a listar
+  // sola, sin tocar este archivo.
+  function ocultarMigradasVacias(key, info, datos) {
+    var censo = window.__SUBCATS_HTML__ && window.__SUBCATS_HTML__[key];
+    if (!censo) return; // sin censo (script no cargado, o mundo sin catbar): no tocar nada
+    for (var seccionSlug in info.linksHtml) {
+      var miembros = censo[seccionSlug];
+      // undefined (no "miembros in censo"): el generador (gen-subcategorias-
+      // html.js) saca los comentarios HTML antes de censar, así que esto
+      // pasa cuando la <section> ni siquiera existe de verdad en la página
+      // — comentada "a pedido" (Rincones/Paredes/Textiles en Decoración,
+      // La mesa dulce/Para regalar en Repostería) o directamente borrada.
+      // Un link a un anchor que no existe no lleva a ningún lado, así que
+      // se oculta igual que una vacía — y un array vacío (existe la
+      // sección pero nunca tuvo ninguna tarjeta) es el mismo caso.
+      if (!miembros || !miembros.length) {
+        info.linksHtml[seccionSlug].hidden = true;
+        continue;
+      }
+      var todasOcultas = miembros.every(function (cardSlug) {
+        var ov = datos.tarjetas[key + '~' + cardSlug];
+        return !!(ov && ov.oculta);
+      });
+      info.linksHtml[seccionSlug].hidden = todasOcultas;
+    }
   }
 
   function completarConSubcategorias() {
@@ -193,15 +234,10 @@
         var lista = porPagina[key].slice().sort(function (x, y) {
           return (x.orden - y.orden) || x.nombre.localeCompare(y.nombre);
         });
-        // Las migradas del HTML (ya están en info.existentes) se dejan
-        // siempre, vacías o no: este script corre en CUALQUIER página del
-        // sitio, no en la dueña de esa <section>, así que no hay forma de
-        // saber desde acá si sus tarjetas (la mayoría sin ninguna fila en
-        // la base) siguen teniendo algo visible o no — sólo la propia
-        // página sabe eso (ver sincronizarCatbar() en precios.js). Filtrar
-        // "a ciegas" podría esconder una categoría que en realidad está
-        // llena. Las nacidas 100% en la base sí se pueden chequear del
-        // todo (tieneAlgoVisible arriba) porque no tienen ese punto ciego.
+        // Las migradas del HTML se resuelven con el censo fijo (ver arriba)
+        // — corre siempre, tenga o no subcategorías nuevas de la base que
+        // agregar, así que va antes del "continue" de abajo.
+        ocultarMigradasVacias(key, info, datos);
         var nuevas = lista.filter(function (s) {
           return !info.existentes[s.slug] && tieneAlgoVisible(s.id, datos);
         });

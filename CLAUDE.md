@@ -104,6 +104,18 @@ buscable y trazable. Pasos:
    Esto reescribe `assets/explorar-data.js` leyendo las tarjetas `.pcard` de
    las páginas — es lo que usa "Explorar" y el buscador cuando el sitio se
    abre como archivo local.
+
+   Si la tarjeta nueva se agregó a una subcategoría que ya existía (no una
+   recién creada desde el panel), regenerar también el censo del mega-menú:
+   ```bash
+   node .claude/gen-subcategorias-html.js
+   ```
+   Reescribe `assets/subcategorias-html.js` — es lo que usa
+   `assets/mundo-menu.js` para saber si una subcategoría migrada del HTML
+   se quedó sin ningún producto visible y sacarla del desplegable
+   "Nuestros mundos" del header. No hace falta correrlo por ocultar/mostrar/
+   mover tarjetas desde el panel de admin (eso ya se lee en vivo) — sólo
+   cuando se agrega o saca una tarjeta a mano del HTML.
 4. **Verificar en el navegador** que la tarjeta nueva aparece, que las fotos
    cargan y que, si es galería, las flechas/puntos cambian de color bien.
 
@@ -180,9 +192,10 @@ tarjeta del HTML:
    correspondiente.
 2. Mover sus fotos de `/productos/...` a `_archive/` (no borrarlas del disco),
    conservando el nombre de archivo, por si hay que restaurarlo después.
-3. Regenerar el snapshot de búsqueda:
+3. Regenerar el snapshot de búsqueda y el censo del mega-menú:
    ```bash
    node .claude/gen-explorar-data.js
+   node .claude/gen-subcategorias-html.js
    ```
 4. Si el producto tenía `data-pos`, revisar `assets/pos-codes.js` por si ese
    código quedó referenciado ahí también (no es automático, es un mapeo
