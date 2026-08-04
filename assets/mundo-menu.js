@@ -159,13 +159,32 @@
   // catalogo-productos.js, que sí espera a DOMContentLoaded, recibiría esa
   // misma respuesta ya resuelta y ninguno de los productos/subcategorías
   // cargados desde el panel llegaría a mostrarse en toda la página.
+  // Sólo tiene sentido para una subcategoría 100% nacida en la base (nunca
+  // para una migrada del HTML, ver la nota grande más abajo): como no viene
+  // de ninguna <section> propia, TODO lo que tiene adentro quedó anotado en
+  // la base al asignársela (subcategoria_id, en catalogo_productos o en el
+  // override de catalogo_tarjetas) — así que si no hay ningún producto
+  // publicado ni ninguna tarjeta sin ocultar con ese id, está vacía de
+  // verdad, en cualquier mundo donde se mire.
+  function tieneAlgoVisible(subId, datos) {
+    var productos = datos.productos || [];
+    for (var i = 0; i < productos.length; i++) {
+      if (productos[i].subcategoriaId === subId) return true;
+    }
+    var tarjetas = datos.tarjetas || {};
+    for (var clave in tarjetas) {
+      if (tarjetas[clave].subcategoriaId === subId && !tarjetas[clave].oculta) return true;
+    }
+    return false;
+  }
+
   function completarConSubcategorias() {
     if (!window.MMCatalogo) return;
     MMCatalogo.cargar(function (datos) {
       var subcategorias = datos.subcategorias || {};
       var porPagina = {};
       for (var id in subcategorias) {
-        var s = subcategorias[id];
+        var s = Object.assign({ id: id }, subcategorias[id]);
         (porPagina[s.pagina] || (porPagina[s.pagina] = [])).push(s);
       }
       for (var key in porPagina) {
@@ -174,7 +193,18 @@
         var lista = porPagina[key].slice().sort(function (x, y) {
           return (x.orden - y.orden) || x.nombre.localeCompare(y.nombre);
         });
-        var nuevas = lista.filter(function (s) { return !info.existentes[s.slug]; });
+        // Las migradas del HTML (ya están en info.existentes) se dejan
+        // siempre, vacías o no: este script corre en CUALQUIER página del
+        // sitio, no en la dueña de esa <section>, así que no hay forma de
+        // saber desde acá si sus tarjetas (la mayoría sin ninguna fila en
+        // la base) siguen teniendo algo visible o no — sólo la propia
+        // página sabe eso (ver sincronizarCatbar() en precios.js). Filtrar
+        // "a ciegas" podría esconder una categoría que en realidad está
+        // llena. Las nacidas 100% en la base sí se pueden chequear del
+        // todo (tieneAlgoVisible arriba) porque no tienen ese punto ciego.
+        var nuevas = lista.filter(function (s) {
+          return !info.existentes[s.slug] && tieneAlgoVisible(s.id, datos);
+        });
         if (!nuevas.length) continue;
         var box = boxDe(info.col, info.headRow, info.a);
         nuevas.forEach(function (s) {
