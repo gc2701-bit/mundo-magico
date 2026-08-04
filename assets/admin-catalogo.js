@@ -348,14 +348,17 @@
     else construirSimple(info, card, datos, tarjetaOv);
 
     construirSubcategoria(datos, clave, tarjetaOv);
-    // Mover de mundo sólo para el caso simple/galería: talles y combos son
-    // varios códigos a la vez y convertirlos en una sola fila de
-    // catalogo_productos (un código, un precio) perdería esa estructura.
+    // Mover de mundo sólo para el caso simple/galería: combos son varios
+    // códigos con cantidades (data-incluye) y convertirlos en una sola fila
+    // de catalogo_productos (un código, un precio) perdería esa estructura.
     if (info.tipo === 'simple') construirMoverMundo(info, card, clave);
-    // Convertir en editable también sirve para la galería multi — es justo
-    // el caso donde falta poder sumar un color con su propio código. Talles y
-    // combos quedan afuera por lo mismo que "Mover a otro mundo".
-    if (info.tipo === 'simple' || info.tipo === 'galeria-multi') {
+    // Convertir en editable también sirve para la galería multi (falta
+    // poder sumar un color con su propio código) y para talles (falta poder
+    // editarle el nombre o el código a cada talle/tamaño — el popover de
+    // arriba, construirTalles(), sólo deja tocar precio y stock). Combos
+    // quedan afuera por lo mismo que "Mover a otro mundo": catalogo_productos
+    // no tiene dónde guardar cantidades por componente.
+    if (info.tipo === 'simple' || info.tipo === 'galeria-multi' || info.tipo === 'talles') {
       construirConvertir(info, card, clave, tarjetaOv);
     }
   }
@@ -413,15 +416,25 @@
     ocultosError.hidden = !msg;
   }
 
+  // Sacar la fila y, si con eso su grupo ("Productos" / "Tarjetas del
+  // HTML") se quedó sin filas, sacar también el título del grupo — sin
+  // esto un grupo vaciado dejaba un encabezado colgado sin nada debajo.
+  // Si no queda NINGÚN grupo, mostrar el aviso de "no hay nada oculto".
+  function sacarFilaOculta(fila) {
+    var grupo = fila.closest('.mm-ocultos-grupo-wrap');
+    fila.remove();
+    if (grupo && !grupo.querySelector('.mm-fila')) grupo.remove();
+    if (!ocultosBody.querySelector('.mm-fila')) {
+      ocultosBody.appendChild(el('p', 'mm-pop-nota mm-ocultos-vacio', 'No queda nada oculto en este mundo.'));
+    }
+  }
+
   function mostrarProducto(producto, fila, boton) {
     boton.disabled = true;
     sb.from('catalogo_productos').update({ publicado: true }).eq('id', producto.id).select().then(function (r) {
       if (r.error) throw r.error;
       if (!r.data || !r.data.length) throw new Error('No se guardó — probablemente se cerró la sesión de admin. Recargá la página.');
-      fila.remove();
-      if (!ocultosBody.querySelector('.mm-fila')) {
-        ocultosBody.appendChild(el('p', 'mm-pop-nota mm-ocultos-vacio', 'No quedan productos ocultos en este mundo.'));
-      }
+      sacarFilaOculta(fila);
       MMCatalogo.refrescar(function () {
         if (window.MMCatalogoProductos && MMCatalogoProductos.repintar) MMCatalogoProductos.repintar();
         if (window.MMPrecios && MMPrecios.repintar) MMPrecios.repintar();
@@ -433,6 +446,46 @@
     });
   }
 
+  // Misma idea que mostrarProducto() pero para una tarjeta del HTML: acá
+  // "volver a mostrar" es destildar oculta en catalogo_tarjetas (guardarTarjeta,
+  // la misma función que usa el popover de la tarjeta) — no hay fila en
+  // catalogo_productos para esto.
+  function mostrarTarjeta(tarjeta, fila, boton) {
+    boton.disabled = true;
+    guardarTarjeta(tarjeta.pagina, tarjeta.slug, { oculta: false }).then(function () {
+      sacarFilaOculta(fila);
+      MMCatalogo.refrescar(function () {
+        if (window.MMPrecios && MMPrecios.repintar) MMPrecios.repintar();
+        montarLapices();
+      });
+    }).catch(function (err) {
+      mostrarErrorOcultos((err && err.message) || 'No se pudo. Probá de nuevo.');
+      boton.disabled = false;
+    });
+  }
+
+  // Agrega un grupo con título ("Productos" / "Tarjetas del HTML") y una
+  // fila por item, con su botón "Volver a mostrar" — mismo armado para los
+  // dos orígenes, sólo cambia qué texto mostrar y qué pasa al click.
+  function agregarGrupoOcultos(titulo, items, nombreDe, onMostrar) {
+    if (!items.length) return;
+    var grupo = el('div', 'mm-ocultos-grupo-wrap');
+    grupo.appendChild(el('p', 'mm-pop-nota mm-ocultos-grupo', titulo));
+    items.forEach(function (item) {
+      // Sin la clase mm-fila-nombre (que en la lista de talles ocupa las dos
+      // columnas del grid a propósito): acá sí quiero nombre y botón lado a
+      // lado en la misma fila.
+      var fila = el('div', 'mm-fila');
+      fila.appendChild(el('span', 'mm-ocultos-nombre', nombreDe(item)));
+      var btn = el('button', 'mm-ocultos-btn', 'Volver a mostrar');
+      btn.type = 'button';
+      btn.addEventListener('click', function () { onMostrar(item, fila, btn); });
+      fila.appendChild(btn);
+      grupo.appendChild(fila);
+    });
+    ocultosBody.appendChild(grupo);
+  }
+
   function abrirOcultos() {
     if (!ocultosPop) armarOcultos();
     mostrarErrorOcultos('');
@@ -442,32 +495,46 @@
     ocultosScrim.classList.add('is-on');
     ocultosPop.classList.add('is-on');
 
-    sb.from('catalogo_productos').select('id,titulo,codigo,actualizado_en')
-      .eq('pagina', pagina).eq('publicado', false)
-      .order('actualizado_en', { ascending: false })
-      .then(function (r) {
-        ocultosBody.innerHTML = '';
-        ocultosBody.appendChild(ocultosError);
-        if (r.error) { mostrarErrorOcultos(r.error.message); return; }
-        var filas = r.data || [];
-        if (!filas.length) {
-          ocultosBody.appendChild(el('p', 'mm-pop-nota mm-ocultos-vacio', 'No hay productos ocultos en este mundo.'));
-          return;
-        }
-        filas.forEach(function (p) {
-          // Sin la clase mm-fila-nombre (que en la lista de talles ocupa
-          // las dos columnas del grid a propósito): acá sí quiero nombre y
-          // botón lado a lado en la misma fila.
-          var fila = el('div', 'mm-fila');
-          var nombre = el('span', 'mm-ocultos-nombre', p.titulo + (p.codigo ? ' · ' + p.codigo : ''));
-          fila.appendChild(nombre);
-          var btn = el('button', 'mm-ocultos-btn', 'Volver a mostrar');
-          btn.type = 'button';
-          btn.addEventListener('click', function () { mostrarProducto(p, fila, btn); });
-          fila.appendChild(btn);
-          ocultosBody.appendChild(fila);
-        });
-      });
+    // Dos tablas, dos consultas: "Sacar de la web" en un producto cargado
+    // desde el panel es catalogo_productos.publicado=false; en una tarjeta
+    // escrita a mano en el HTML es catalogo_tarjetas.oculta=true — no hay
+    // una sola tabla que traiga las dos cosas. Sin esto último, una tarjeta
+    // del HTML ocultada quedaba invisible en TODA la web (ver marcarEstado()
+    // en precios.js: card.hidden no distingue admin de visita) y sin ningún
+    // lugar del panel para volver a encontrarla.
+    Promise.all([
+      sb.from('catalogo_productos').select('id,titulo,codigo,actualizado_en')
+        .eq('pagina', pagina).eq('publicado', false)
+        .order('actualizado_en', { ascending: false }),
+      sb.from('catalogo_tarjetas').select('pagina,slug,titulo_ref,actualizado_en')
+        .eq('pagina', pagina).eq('oculta', true)
+        .order('actualizado_en', { ascending: false })
+    ]).then(function (rs) {
+      ocultosBody.innerHTML = '';
+      ocultosBody.appendChild(ocultosError);
+      var rProductos = rs[0], rTarjetas = rs[1];
+      if (rProductos.error) { mostrarErrorOcultos(rProductos.error.message); return; }
+      if (rTarjetas.error) { mostrarErrorOcultos(rTarjetas.error.message); return; }
+
+      var productos = rProductos.data || [];
+      var tarjetas = rTarjetas.data || [];
+      if (!productos.length && !tarjetas.length) {
+        ocultosBody.appendChild(el('p', 'mm-pop-nota mm-ocultos-vacio', 'No hay nada oculto en este mundo.'));
+        return;
+      }
+
+      agregarGrupoOcultos('Productos', productos, function (p) {
+        return p.titulo + (p.codigo ? ' · ' + p.codigo : '');
+      }, mostrarProducto);
+
+      // titulo_ref sólo queda cargado si esa tarjeta se guardó DESPUÉS de
+      // que admin-catalogo.js empezó a mandarlo (ver guardarTarjeta) — para
+      // una fila vieja que no lo tiene, el slug sigue siendo legible (sale
+      // del título del producto) así que alcanza como respaldo.
+      agregarGrupoOcultos('Tarjetas del HTML', tarjetas, function (t) {
+        return t.titulo_ref || t.slug;
+      }, mostrarTarjeta);
+    });
   }
 
   /* --- Caso: producto simple o galería de colores (un solo código) ------- */
@@ -637,15 +704,16 @@
     }
     if (existenteId) return Promise.resolve(existenteId);
 
+    var orden = proximoOrden(pagina);
     return sb.from('catalogo_subcategorias')
-      .insert({ pagina: pagina, nombre: nombre, slug: slugNueva, orden: 0 })
+      .insert({ pagina: pagina, nombre: nombre, slug: slugNueva, orden: orden })
       .select('id')
       .then(function (r) {
         if (r.error) throw r.error;
         var id = r.data && r.data[0] && r.data[0].id;
         if (id) {
           var parche = { subcategorias: {} };
-          parche.subcategorias[id] = { pagina: pagina, nombre: nombre, slug: slugNueva, orden: 0 };
+          parche.subcategorias[id] = { pagina: pagina, nombre: nombre, slug: slugNueva, orden: orden };
           MMCatalogo.parche(parche);
         }
         return id;
@@ -806,7 +874,7 @@
       return sb.from('catalogo_productos').insert(nuevo).select('id');
     }).then(function (r) {
       if (r.error) throw r.error;
-      return guardarTarjeta(clave.pagina, clave.slug, { oculta: true });
+      return guardarTarjeta(clave.pagina, clave.slug, { oculta: true }, { titulo_ref: info.titulo });
     }).then(function () {
       MMCatalogo.refrescar(function () {
         if (window.MMPrecios && window.MMPrecios.repintar) MMPrecios.repintar();
@@ -884,6 +952,7 @@
   }
 
   function construirConvertir(info, card, clave, tarjetaOv) {
+    var esTalles = info.tipo === 'talles';
     var multi = info.tipo === 'galeria-multi';
     var fotos = fotosDeTarjeta(card, multi);
     if (!fotos.length) return; // sin foto no hay nada que convertir
@@ -894,7 +963,9 @@
     panel.hidden = true;
 
     panel.appendChild(el('p', 'mm-pop-nota',
-      'Para poder agregarle fotos de otros colores, ponerle un código a cada uno o pasarla a talles. ' +
+      (esTalles
+        ? 'Para poder editarle el nombre o el código a cada talle/tamaño, o agregarle fotos. '
+        : 'Para poder agregarle fotos de otros colores, ponerle un código a cada uno o pasarla a talles. ') +
       'Queda en este mismo mundo y en su subcategoría, con ' +
       (fotos.length === 1 ? 'su foto.' : 'sus ' + fotos.length + ' fotos.')));
 
@@ -918,6 +989,7 @@
     mostrarError(''); mostrarOk('');
     boton.disabled = true;
 
+    var esTalles = info.tipo === 'talles';
     var specsAttr = card.getAttribute('data-specs') || '';
     var specs = specsAttr ? specsAttr.split('|').map(function (s) { return s.trim(); }).filter(Boolean) : null;
 
@@ -926,9 +998,16 @@
       subcategoria_id: subcategoriaDeTarjeta(card, clave, tarjetaOv),
       titulo: info.titulo,
       slug: slug(info.titulo),
-      // En una galería multi el código vive en cada foto, no en el producto
-      // (mismo criterio que usa el formulario al guardar, ver tipo).
-      codigo: multi ? null : (info.codigo || null),
+      // En una galería multi el código vive en cada foto y en talles vive uno
+      // por opción (ver abajo) — ninguno de los dos tiene un único código de
+      // tarjeta (mismo criterio que usa el formulario "+ Agregar producto").
+      codigo: (multi || esTalles) ? null : (info.codigo || null),
+      // [{nombre, codigo}] por opción — se traduce 1 a 1 al mismo
+      // data-talles="Nombre:codigo;…" que ya sabe leer producto.js (ver
+      // catalogo-productos.js). El precio de cada código ya está cargado en
+      // catalogo_precios (es el mismo código que usaba la tarjeta del HTML),
+      // así que no hace falta volver a guardarlo acá.
+      talles: esTalles ? info.opciones.map(function (op) { return { nombre: op.name, codigo: op.code }; }) : null,
       specs: specs,
       fotos: fotos,
       orden: 0,
@@ -937,7 +1016,7 @@
 
     sb.from('catalogo_productos').insert(nuevo).select('id').then(function (r) {
       if (r.error) throw r.error;
-      return guardarTarjeta(clave.pagina, clave.slug, { oculta: true });
+      return guardarTarjeta(clave.pagina, clave.slug, { oculta: true }, { titulo_ref: info.titulo });
     }).then(function () {
       // A diferencia de moverAMundo, el producto nuevo va EN ESTA página:
       // hay que redibujarlo acá o desaparece hasta recargar.
@@ -1580,6 +1659,23 @@
     });
   }
 
+  // Para que una subcategoría nueva no nazca empatada en "orden" con la
+  // primera que ya existía en ese mundo: por default arrancaban las dos en
+  // 0, y "Subir"/"Bajar" (intercambiarOrdenSubcat) contra una vecina con el
+  // mismo número no mueve nada visible — cambia 0 por 0 — así que el botón
+  // parecía roto. Empezar después de la última deja lugar para acomodarla
+  // con Subir/Bajar sin ese empate.
+  function proximoOrden(pagina) {
+    var datos = MMCatalogo.datos();
+    if (!datos) return 0;
+    var max = -1;
+    Object.keys(datos.subcategorias).forEach(function (id) {
+      var s = datos.subcategorias[id];
+      if (s.pagina === pagina && s.orden > max) max = s.orden;
+    });
+    return max + 1;
+  }
+
   /* --- Agregar subcategoría nueva, sin pasar por un producto --------------
    * Antes la única forma de crear una subcategoría era de paso, mientras se
    * editaba una tarjeta o se cargaba un producto ("+ Crear subcategoría
@@ -1709,9 +1805,21 @@
     var nombreIn = campoTexto('Nombre', actual ? actual.nombre : '');
     subcatBody.appendChild(nombreIn.wrap);
 
-    var ordenIn = campoNumero('Orden (opcional — más chico aparece primero)', actual ? actual.orden : '');
+    // Al crear una nueva, se sugiere el número que la deja al final de la
+    // lista de ese mundo (proximoOrden) en vez de dejar el campo en blanco
+    // (que el form mandaba como 0) — así no nace empatada con la primera
+    // que ya existía, y Subir/Bajar (más abajo) tiene desde dónde moverla.
+    var ordenIn = campoNumero('Orden (más chico aparece primero)', actual ? actual.orden : proximoOrden(mundoSel ? mundoSel.value : pagina));
     ordenIn.input.min = '0';
     subcatBody.appendChild(ordenIn.wrap);
+    // Si cambian de mundo antes de guardar, el "final de la lista" es
+    // distinto en cada uno — recalcular para seguir sugiriendo un lugar sin
+    // empates.
+    if (mundoSel) {
+      mundoSel.addEventListener('change', function () {
+        ordenIn.input.value = proximoOrden(mundoSel.value);
+      });
+    }
 
     // Subir/bajar: más simple que pedirle a alguien que calcule a mano en
     // qué número de "orden" queda justo entre otras dos. Intercambia el
@@ -2123,12 +2231,20 @@
       });
   }
 
-  function guardarTarjeta(pagina, slug, campos) {
+  // camposSoloAlta: campos que sólo tiene sentido mandar en el INSERT, nunca
+  // en el UPDATE — hoy sólo titulo_ref. No puede viajar en "campos" porque
+  // el grant de columna de catalogo_00_base.sql sólo da UPDATE de
+  // (oculta, sin_stock, precio_fijo, nota): un UPDATE que toque titulo_ref
+  // rebota por permisos y tira abajo TODO el guardado, no sólo ese campo.
+  // titulo_ref es a propósito así — es el que congela el <h3> tal como
+  // estaba cuando se ocultó/movió la tarjeta, para poder detectar después
+  // si el HTML le cambió el nombre (ver .claude/check-catalogo.js).
+  function guardarTarjeta(pagina, slug, campos, camposSoloAlta) {
     return sb.from('catalogo_tarjetas').update(campos).eq('pagina', pagina).eq('slug', slug).select()
       .then(function (r) {
         if (r.error) throw r.error;
         if (r.data && r.data.length) return;
-        return sb.from('catalogo_tarjetas').insert(Object.assign({ pagina: pagina, slug: slug }, campos))
+        return sb.from('catalogo_tarjetas').insert(Object.assign({ pagina: pagina, slug: slug }, campos, camposSoloAlta))
           .then(function (r2) { if (r2.error) throw r2.error; });
       })
       .then(function () {
@@ -2149,6 +2265,11 @@
     if (!cardActual) return;
     var card = cardActual;
     var clave = claveDe(card);
+    // Mismo texto que construir() ya puso en el título del popover — sólo
+    // se usa si esta es la primera vez que se guarda algo de esta tarjeta
+    // (ver camposSoloAlta en guardarTarjeta()).
+    var tituloH3 = $('h3', popHead);
+    var titulo = tituloH3 ? tituloH3.textContent.trim() : '';
     mostrarError(''); mostrarOk('');
     guardarBtn.disabled = true;
 
@@ -2242,7 +2363,7 @@
           .map(function (c) { return c.nombre; });
       }
 
-      pasos.push(guardarTarjeta(clave.pagina, clave.slug, tarjetaCampos));
+      pasos.push(guardarTarjeta(clave.pagina, clave.slug, tarjetaCampos, { titulo_ref: titulo }));
       return Promise.all(pasos);
     }).then(function () {
       if (window.MMPrecios && window.MMPrecios.repintar) MMPrecios.repintar();
