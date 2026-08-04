@@ -465,19 +465,26 @@
   }
 
   // Agrega un grupo con título ("Productos" / "Tarjetas del HTML") y una
-  // fila por item, con su botón "Volver a mostrar" — mismo armado para los
-  // dos orígenes, sólo cambia qué texto mostrar y qué pasa al click.
-  function agregarGrupoOcultos(titulo, items, nombreDe, onMostrar) {
+  // fila por item, con su botón de acción — mismo armado para los dos
+  // orígenes, sólo cambia qué texto mostrar y qué pasa al click.
+  // notaDe/labelBtnDe son opcionales (sólo los usa el grupo de tarjetas,
+  // para avisar cuando una está "oculta acá" pero en realidad sigue viva
+  // como producto en otro mundo — ver abrirOcultos()).
+  function agregarGrupoOcultos(titulo, items, nombreDe, notaDe, labelBtnDe, onMostrar) {
     if (!items.length) return;
     var grupo = el('div', 'mm-ocultos-grupo-wrap');
     grupo.appendChild(el('p', 'mm-pop-nota mm-ocultos-grupo', titulo));
     items.forEach(function (item) {
       // Sin la clase mm-fila-nombre (que en la lista de talles ocupa las dos
-      // columnas del grid a propósito): acá sí quiero nombre y botón lado a
-      // lado en la misma fila.
+      // columnas del grid a propósito): acá sí quiero nombre+nota y botón
+      // lado a lado en la misma fila.
       var fila = el('div', 'mm-fila');
-      fila.appendChild(el('span', 'mm-ocultos-nombre', nombreDe(item)));
-      var btn = el('button', 'mm-ocultos-btn', 'Volver a mostrar');
+      var info = el('div', 'mm-ocultos-info');
+      info.appendChild(el('span', 'mm-ocultos-nombre', nombreDe(item)));
+      var nota = notaDe ? notaDe(item) : null;
+      if (nota) info.appendChild(el('span', 'mm-ocultos-mudada', nota));
+      fila.appendChild(info);
+      var btn = el('button', 'mm-ocultos-btn', (labelBtnDe && labelBtnDe(item)) || 'Volver a mostrar');
       btn.type = 'button';
       btn.addEventListener('click', function () { onMostrar(item, fila, btn); });
       fila.appendChild(btn);
@@ -502,17 +509,30 @@
     // del HTML ocultada quedaba invisible en TODA la web (ver marcarEstado()
     // en precios.js: card.hidden no distingue admin de visita) y sin ningún
     // lugar del panel para volver a encontrarla.
+    //
+    // La tercera consulta es para el caso "Mover a otro mundo": la tarjeta
+    // del HTML queda oculta EN ESTE mundo a propósito porque el producto de
+    // verdad ahora vive en otro (mismo slug, otra "pagina" en
+    // catalogo_productos). Sin cruzar esto, una tarjeta mudada se veía
+    // igual que una realmente perdida — y "Volver a mostrar" sobre una
+    // mudada crea un duplicado con el producto que ya está publicado en el
+    // otro mundo (pasó de verdad: ver el chat sobre "Platos descartables").
+    // Trae TODOS los productos publicados del sitio (hoy son pocos) en vez
+    // de filtrar por slug porque los slugs recién se conocen después de la
+    // consulta de tarjetas de arriba — más simple una sola consulta chica
+    // que encadenar dos viajes.
     Promise.all([
       sb.from('catalogo_productos').select('id,titulo,codigo,actualizado_en')
         .eq('pagina', pagina).eq('publicado', false)
         .order('actualizado_en', { ascending: false }),
       sb.from('catalogo_tarjetas').select('pagina,slug,titulo_ref,actualizado_en')
         .eq('pagina', pagina).eq('oculta', true)
-        .order('actualizado_en', { ascending: false })
+        .order('actualizado_en', { ascending: false }),
+      sb.from('catalogo_productos').select('pagina,slug,titulo').eq('publicado', true)
     ]).then(function (rs) {
       ocultosBody.innerHTML = '';
       ocultosBody.appendChild(ocultosError);
-      var rProductos = rs[0], rTarjetas = rs[1];
+      var rProductos = rs[0], rTarjetas = rs[1], rMudadas = rs[2];
       if (rProductos.error) { mostrarErrorOcultos(rProductos.error.message); return; }
       if (rTarjetas.error) { mostrarErrorOcultos(rTarjetas.error.message); return; }
 
@@ -523,9 +543,14 @@
         return;
       }
 
+      var mudadasPorSlug = {};
+      if (!rMudadas.error) {
+        (rMudadas.data || []).forEach(function (p) { mudadasPorSlug[p.slug] = p; });
+      }
+
       agregarGrupoOcultos('Productos', productos, function (p) {
         return p.titulo + (p.codigo ? ' · ' + p.codigo : '');
-      }, mostrarProducto);
+      }, null, null, mostrarProducto);
 
       // titulo_ref sólo queda cargado si esa tarjeta se guardó DESPUÉS de
       // que admin-catalogo.js empezó a mandarlo (ver guardarTarjeta) — para
@@ -533,6 +558,14 @@
       // del título del producto) así que alcanza como respaldo.
       agregarGrupoOcultos('Tarjetas del HTML', tarjetas, function (t) {
         return t.titulo_ref || t.slug;
+      }, function (t) {
+        var mudada = mudadasPorSlug[t.slug];
+        if (!mudada || mudada.pagina === t.pagina) return null;
+        var mundoNombre = (MUNDOS.filter(function (m) { return m.pagina === mudada.pagina; })[0] || {}).nombre || mudada.pagina;
+        return 'No está perdida: ahora vive en ' + mundoNombre + ' como "' + mudada.titulo + '".';
+      }, function (t) {
+        var mudada = mudadasPorSlug[t.slug];
+        return (mudada && mudada.pagina !== t.pagina) ? 'Mostrar igual (quedará duplicada)' : null;
       }, mostrarTarjeta);
     });
   }

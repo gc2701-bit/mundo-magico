@@ -216,7 +216,11 @@ body.mm-admin-edit .mm-seccion-edit{ display:inline-flex; }
 
 /* --- Productos ocultos: nombre y botón lado a lado (mismo .mm-fila, sin
    el grid-column:1/3 de la lista de talles) ------------------------------ */
-.mm-ocultos-nombre{ font:600 13.5px/1.3 var(--font-body); color:var(--ink); min-width:0; }
+.mm-ocultos-info{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.mm-ocultos-nombre{ font:600 13.5px/1.3 var(--font-body); color:var(--ink); }
+/* Aviso de "en realidad vive en otro mundo" (ver abrirOcultos()) — mismo
+   tono que .mm-alerta pero sin heredar su margin de párrafo suelto. */
+.mm-ocultos-mudada{ font:600 12px/1.35 var(--font-body); color:var(--orange, #b06a1a); }
 .mm-ocultos-vacio{ margin:0; }
 .mm-ocultos-grupo-wrap{ display:flex; flex-direction:column; gap:10px; }
 .mm-ocultos-grupo-wrap + .mm-ocultos-grupo-wrap{ margin-top:18px; }
