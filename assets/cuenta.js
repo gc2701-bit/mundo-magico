@@ -19,7 +19,17 @@
 
   var sb;
   try {
-    sb = window.supabase.createClient(window.MM_SUPABASE.url, window.MM_SUPABASE.anonKey);
+    // persistSession + localStorage (no sessionStorage, que se borra al
+    // cerrar la pestaña) y autoRefreshToken es el default del SDK — se
+    // pasa explícito para que quede documentado acá y no dependa de que un
+    // futuro cambio de versión lo cambie en silencio. Si igual a un
+    // cliente le sigue pidiendo iniciar sesión antes de lo esperado, no es
+    // esto: es "Time-box user sessions" / "Inactivity timeout" en
+    // supabase.com → el proyecto → Authentication → Sessions, que fuerza
+    // el re-login pasados N días PASE LO QUE PASE acá.
+    sb = window.supabase.createClient(window.MM_SUPABASE.url, window.MM_SUPABASE.anonKey, {
+      auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage }
+    });
   } catch (e) {
     return;
   }
@@ -122,6 +132,46 @@
     document.dispatchEvent(new CustomEvent('mm:sesion'));
     sesionListaBienvenida = true;
     intentarBienvenida();
+    etiquetarAnalytics();
+  }
+
+  // GA4: identifica la sesión con el ID interno de la cuenta (uuid de
+  // auth.users) — NUNCA el email ni el nombre: mandarle a Analytics algo
+  // que identifique a una persona de verdad viola los Términos de Servicio
+  // de Google (https://support.google.com/analytics/answer/9019185) y
+  // arriesga que suspendan la cuenta de GA4. Para saber qué cuenta es cuál
+  // hay que cruzar este id contra Authentication → Users en Supabase, o
+  // contra los pedidos (que ya guardan nombre/email por su cuenta).
+  //
+  // Se manda también si la cuenta es admin (es_admin(), la misma función
+  // que ya usa admin-catalogo.js) como "user property", para poder
+  // separar en los reportes la actividad de un admin probando el panel de
+  // la de un cliente real — hoy analytics.js no distinguía nada de esto.
+  //
+  // ultimoUid evita repetir el viaje a es_admin() cuando avisar() se llama
+  // de nuevo para la MISMA sesión (getSession() y onAuthStateChange
+  // suelen disparar los dos al cargar la página).
+  var ultimoUid;
+  function etiquetarAnalytics() {
+    if (!window.gtag) return;
+    var uid = sesion && sesion.user && sesion.user.id;
+    if (uid === ultimoUid) return;
+    ultimoUid = uid;
+    // logged_in: para comparar en los reportes cómo navega/convierte una
+    // visita con cuenta iniciada contra una de invitado (la mayoría del
+    // catálogo se puede mirar y comprar sin cuenta — ver el comentario al
+    // principio de este archivo) — antes no había forma de distinguirlas.
+    if (!uid) {
+      gtag('set', { user_id: null });
+      gtag('set', 'user_properties', { is_admin: null, logged_in: false });
+      return;
+    }
+    gtag('set', { user_id: uid });
+    gtag('set', 'user_properties', { logged_in: true });
+    sb.rpc('es_admin').then(function (r) {
+      if (uid !== ultimoUid) return; // cambió de cuenta mientras esperaba la respuesta
+      gtag('set', 'user_properties', { is_admin: !r.error && !!r.data });
+    }).catch(function () {});
   }
 
   // --- Recuperación de contraseña (ver recuperar.html/recuperar.js) -------
