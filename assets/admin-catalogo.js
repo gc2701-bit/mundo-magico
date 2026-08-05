@@ -128,6 +128,7 @@
       // visita, no una preferencia que tenga sentido arrastrar para
       // siempre — sobre todo en una compu compartida del local.
       try { sessionStorage.setItem(EDICION_KEY, on ? '1' : '0'); } catch (e) {}
+      if (window.trackEvent) trackEvent('admin_modo_edicion', { estado: on ? 'on' : 'off', page_path: location.pathname });
     });
     barra.appendChild(switchBtn);
 
@@ -914,6 +915,7 @@
       });
       mostrarOk('Movido. La tarjeta original quedó oculta acá.');
       boton.disabled = false;
+      if (window.trackEvent) trackEvent('admin_mover_mundo', { mundo_origen: clave.pagina, mundo_destino: paginaDestino });
       setTimeout(cerrarPopover, 900);
     }).catch(function (err) {
       var msg = (err && err.message) || '';
@@ -1059,6 +1061,7 @@
       });
       mostrarOk('Convertida. Abrí su lápiz para agregarle fotos y códigos.');
       boton.disabled = false;
+      if (window.trackEvent) trackEvent('admin_convertir_producto', { pagina: clave.pagina, page_path: location.pathname });
       setTimeout(cerrarPopover, 1200);
     }).catch(function (err) {
       var msg = (err && err.message) || '';
@@ -1497,6 +1500,7 @@
       var card = document.querySelector('[data-mm-producto-id="' + productoId + '"]');
       if (card) card.remove();
       MMCatalogo.refrescar(function () {});
+      if (window.trackEvent) trackEvent('admin_borrar_producto', { page_path: location.pathname });
       cerrarAlta();
     }).catch(function (err) {
       mostrarErrorAlta((err && err.message) || 'No se pudo borrar. Probá de nuevo.');
@@ -1683,6 +1687,7 @@
       });
       mostrarOkAlta(editando ? 'Guardado.' : 'Agregado.');
       altaBtn.disabled = false;
+      if (window.trackEvent) trackEvent(editando ? 'admin_editar_producto' : 'admin_agregar_producto', { pagina: paginaDestino, tipo: tipo });
       setTimeout(cerrarAlta, editando ? 700 : 900);
     }).catch(function (err) {
       var msg = (err && err.message) || '';
@@ -1929,6 +1934,7 @@
       });
       mostrarOkSubcat('Borrada.');
       subcatBtn.disabled = false;
+      if (window.trackEvent) trackEvent('admin_borrar_subcategoria', { page_path: location.pathname });
       setTimeout(cerrarSubcatAlta, 700);
     }).catch(function (err) {
       mostrarErrorSubcat((err && err.message) || 'No se pudo borrar. Probá de nuevo.');
@@ -2019,6 +2025,7 @@
         });
         mostrarOkSubcat('Guardado.');
         subcatBtn.disabled = false;
+        if (window.trackEvent) trackEvent('admin_editar_subcategoria', { page_path: location.pathname });
         setTimeout(cerrarSubcatAlta, 700);
       }).catch(function (err) {
         mostrarErrorSubcat((err && err.message) || 'No se pudo guardar. Probá de nuevo.');
@@ -2053,6 +2060,7 @@
         });
         mostrarOkSubcat('Agregada. Ya la podés elegir en cualquier producto de ese mundo.');
         subcatBtn.disabled = false;
+        if (window.trackEvent) trackEvent('admin_agregar_subcategoria', { mundo: mundoDestino });
         setTimeout(cerrarSubcatAlta, 900);
       })
       .catch(function (err) {
@@ -2402,6 +2410,7 @@
       if (window.MMPrecios && window.MMPrecios.repintar) MMPrecios.repintar();
       mostrarOk('Guardado.');
       guardarBtn.disabled = false;
+      if (window.trackEvent) trackEvent('admin_guardar_tarjeta', { oculta: ocultaChk.checked, page_path: location.pathname });
       setTimeout(cerrarPopover, 700);
     }).catch(function (err) {
       mostrarError((err && err.message) || 'No se pudo guardar. Probá de nuevo.');
