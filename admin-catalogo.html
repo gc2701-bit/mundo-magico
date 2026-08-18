@@ -1,0 +1,51 @@
+---
+permalink: admin-catalogo.html
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://kyuilrlewynqrzebouww.supabase.co">
+<link rel="dns-prefetch" href="https://challenges.cloudflare.com">
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<link rel="dns-prefetch" href="https://www.google-analytics.com">
+<link rel="dns-prefetch" href="https://www.clarity.ms">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo · Mundo Mágico</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/v2.css">
+<link rel="stylesheet" href="assets/cuenta.css">
+<link rel="stylesheet" href="assets/admin-catalogo.css">
+</head>
+<body>
+
+<div class="adm-wrap">
+  <div class="adm-head">
+    <h1>Catálogo</h1>
+    <p id="adm-sesion" class="adm-sesion-info" hidden></p>
+    <button type="button" class="adm-logout-btn" id="adm-logout-btn" hidden>Cerrar sesión</button>
+  </div>
+
+  <div id="adm-gate" class="adm-gate">
+    <p>Necesitás iniciar sesión con la cuenta del negocio para administrar el catálogo.</p>
+    <button type="button" class="btn btn-primary" id="adm-login-btn">Iniciar sesión</button>
+  </div>
+
+  <div id="adm-panel" class="adm-panel" hidden>
+    <div class="adm-tabs" role="tablist">
+      <button type="button" class="adm-tab is-active" id="adm-tab-publicado" role="tab" aria-selected="true">Publicado</button>
+      <button type="button" class="adm-tab" id="adm-tab-espejo" role="tab" aria-selected="false">Sin activar</button>
+    </div>
+
+    <div id="adm-panel-publicado" class="adm-tab-panel" role="tabpanel"></div>
+    <div id="adm-panel-espejo" class="adm-tab-panel" hidden role="tabpanel"></div>
+  </div>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+<script src="assets/supabase-js-2.111.0.min.js"></script>
+<script src="assets/supabase-config.js"></script>
+<script src="assets/cuenta.js"></script>
+<script src="assets/admin-catalogo.js"></script>
+</body>
+</html>
