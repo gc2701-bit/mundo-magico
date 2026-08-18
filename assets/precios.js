@@ -476,7 +476,7 @@
   // color). El override de la tarjeta (sin código propio, ver
   // admin-catalogo.js) manda cuando está seteado: es lo único que cubre las
   // tarjetas que no resuelven a ningún código del POS.
-  function marcarEstado(card, codigosUsados, sinStock, tarjetaOv) {
+  function marcarEstado(card, codigosUsados, sinStock, tarjetaOv, pocasUnidades) {
     var agotado;
     if (tarjetaOv && tarjetaOv.sinStock != null) agotado = !!tarjetaOv.sinStock;
     else agotado = codigosUsados.length > 0 && codigosUsados.every(function (c) { return !!sinStock[c]; });
@@ -484,6 +484,7 @@
     else card.removeAttribute('data-agotado');
 
     marcarColoresSinStock(card, tarjetaOv);
+    if (pocasUnidades) marcarPocasUnidades(card, pocasUnidades);
 
     // Ocultar: la tarjeta sigue en el HTML (ver el comentario sobre esto en
     // el plan — no es borrado real), sólo se saca de la vista en esta misma
@@ -510,8 +511,22 @@
     }
   }
 
-  function aplicar(precios, codigos, alias, origen, sinStock, tarjetas, subcategorias) {
+  // Leyenda "quedan pocas unidades" (umbral configurable, catalogo_config) —
+  // nunca se expone el número real de stock, solo este booleano por código
+  // (mismo criterio que sinStock). Reversible: si el código sale del set
+  // (el worker actualizó stock por encima del umbral, o volvió a haber
+  // sin_stock que ya lo cubre por su cuenta), la marca se saca en la
+  // próxima pasada.
+  function marcarPocasUnidades(card, pocasUnidades) {
+    var codigos = codigosDeTarjeta(card);
+    var alguno = codigos.some(function (c) { return !!pocasUnidades[c]; });
+    if (alguno) card.setAttribute('data-pocas-unidades', '1');
+    else card.removeAttribute('data-pocas-unidades');
+  }
+
+  function aplicar(precios, codigos, alias, origen, sinStock, pocasUnidades, tarjetas, subcategorias) {
     sinStock = sinStock || {};
+    pocasUnidades = pocasUnidades || {};
     tarjetas = tarjetas || {};
     subcategorias = subcategorias || {};
     var R = new Resolutor(precios, codigos, alias);
@@ -523,7 +538,7 @@
       var talles = P.leerTalles(card);
       if (talles) {
         if (pintarTalles(card, talles, R)) n++;
-        marcarEstado(card, talles.map(function (t) { return t.code; }), sinStock, tarjetaOv);
+        marcarEstado(card, talles.map(function (t) { return t.code; }), sinStock, tarjetaOv, pocasUnidades);
         continue;
       }
       var incluye = P.leerIncluye(card);
@@ -533,12 +548,12 @@
         // corregir el precio de un combo sin tener que editar el HTML.
         if (tarjetaOv && tarjetaOv.precioFijo) { pintarPrecioFijo(card, tarjetaOv.precioFijo); n++; }
         else if (pintarIncluye(card, incluye, R)) n++;
-        marcarEstado(card, incluye.map(function (c) { return c.code; }), sinStock, tarjetaOv);
+        marcarEstado(card, incluye.map(function (c) { return c.code; }), sinStock, tarjetaOv, pocasUnidades);
         continue;
       }
       var lista = preciosDeTarjeta(card, R, tarjetaOv && tarjetaOv.codigoOverride);
       if (lista.length) { pintar(card, lista); n++; }
-      marcarEstado(card, codigosDeTarjeta(card), sinStock, tarjetaOv);
+      marcarEstado(card, codigosDeTarjeta(card), sinStock, tarjetaOv, pocasUnidades);
     }
     reubicar(tarjetas, subcategorias);
     ocultarSeccionesVacias();
@@ -558,6 +573,7 @@
       de: hacerBuscador(precios, alias),
       formato: function (n) { return fmt.format(n); },
       sinStock: function (codigo) { return !!sinStock[String(codigo || '').trim()]; },
+      marcarPocasUnidades: marcarPocasUnidades,
       // Repinta sin recargar después de guardar un cambio desde
       // admin-catalogo.js: borra sólo LAS PROPIAS etiquetas (data-mm-precio
       // — los combos escritos a mano no las tienen) y vuelve a aplicar con
@@ -574,7 +590,7 @@
         });
         if (!window.MMCatalogo) return;
         MMCatalogo.cargar(function (d) {
-          aplicar(d.precios, d.fotos, window.__PRECIOS_ALIAS__ || {}, d.origen, d.sinStock, d.tarjetas, d.subcategorias);
+          aplicar(d.precios, d.fotos, window.__PRECIOS_ALIAS__ || {}, d.origen, d.sinStock, d.pocasUnidades, d.tarjetas, d.subcategorias);
         });
       }
     };
@@ -595,7 +611,7 @@
         window.__PRECIOS_INFO__ = { origen: (datos && datos.origen) || 'sin-datos' };
         return;
       }
-      aplicar(datos.precios, datos.fotos, window.__PRECIOS_ALIAS__ || {}, datos.origen, datos.sinStock, datos.tarjetas, datos.subcategorias);
+      aplicar(datos.precios, datos.fotos, window.__PRECIOS_ALIAS__ || {}, datos.origen, datos.sinStock, datos.pocasUnidades, datos.tarjetas, datos.subcategorias);
     });
   }
 
