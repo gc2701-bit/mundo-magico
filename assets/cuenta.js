@@ -127,6 +127,24 @@
   // --- Sesión -------------------------------------------------------------
   var sesion = null;
 
+  // --- Gate de admin para el desplegable de cuenta -------------------------
+  // Mismo es_admin() que ya usa etiquetarAnalytics() (línea ~171) y todo el
+  // resto del sitio — cacheado por uid para no duplicar la llamada de red
+  // cada vez que se abre el menú. null = todavía no se sabe (no bloquea el
+  // resto del menú, el link de admin aparece async si corresponde).
+  var esAdminCache = {}; // uid -> boolean
+
+  function chequearEsAdmin(cb) {
+    var uid = sesion && sesion.user && sesion.user.id;
+    if (!uid) { cb(false); return; }
+    if (esAdminCache.hasOwnProperty(uid)) { cb(esAdminCache[uid]); return; }
+    sb.rpc('es_admin').then(function (r) {
+      var esAdmin = !r.error && !!r.data;
+      esAdminCache[uid] = esAdmin;
+      cb(esAdmin);
+    }).catch(function () { cb(false); });
+  }
+
   function avisar() {
     pintarBotonNav();
     document.dispatchEvent(new CustomEvent('mm:sesion'));
@@ -1042,6 +1060,21 @@
     var salir = el('button', 'cuenta-pop-out', 'Cerrar sesión');
     salir.type = 'button';
     salir.addEventListener('click', function () { cerrarPop(); sb.auth.signOut({ scope: 'global' }); });
+
+    // El link admin se inserta ANTES de "Cerrar sesión" cuando resuelve —
+    // navPop puede haberse vuelto a pintar (o cerrado) mientras esperaba la
+    // RPC; sólo tocar el DOM si navPop sigue siendo el mismo nodo montado.
+    var popAlAbrir = navPop;
+    chequearEsAdmin(function (esAdmin) {
+      if (!esAdmin || popAlAbrir !== navPop || !navPop.contains(who)) return;
+      var catalogo = document.createElement('a');
+      catalogo.className = 'cuenta-pop-item cuenta-pop-admin';
+      catalogo.href = 'admin-catalogo.html';
+      catalogo.textContent = 'Catálogo';
+      catalogo.setAttribute('role', 'menuitem');
+      navPop.insertBefore(catalogo, salir);
+    });
+
     navPop.appendChild(salir);
   }
 
