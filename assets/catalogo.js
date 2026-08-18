@@ -24,6 +24,7 @@
  *     origen:        'cache' | 'supabase' | 'ultimo-bueno' | 'respaldo-local' | 'sin-datos',
  *     precios:       { codigo: precio },
  *     sinStock:      { codigo: true },              // set, no array — para poder parchear
+ *     pocasUnidades: { codigo: true },              // set, igual que sinStock; recalculado server-side, nunca se parchea
  *     fotos:         { rutaDecodificada: codigo },
  *     tarjetas:      { 'pagina~slug': {oculta, sinStock, precioFijo, subcategoriaId, codigoOverride} },
  *     subcategorias: { id: {pagina, nombre, slug, orden} },
@@ -46,7 +47,7 @@
   var pendiente = null;   // promesa en curso, para no pedir dos veces en paralelo
 
   function vacio(origen) {
-    return { origen: origen, precios: {}, sinStock: {}, fotos: {}, tarjetas: {}, subcategorias: {}, productos: [] };
+    return { origen: origen, precios: {}, sinStock: {}, pocasUnidades: {}, fotos: {}, tarjetas: {}, subcategorias: {}, productos: [] };
   }
 
   // Del array que devuelve la RPC (sinStock: ["04375", ...]) al set que usa
@@ -55,10 +56,13 @@
   function normalizar(cruda, origen) {
     var sinStock = {};
     (cruda.sinStock || []).forEach(function (c) { sinStock[c] = true; });
+    var pocasUnidades = {};
+    (cruda.pocasUnidades || []).forEach(function (c) { pocasUnidades[c] = true; });
     return {
       origen: origen,
       precios: cruda.precios || {},
       sinStock: sinStock,
+      pocasUnidades: pocasUnidades,
       fotos: cruda.fotos || {},
       tarjetas: cruda.tarjetas || {},
       subcategorias: cruda.subcategorias || {},
@@ -127,7 +131,9 @@
       if (ultimoBueno) {
         cache = {
           origen: 'ultimo-bueno',
-          precios: ultimoBueno.precios, sinStock: ultimoBueno.sinStock, fotos: ultimoBueno.fotos, tarjetas: ultimoBueno.tarjetas,
+          precios: ultimoBueno.precios, sinStock: ultimoBueno.sinStock,
+          pocasUnidades: ultimoBueno.pocasUnidades || {},
+          fotos: ultimoBueno.fotos, tarjetas: ultimoBueno.tarjetas,
           subcategorias: ultimoBueno.subcategorias || {}, productos: ultimoBueno.productos || []
         };
         return cache;
