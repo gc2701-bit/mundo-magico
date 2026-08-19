@@ -78,12 +78,23 @@ function parsePage(html) {
       if (tagm) price = decode(tagm[1].replace(/<[^>]*>/g, '').trim());
     }
 
+    // tags/pos: deben coincidir exactamente con lo que assets/explorar.js
+    // parsePage() lee en vivo (mismos nombres de campo, mismo split en "|"),
+    // porque ambos caminos terminan en finalizeProduct() y hasta ahora este
+    // snapshot los omitía — sin esto, los chips de filtro (con-luz,
+    // feliz-cumpleanos) quedaban vacíos al usar el snapshot, y el pedido
+    // perdía el código del POS.
+    const dataTags = attr(openTag, 'data-tags');
+    const tags = dataTags ? dataTags.split('|').map(s => s.trim()).filter(Boolean) : [];
+
     out.push({
       title: title,
       images: images,
       specs: specs,
       price: price,
-      wamsg: attr(openTag, 'data-wamsg')
+      tags: tags,
+      wamsg: attr(openTag, 'data-wamsg'),
+      pos: attr(openTag, 'data-pos')
     });
   }
   return out;

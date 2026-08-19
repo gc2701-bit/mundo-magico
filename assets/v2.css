@@ -506,11 +506,30 @@ section{scroll-margin-top:calc(var(--nav-h) + var(--s2))}
 .pgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:var(--s2)}
 .pcard{display:flex; flex-direction:column; text-decoration:none; color:inherit; background:#fff;
   border:1px solid rgba(28,26,22,.07); border-radius:20px; overflow:hidden; box-shadow:var(--shadow-sm);
-  transition:transform .3s var(--ease), box-shadow .3s var(--ease)}
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  /* Mismo criterio que .slide en explorar.css: en páginas con 200+ tarjetas
+     (cumpleaños, globos-fiesta), saltear pintar/renderizar las que están
+     fuera de pantalla. El alto estimado (contain-intrinsic-size) evita que
+     el navegador las colapse a 0 antes de conocer su tamaño real, que haría
+     saltar el scroll. No afecta el scroll-spy del catbar: ese mide contra
+     .catsec (las secciones), no contra cada .pcard. */
+  content-visibility:auto;
+  contain-intrinsic-size:auto 320px;
+}
 .pcard:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg)}
 .pcard-ph{aspect-ratio:1/1; overflow:hidden; background:#fff; position:relative}
 .pcard-ph img{width:100%; height:100%; object-fit:contain; display:block; transition:transform .45s var(--ease)}
 .pcard:not(.has-gallery):hover .pcard-ph img{transform:scale(1.05)}
+/* Agotado: cinta simple sobre la foto — no tapa el precio ni el nombre. Lo
+   pone precios.js con data-agotado en la tarjeta para TODOS los visitantes
+   (no depende de admin-catalogo.css/js, que ahora carga condicional). */
+.pcard[data-agotado] .pcard-ph::after{
+  content:'Sin stock'; position:absolute; left:0; right:0; bottom:0;
+  padding:6px 10px; text-align:center;
+  background:rgba(28,26,22,.72); color:#fff;
+  font:700 12.5px/1 var(--font-body); letter-spacing:.02em;
+}
+.pcard[data-agotado] .pcard-ph img{ filter:grayscale(.6); opacity:.75; }
 /* Pocas unidades: leyenda de texto en el cuerpo de la tarjeta (no una cinta
    sobre la foto) — el producto sigue disponible, esto es un aviso, no un
    bloqueo. Lo pone precios.js con data-pocas-unidades="1" en la tarjeta,

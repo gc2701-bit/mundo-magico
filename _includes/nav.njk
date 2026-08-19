@@ -1,0 +1,44 @@
+<nav class="nav" id="nav">
+  <a class="corner-logo" href="{{ navHome | default("index.html") }}" aria-label="Inicio · Mundo Mágico">
+    <img src="Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width="44" height="44">
+  </a>
+  <button class="nav-search-mobile" type="button" id="nav-search-mobile" aria-label="Buscar productos">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  </button>
+  <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="nav-links" id="nav-links">
+{%- if navVariant == "index" %}
+    <a href="#historia">Historia</a>
+{%- elif navVariant == "historia" %}
+    <a href="index.html">Inicio</a>
+    <a href="historia-v2.html" aria-current="page">Historia</a>
+{%- else %}
+    <a href="index.html">Inicio</a>
+{%- endif %}
+    <div class="nav-item has-dropdown">
+      <a href="{{ navHash | default("index.html#") }}mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+      <div class="nav-dropdown" role="menu">
+        <span class="nd-label">Mundos</span>
+        <a href="globos-fiesta-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón</a>
+        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Cumpleaños</a>
+        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#a23e8c"></span>Disfraces y accesorios</a>
+        <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
+        <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
+        <div class="nd-sep" role="separator"></div>
+        <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
+      </div>
+    </div>
+{%- if navVariant != "eventos" and navVariant != "historia" %}
+    <a href="explorar.html">Explorar</a>
+{%- endif %}
+{%- if navVariant == "eventos" %}
+    <a href="eventos-v2.html" aria-current="page">Eventos a medida</a>
+{%- else %}
+    <a href="eventos-v2.html">Eventos a medida</a>
+{%- endif %}
+    <a href="{{ navHash | default("index.html#") }}visitanos">Visitanos</a>
+    <a href="{{ navHash | default("index.html#") }}contacto">Contacto</a>
+  </div>
+</nav>

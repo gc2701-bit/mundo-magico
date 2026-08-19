@@ -1,0 +1,36 @@
+{
+  "name": "mundo-magico",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "eleventy",
+    "build:watch": "eleventy --serve",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gc2701-bit/mundo-magico.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gc2701-bit/mundo-magico/issues"
+  },
+  "homepage": "https://github.com/gc2701-bit/mundo-magico#readme",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "@playwright/test": "^1.62.1",
+    "jsdom": "^30.0.1",
+    "vitest": "^4.1.10"
+  }
+}

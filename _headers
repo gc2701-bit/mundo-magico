@@ -31,3 +31,21 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), camera=(), microphone=()
+
+# Cache-Control moderado, SIN hash de nombre de archivo (decisión explícita,
+# ver SPEC.md sección "5. Cache-Control"): hashear requeriría reescribir los
+# ~18 <script>/<link> de cada página para resolver el nombre con hash — se
+# prefirió este alcance más chico. max-age corto + stale-while-revalidate
+# para JS/CSS (assets/*.js y *.css se editan de vez en cuando a mano, un
+# max-age largo serviría código viejo tras un deploy); productos/ y Logo/
+# rara vez cambian EN EL MISMO NOMBRE (una foto reemplazada por mejor calidad
+# usa el mismo path — ver CLAUDE.md "Reemplazar una foto puntual" — así que
+# tampoco conviene un max-age tan largo ahí como para no notarlo).
+/assets/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/productos/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/Logo/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

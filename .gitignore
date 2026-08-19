@@ -1,6 +1,18 @@
 # Local Netlify folder
 .netlify
 
+# Output del build de Eleventy — Netlify lo genera en cada deploy
+# (netlify.toml), no se versiona
+_site/
+
+# Test suite (tests/ — Vitest + Playwright, ver package.json)
+node_modules/
+node_modules_broken_win/
+test-results/
+playwright-report/
+blob-report/
+.vitest-cache/
+
 # Backups de fotos originales antes de recortarlas (quedan solo localmente)
 productos/**/_orig/
 

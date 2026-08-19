@@ -188,7 +188,23 @@
   }
 
   /* ---------- Carga y parseo de las páginas de categoría ---------- */
+  // El snapshot (assets/explorar-data.js, generado por
+  // .claude/gen-explorar-data.js) es la fuente primaria: evita 7 fetch() +
+  // DOMParser del HTML completo de cada categoría para quedarse solo con las
+  // .pcard. El fetch+parseo en vivo queda como respaldo — para cuando el
+  // snapshot no está o quedó vacío (p.ej. recién clonado el repo, antes de
+  // correr el generador por primera vez) — no al revés como era antes.
   function loadAll() {
+    var snapshot = loadFromSnapshot();
+    if (snapshot.length) {
+      products = snapshot;
+      aplicarOcultos(function () {
+        hideLoading();
+        render();
+      });
+      return;
+    }
+
     var jobs = CATS.map(function (cat) {
       return fetch(cat.page)
         .then(function (r) { return r.ok ? r.text() : ''; })
@@ -199,9 +215,6 @@
     Promise.all(jobs).then(function (lists) {
       products = [];
       lists.forEach(function (list) { products = products.concat(list); });
-      // Al abrir el archivo local (file://) fetch está bloqueado y no llega nada:
-      // usamos el snapshot embebido en assets/explorar-data.js como respaldo.
-      if (!products.length) products = loadFromSnapshot();
       aplicarOcultos(function () {
         hideLoading();
         if (!products.length) { showEmpty(); return; }

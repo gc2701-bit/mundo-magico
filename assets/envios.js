@@ -327,5 +327,17 @@
     cupos: cupos
   };
 
-  cargar();
+  // Diferido en vez de al toque: es la única llamada de red que se hacía en
+  // TODA carga de página sin que nadie la pidiera. `cargar()` ya es idempotente
+  // (promesaCarga) y cada getter cae a RESPALDO si `datos` sigue null (ver
+  // actual()) — el mismo contrato que ya usan para "sin red" — así que no hay
+  // ventana insegura: si carrito.js/envio-form.js llaman a algo de MMEnvios
+  // antes de que esto corra, tienen la misma respuesta de respaldo que
+  // tendrían con Supabase caído. `requestIdleCallback` con fallback a
+  // setTimeout para navegadores que no lo tienen (Safari).
+  if (window.requestIdleCallback) {
+    requestIdleCallback(cargar, { timeout: 2000 });
+  } else {
+    setTimeout(cargar, 200);
+  }
 })();

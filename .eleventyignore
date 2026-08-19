@@ -1,0 +1,14 @@
+node_modules/
+node_modules_broken_win/
+.claude/
+.git/
+_site/
+_archive/
+tests/
+productos/
+assets/
+Logo/
+Header categories/
+docs/
+plantilla-precios/
+supabase/

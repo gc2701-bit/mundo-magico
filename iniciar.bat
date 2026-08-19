@@ -9,6 +9,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+call npx @11ty/eleventy
+if errorlevel 1 (
+    echo Fallo el build de Eleventy.
+    pause
+    exit /b 1
+)
+
 start "" http://localhost:%PORT%/index.html
-node ".claude\static-server.js"
+cd _site
+node "..\.claude\static-server.js"
 pause

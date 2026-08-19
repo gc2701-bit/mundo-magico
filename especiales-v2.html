@@ -1,7 +1,16 @@
+---
+permalink: especiales-v2.html
+---
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://kyuilrlewynqrzebouww.supabase.co">
+<link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+<link rel="dns-prefetch" href="https://challenges.cloudflare.com">
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<link rel="dns-prefetch" href="https://www.google-analytics.com">
+<link rel="dns-prefetch" href="https://www.clarity.ms">
 <script src="assets/analytics.js"></script>
 <script src="assets/loader.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,7 +30,6 @@
 <link rel="preload" href="assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/v2.css">
 <link rel="stylesheet" href="assets/carrito.css">
-<link rel="stylesheet" href="assets/admin-catalogo.css">
 <link rel="stylesheet" href="assets/cuenta.css">
 <style>
 /* Mundo ESPECIALES DE TEMPORADA · acento albiceleste, portal claro sin video */
@@ -111,37 +119,7 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 
 <a class="skip-link" href="#vamos-argentina">Saltar al contenido</a>
 
-<nav class="nav" id="nav">
-  <a class="corner-logo" href="index.html" aria-label="Inicio · Mundo Mágico">
-    <img src="Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width="44" height="44">
-  </a>
-  <button class="nav-search-mobile" type="button" id="nav-search-mobile" aria-label="Buscar productos">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-  </button>
-  <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-  </button>
-  <div class="nav-links" id="nav-links">
-    <a href="index.html">Inicio</a>
-    <div class="nav-item has-dropdown">
-      <a href="index.html#mundos" aria-haspopup="true" aria-expanded="false">Nuestros mundos<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
-      <div class="nav-dropdown" role="menu">
-        <span class="nd-label">Mundos</span>
-        <a href="globos-fiesta-v2.html" role="menuitem"><span class="nd-dot" style="background:#2f63cf"></span>Cotillón</a>
-        <a href="cumpleanos-v2.html" role="menuitem"><span class="nd-dot" style="background:#e23b30"></span>Cumpleaños</a>
-        <a href="disfraces-v2.html" role="menuitem"><span class="nd-dot" style="background:#a23e8c"></span>Disfraces y accesorios</a>
-        <a href="reposteria-v2.html" role="menuitem"><span class="nd-dot" style="background:#ec6a9c"></span>Repostería</a>
-        <a href="decoracion-v2.html" role="menuitem"><span class="nd-dot" style="background:#6f9e5b"></span>Decoración del hogar</a>
-        <div class="nd-sep" role="separator"></div>
-        <a href="combos-v2.html" role="menuitem"><span class="nd-dot" style="background:#f0913a"></span>Combos</a>
-      </div>
-    </div>
-    <a href="explorar.html">Explorar</a>
-    <a href="eventos-v2.html">Eventos a medida</a>
-    <a href="index.html#visitanos">Visitanos</a>
-    <a href="index.html#contacto">Contacto</a>
-  </div>
-</nav>
+{% include "nav.njk" %}
 
 <!-- ====== PORTAL CLARO ====== -->
 <header class="portal-light" id="inicio">
@@ -205,41 +183,7 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 </section>
 </main>
 
-<footer class="site-footer">
-  <div class="wrap foot-grid">
-    <div class="foot-brand">
-      <div class="fname">Mundo Mágico ✨</div>
-      <p>El cotillón de Tucumán desde 1994. La misma familia, el mismo mostrador, la misma alegría.</p>
-    </div>
-    <nav class="foot-col" aria-label="Mundos">
-      <b>Mundos</b>
-      <a href="globos-fiesta-v2.html">Cotillón</a>
-      <a href="disfraces-v2.html">Disfraces y accesorios</a>
-      <a href="reposteria-v2.html">Repostería</a>
-      <a href="decoracion-v2.html">Decoración del hogar</a>
-      <a href="cumpleanos-v2.html">Cumpleaños</a>
-      <a href="combos-v2.html">Combos</a>
-    </nav>
-    <nav class="foot-col" aria-label="La casa">
-      <b>La casa</b>
-      <a href="historia-v2.html">Nuestra historia</a>
-      <a href="eventos-v2.html">Eventos y mayoristas 💍</a>
-      <a href="especiales-v2.html">Especial Selección Argentina ⚽</a>
-      <a href="index.html#visitanos">Sucursales y horarios</a>
-    </nav>
-    <nav class="foot-col" aria-label="Hablemos">
-      <b>Hablemos</b>
-      <a href="https://wa.me/5493813006343" target="_blank" rel="noopener">WhatsApp: +54 9 381 300-6343</a>
-      <a href="https://www.instagram.com/mundo_magico_tuc/" target="_blank" rel="noopener">Instagram: @mundo_magico_tuc</a>
-      <a href="https://www.facebook.com/mundomagicotucuman/" target="_blank" rel="noopener">Facebook: Mundo Mágico Tucumán</a>
-      <a href="https://www.instagram.com/mundomagico.yb/" target="_blank" rel="noopener">Yerba Buena: @mundomagico.yb</a>
-    </nav>
-  </div>
-  <div class="wrap foot-bottom">
-    <span>© 1994–2026 Mundo Mágico · San Miguel de Tucumán, Argentina</span>
-    <span>Hecho con ❤️ y mucho cotillón</span>
-  </div>
-</footer>
+{% include "footer.njk" %}
 
 <script src="assets/pos-codes.js"></script>
 <script src="assets/precios-datos.js"></script>
@@ -258,6 +202,5 @@ addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.c
 <script src="assets/cuenta.js"></script>
 <script src="assets/envio-form.js"></script>
 <script src="assets/carrito.js"></script>
-<script src="assets/admin-catalogo.js"></script>
 </body>
 </html>
