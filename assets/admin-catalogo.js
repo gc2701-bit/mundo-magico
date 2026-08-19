@@ -831,6 +831,70 @@
       });
   }
 
+  // == ESPEJO ================================================================
+  // Pestaña "Sin activar": códigos que ya llegaron del ERP del local vía el
+  // espejo de Búho (catalogo_buho_espejo, Task 1) pero todavía no tienen
+  // producto propio en el catálogo. Acá sólo van las funciones puras de
+  // listado y armado del flujo de activación — el render de la lista y el
+  // formulario de activación en sí son la Parte B de esta tarea.
+  function cargarEspejo(sbCliente, opts) {
+    opts = opts || {};
+    var q = sbCliente.from('catalogo_buho_espejo').select('*').eq('publicado', false).order('nombre');
+    if (opts.busqueda) q = q.or('nombre.ilike.%' + opts.busqueda + '%,codigo.ilike.%' + opts.busqueda + '%,familia.ilike.%' + opts.busqueda + '%');
+    return q.then(function (r) {
+      if (r.error) throw r.error;
+      return r.data;
+    });
+  }
+
+  // Arma lo necesario para activar un código del espejo: la fila nueva de
+  // catalogo_productos, el precio/stock inicial de catalogo_precios, y deja
+  // afuera (lo hace activarCodigo() más abajo) el update de
+  // catalogo_buho_espejo.publicado=true — ese es un paso de red separado,
+  // esto es sólo el armado, que es lo testeable sin mockear Supabase.
+  function armarFilaActivacion(codigoEspejo, opts) {
+    opts = opts || {};
+    if (!opts.mundo) throw new Error('Elegí a qué mundo va este artículo.');
+    if (!opts.fotos || !opts.fotos.length) throw new Error('Subí al menos una foto antes de activar.');
+
+    var tituloSlug = slug(codigoEspejo.nombre);
+    return {
+      producto: {
+        pagina: opts.mundo,
+        subcategoria_id: opts.subcategoriaId || null,
+        titulo: codigoEspejo.nombre,
+        slug: tituloSlug,
+        codigo: codigoEspejo.codigo,
+        fotos: opts.fotos,
+        orden: 0,
+        publicado: true
+      },
+      precio: {
+        codigo: codigoEspejo.codigo,
+        precio: codigoEspejo.precio,
+        stock: codigoEspejo.stock,
+        sin_stock: codigoEspejo.stock != null && codigoEspejo.stock <= 0
+      }
+    };
+  }
+
+  // Efecto de red completo de "Activar": producto + precio + marcar el
+  // espejo. Tres escrituras separadas porque son tres tablas — si la
+  // segunda o tercera fallan después de que la primera tuvo éxito, el
+  // producto ya quedó visible pero sin precio/sin marcar en el espejo; se
+  // deja loggeado en consola para que el admin reintente manualmente (no
+  // hay transacción cross-tabla posible desde el cliente vía PostgREST).
+  function activarCodigo(sbCliente, codigoEspejo, opts) {
+    var armado = armarFilaActivacion(codigoEspejo, opts);
+    return sbCliente.from('catalogo_productos').insert(armado.producto).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      return sbCliente.from('catalogo_precios').upsert(armado.precio).then(function (r2) {
+        if (r2.error) throw r2.error;
+        return sbCliente.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', codigoEspejo.codigo);
+      });
+    });
+  }
+
   // Ganchos SOLO para tests unitarios — no se usan en producción. Mismo
   // patrón sería "exportar" en un módulo ES real; este repo no usa ESM en
   // runtime (ver mundo-magico/CLAUDE.md), así que se expone acotado detrás
@@ -840,6 +904,7 @@
     filtrarYOrdenar: filtrarYOrdenar,
     proximoSort: proximoSort,
     nombreMundo: nombreMundo,
+    armarFilaActivacion: armarFilaActivacion,
     estado: pub
   };
 })();
