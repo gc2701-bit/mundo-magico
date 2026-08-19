@@ -86,3 +86,17 @@ describe('filtrarYOrdenar()', () => {
     expect(filtrarYOrdenar(lista, { sortCol: 'precio', sortDir: 'desc' }).map((x) => x.id)).toEqual(['c', 'a', 'b']);
   });
 });
+
+describe('agruparPorOrigen()', () => {
+  const lista = [
+    { id: 'p1', origen: 'producto' },
+    { id: 'combos-v2.html~x', origen: 'tarjeta' },
+    { id: 'p2', origen: 'producto' }
+  ];
+
+  it('separa ids de producto de las claves compuestas de tarjeta', () => {
+    const r = window.__MM_ADMIN_CATALOGO_TEST__.agruparPorOrigen(['p1', 'combos-v2.html~x', 'p2'], lista);
+    expect(r.productos).toEqual(['p1', 'p2']);
+    expect(r.tarjetas).toEqual([{ pagina: 'combos-v2.html', slug: 'x' }]);
+  });
+});

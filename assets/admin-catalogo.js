@@ -182,6 +182,30 @@
     return out;
   }
 
+  // Separa una selección de ids de fila en ids de catalogo_productos vs.
+  // claves compuestas {pagina,slug} de catalogo_tarjetas — necesario porque
+  // una acción en lote (despublicar/ocultar) pega a tablas y columnas
+  // distintas según el origen de cada fila (ver unificarLista() más arriba).
+  function agruparPorOrigen(ids, lista) {
+    var porId = {};
+    lista.forEach(function (item) { porId[item.id] = item; });
+    var productos = [], tarjetas = [];
+    ids.forEach(function (id) {
+      var item = porId[id];
+      if (!item) return;
+      if (item.origen === 'producto') productos.push(id);
+      else {
+        // slice(1).join('~') en vez de partes[1]: un slug puede a su vez
+        // contener '~', igual que actualizarTarjeta() más abajo asume
+        // split('~') de dos partes nomás — acá se es explícito porque el id
+        // viene de una selección arbitraria de filas, no de un solo item.
+        var partes = id.split('~');
+        tarjetas.push({ pagina: partes[0], slug: partes.slice(1).join('~') });
+      }
+    });
+    return { productos: productos, tarjetas: tarjetas };
+  }
+
   // Fetch real — RLS exige sesión admin, mismo criterio que
   // admin-pedidos.js (sb viene ya autenticado desde chequear() de Task 10).
   function cargarPublicado(sbCliente) {
@@ -693,6 +717,22 @@
         if (r.error) throw r.error;
         if (!r.data || !r.data.length) throw new Error('No se guardó — probablemente se cerró la sesión de admin. Recargá la página.');
       });
+  }
+
+  // Despublicar/ocultar en lote — SIEMPRE reversible (ver Global
+  // Constraints: nunca borrado definitivo desde este panel). Un producto
+  // se despublica con publicado=false (misma columna que ya usa
+  // "sacar de la web" del editor viejo); una tarjeta con oculta=true.
+  function despublicarLote(sbCliente, ids, lista) {
+    var grupo = agruparPorOrigen(ids, lista);
+    var pasos = [];
+    if (grupo.productos.length) {
+      pasos.push(sbCliente.from('catalogo_productos').update({ publicado: false }).in('id', grupo.productos));
+    }
+    grupo.tarjetas.forEach(function (t) {
+      pasos.push(sbCliente.from('catalogo_tarjetas').update({ oculta: true }).eq('pagina', t.pagina).eq('slug', t.slug));
+    });
+    return Promise.all(pasos);
   }
 
   /* --- Subcategorías ------------------------------------------------------ */
@@ -1222,6 +1262,8 @@
     filtrarYOrdenar: filtrarYOrdenar,
     proximoSort: proximoSort,
     nombreMundo: nombreMundo,
+    agruparPorOrigen: agruparPorOrigen,
+    despublicarLote: despublicarLote,
     armarFilaActivacion: armarFilaActivacion,
     activarCodigo: activarCodigo,
     limpiarBusquedaEspejo: limpiarBusquedaEspejo,
