@@ -890,7 +890,11 @@
       if (r.error) throw r.error;
       return sbCliente.from('catalogo_precios').upsert(armado.precio).then(function (r2) {
         if (r2.error) throw r2.error;
-        return sbCliente.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', codigoEspejo.codigo);
+        return sbCliente.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', codigoEspejo.codigo)
+          .then(function (r3) {
+            if (r3.error) throw r3.error;
+            return r3;
+          });
       });
     });
   }
@@ -905,6 +909,7 @@
     proximoSort: proximoSort,
     nombreMundo: nombreMundo,
     armarFilaActivacion: armarFilaActivacion,
+    activarCodigo: activarCodigo,
     estado: pub
   };
 })();

@@ -8,7 +8,7 @@ import { loadScript } from '../helpers/loadScript.js';
 // Mismo motivo que admin-catalogo-lista.test.js (Task 11): admin-catalogo.js
 // corre chequear() al cargar y pisa .hidden de #adm-gate/#adm-panel — hace
 // falta este DOM mínimo montado ANTES de loadScript().
-let armarFilaActivacion;
+let armarFilaActivacion, activarCodigo;
 beforeAll(() => {
   document.body.innerHTML =
     '<div id="adm-gate"><button id="adm-login-btn"></button></div>' +
@@ -18,8 +18,27 @@ beforeAll(() => {
     '  <div id="adm-panel-espejo" hidden></div>' +
     '</div>';
   loadScript('assets/admin-catalogo.js');
-  ({ armarFilaActivacion } = window.__MM_ADMIN_CATALOGO_TEST__);
+  ({ armarFilaActivacion, activarCodigo } = window.__MM_ADMIN_CATALOGO_TEST__);
 });
+
+// Cliente Supabase falso: sólo lo mínimo que activarCodigo() encadena
+// (from().insert().select(), from().upsert(), from().update().eq()), cada
+// uno resuelve con la respuesta {data, error} configurada por tabla, igual
+// que supabase-js real (nunca rechaza la promesa por sí solo — por eso hay
+// que chequear r.error a mano en cada paso, que es justo lo que este test
+// verifica).
+function fakeSb(respuestas) {
+  return {
+    from(tabla) {
+      const r = respuestas[tabla] || { data: null, error: null };
+      return {
+        insert() { return { select: () => Promise.resolve(r) }; },
+        upsert() { return Promise.resolve(r); },
+        update() { return { eq: () => Promise.resolve(r) }; }
+      };
+    }
+  };
+}
 
 describe('armarFilaActivacion()', () => {
   it('arma la fila de catalogo_productos y el precio/stock desde el código del espejo', () => {
@@ -48,5 +67,41 @@ describe('armarFilaActivacion()', () => {
     const codigoEspejo = { codigo: '1', nombre: 'X', precio: 100, stock: 1 };
     expect(() => armarFilaActivacion(codigoEspejo, { mundo: '', subcategoriaId: null, fotos: [{ src: 'x' }] }))
       .toThrow(/mundo/i);
+  });
+});
+
+describe('activarCodigo()', () => {
+  const codigoEspejo = { codigo: '58231', nombre: 'Sombrero de mago', precio: 4500, stock: 20 };
+  const opts = { mundo: 'disfraces-v2.html', subcategoriaId: null, fotos: [{ src: 'https://x/foto.webp', cap: '' }] };
+
+  it('las tres escrituras OK: resuelve', async () => {
+    const sb = fakeSb({
+      catalogo_productos: { data: [{ id: 'p1' }], error: null },
+      catalogo_precios: { data: [{ codigo: '58231' }], error: null },
+      catalogo_buho_espejo: { data: [{ codigo: '58231' }], error: null }
+    });
+    await expect(activarCodigo(sb, codigoEspejo, opts)).resolves.toBeTruthy();
+  });
+
+  // Regresión: supabase-js resuelve (no rechaza) incluso cuando el write
+  // falla del lado de PostgREST — devuelve {data, error} en el mismo
+  // objeto resuelto. Antes del fix, activarCodigo() devolvía ese objeto
+  // directo en el tercer paso sin chequear .error, así que la promesa de
+  // activarCodigo() terminaba resolviendo igual aunque el espejo nunca se
+  // hubiera marcado publicado=true.
+  it('falla el tercer write (marcar el espejo): la promesa rechaza, no resuelve en silencio', async () => {
+    const errorEspejo = { message: 'no matching row' };
+    const sb = fakeSb({
+      catalogo_productos: { data: [{ id: 'p1' }], error: null },
+      catalogo_precios: { data: [{ codigo: '58231' }], error: null },
+      catalogo_buho_espejo: { data: null, error: errorEspejo }
+    });
+    await expect(activarCodigo(sb, codigoEspejo, opts)).rejects.toBe(errorEspejo);
+  });
+
+  it('falla el primer write (insert producto): la promesa rechaza sin llegar a los otros pasos', async () => {
+    const errorProducto = { message: 'duplicate key' };
+    const sb = fakeSb({ catalogo_productos: { data: null, error: errorProducto } });
+    await expect(activarCodigo(sb, codigoEspejo, opts)).rejects.toBe(errorProducto);
   });
 });
