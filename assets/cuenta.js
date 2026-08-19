@@ -1060,6 +1060,16 @@
     var salir = el('button', 'cuenta-pop-out', 'Cerrar sesión');
     salir.type = 'button';
     salir.addEventListener('click', function () { cerrarPop(); sb.auth.signOut({ scope: 'global' }); });
+    // "Cerrar sesión" se monta ANTES de chequearEsAdmin() a propósito: en la
+    // segunda apertura del menú el callback de abajo corre SINCRÓNICO (cache
+    // de esAdminCache por uid), o sea todavía adentro de la llamada. Si el
+    // appendChild quedara después, ese insertBefore(catalogo, salir) tiraría
+    // `NotFoundError: The child can not be found in the parent` y abortaría
+    // pintarPop() entero — el menú quedaba sin "Catálogo" Y sin "Cerrar
+    // sesión", en todas las páginas del sitio, a partir de la segunda vez que
+    // se abría. Con el appendChild acá el orden final es el mismo (el link
+    // admin se inserta arriba de "Cerrar sesión") resuelva sync o async.
+    navPop.appendChild(salir);
 
     // El link admin se inserta ANTES de "Cerrar sesión" cuando resuelve —
     // navPop puede haberse vuelto a pintar (o cerrado) mientras esperaba la
@@ -1074,8 +1084,6 @@
       catalogo.setAttribute('role', 'menuitem');
       navPop.insertBefore(catalogo, salir);
     });
-
-    navPop.appendChild(salir);
   }
 
   // Con sesión el ícono queda "prendido" (mismo lenguaje visual que el
