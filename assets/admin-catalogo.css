@@ -98,6 +98,10 @@
 .adm-detalle {
   max-width: 640px;
 }
+.adm-detalle > h2 {
+  font-size: var(--fs2);
+  margin-bottom: var(--s2);
+}
 .adm-detalle-fotos {
   display: flex;
   flex-wrap: wrap;
@@ -115,8 +119,8 @@
   width: 96px;
   height: 96px;
   object-fit: contain;
-  background: #fff;
-  border: 1px solid #eee;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 6px;
 }
 .adm-detalle-quitar-foto {
@@ -124,7 +128,7 @@
   background: none;
   padding: 0;
   font: 600 12px/1.4 inherit;
-  color: #b91c1c;
+  color: var(--red);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -138,7 +142,7 @@
   font-size: 0.85rem;
 }
 .adm-detalle-solo-lectura {
-  color: #777;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 .adm-detalle-campo input[type="text"],
@@ -148,16 +152,113 @@
   width: 100%;
   box-sizing: border-box;
   padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
   font: inherit;
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.adm-detalle-campo input[type="text"]:focus,
+.adm-detalle-campo input[type="number"]:focus,
+.adm-detalle-campo select:focus,
+.adm-detalle-campo textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(47, 99, 207, .15);
 }
 .adm-detalle-campo textarea { min-height: 72px; resize: vertical; }
+
+/* Campos editables: agrupados aparte, después del resumen de sólo lectura —
+   mismo fondo que la página (no la tarjeta blanca del resumen) para que se
+   note a simple vista qué se puede tocar y qué no. */
+.adm-detalle-campos-editables {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--s1);
+}
+
+/* Resumen — precio/stock/código/familia "de un vistazo", antes que nada
+   editable. Tarjeta propia, con jerarquía tipográfica real: precio grande,
+   stock con color, código monoespaciado. Mismos tokens que v2.css, ningún
+   color hardcodeado. */
+.adm-detalle-resumen {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--s3);
+  margin-bottom: var(--s3);
+}
+.adm-detalle-resumen-grilla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s3) var(--s4);
+}
+.adm-detalle-resumen-nota {
+  margin: var(--s2) 0 0;
+  padding-top: var(--s2);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-1);
+  color: var(--muted);
+}
+.adm-detalle-resumen-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.adm-detalle-resumen-item label {
+  font: 800 11px/1.2 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+}
+.adm-detalle-resumen-item .adm-detalle-solo-lectura {
+  font: 600 var(--fs0)/1.25 var(--font-body);
+  color: var(--ink);
+}
+
+.adm-detalle-resumen-precio { flex: 1 1 160px; }
+.adm-detalle-resumen-precio .adm-detalle-solo-lectura {
+  font: 700 var(--fs3)/1 var(--font-display);
+  color: var(--green-ink);
+}
+
+.adm-detalle-resumen-codigo .adm-detalle-solo-lectura {
+  font: 600 15px/1.3 ui-monospace, SFMono-Regular, 'SF Mono', Consolas, monospace;
+  color: var(--muted);
+  letter-spacing: .01em;
+}
+
+.adm-detalle-resumen-stock .adm-detalle-solo-lectura { font-weight: 800; }
+.adm-detalle-resumen-stock.es-ok .adm-detalle-solo-lectura { color: var(--green-ink); }
+.adm-detalle-resumen-stock.es-pocas .adm-detalle-solo-lectura { color: var(--orange); }
+.adm-detalle-resumen-stock.es-sin-stock .adm-detalle-solo-lectura { color: var(--red); }
+.adm-detalle-resumen-stock.es-na .adm-detalle-solo-lectura { color: var(--muted); font-weight: 600; }
+
+.adm-detalle-resumen-familia .adm-detalle-solo-lectura {
+  font-size: var(--fs-1);
+}
+
+.adm-detalle-resumen-tipo .adm-detalle-solo-lectura {
+  display: inline-block;
+  font: 800 11px/1.5 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--blue);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 10px;
+}
+
 .adm-detalle .adm-msg { margin: 12px 0; font-size: 0.9rem; }
-.adm-msg-error { color: #b91c1c; }
-.adm-msg-ok { color: #15803d; }
+.adm-msg-error { color: var(--red); }
+.adm-msg-ok { color: var(--green-ink); }
 .adm-detalle-volver { margin-left: 8px; }
 .adm-espejo-cancelar { margin-left: 8px; }
 
-.adm-badge-pocas { color: #b5530c; font-size: 0.8rem; }
-.adm-badge-sin-stock { color: #b91c1c; font-size: 0.8rem; }
+.adm-badge-pocas { color: var(--orange); font-size: 0.8rem; }
+.adm-badge-sin-stock { color: var(--red); font-size: 0.8rem; }

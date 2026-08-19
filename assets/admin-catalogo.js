@@ -95,8 +95,11 @@
     }).catch(function () { mostrarGate(); });
   }
 
+  // MMCuenta no expone abrirLogin() — el modal se abre con pedirSesion()
+  // (mismo método que usa admin-pedidos.js para este mismo botón). Sin este
+  // fix el botón "Iniciar sesión" de este panel no hacía nada.
   if (loginBtn) loginBtn.addEventListener('click', function () {
-    if (window.MMCuenta && MMCuenta.abrirLogin) MMCuenta.abrirLogin();
+    if (window.MMCuenta) MMCuenta.pedirSesion(function () {});
   });
 
   if (logoutBtn) logoutBtn.addEventListener('click', function () {
@@ -536,6 +539,39 @@
     return wrap;
   }
 
+  // --- Resumen del detalle ------------------------------------------------
+  // El dueño pidió que precio/stock/código/familia se vean "de un vistazo"
+  // al entrar a editar un artículo, con jerarquía real (precio grande, stock
+  // con color) en vez de una fila más idéntica a las demás. Reusa la misma
+  // clase .adm-detalle-solo-lectura de campoSoloLectura() para el valor (los
+  // tests de render buscan esa clase), pero con un wrapper y un contenedor
+  // propios que admin-catalogo.css pinta distinto.
+  function campoResumenItem(claseExtra, etiqueta, valor) {
+    var wrap = el('div', 'adm-detalle-resumen-item' + (claseExtra ? ' ' + claseExtra : ''));
+    wrap.appendChild(el('label', null, etiqueta));
+    wrap.appendChild(el('div', 'adm-detalle-solo-lectura', valor));
+    return wrap;
+  }
+
+  function armarResumen(items, nota) {
+    var caja = el('div', 'adm-detalle-resumen');
+    var grilla = el('div', 'adm-detalle-resumen-grilla');
+    items.forEach(function (it) { grilla.appendChild(it); });
+    caja.appendChild(grilla);
+    if (nota) caja.appendChild(el('p', 'adm-detalle-resumen-nota', nota));
+    return caja;
+  }
+
+  // Mismo criterio que el badge de la lista (renderFilas): sin_stock manda,
+  // después el umbral de catalogo_config, "ok" en cualquier otro caso
+  // (incluido stock desconocido — no todos los orígenes lo tienen).
+  function estadoStock(sinStock, stock, umbral) {
+    if (sinStock) return 'sin-stock';
+    if (stock == null) return 'na';
+    if (stock <= umbral) return 'pocas';
+    return 'ok';
+  }
+
   function abrirDetalle(item) {
     panelPublicado.textContent = '';
     tbodyLista = null;
@@ -589,6 +625,16 @@
   }
 
   function armarDetalleProducto(caja, item, mostrar) {
+    // Resumen — código/precio/stock de un vistazo, antes que nada más.
+    // Precio y stock NO se editan acá: los sincroniza el worker de Búho
+    // contra el ERP del local (ver SPEC-catalogo-admin.md, sección 1).
+    var estado = estadoStock(item.sinStock, item.stock, pub.umbral);
+    caja.appendChild(armarResumen([
+      campoResumenItem('adm-detalle-resumen-codigo', 'Código', item.codigo || '—'),
+      campoResumenItem('adm-detalle-resumen-precio', 'Precio', plata(item.precio)),
+      campoResumenItem('adm-detalle-resumen-stock es-' + estado, 'Stock', item.stock == null ? '—' : String(item.stock))
+    ], 'Precio y stock los sincroniza el POS del local — no se editan acá.'));
+
     // Fotos: viven en la columna jsonb `fotos` de catalogo_productos, así que
     // se pueden agregar/quitar desde acá (a diferencia de una tarjeta del
     // HTML, cuyas fotos están en el markup).
@@ -624,10 +670,11 @@
     subir.appendChild(labSubir);
     caja.appendChild(subir);
 
+    var camposEditables = el('div', 'adm-detalle-campos-editables');
     var titulo = campoTexto('Título', item.titulo);
-    caja.appendChild(titulo.wrap);
+    camposEditables.appendChild(titulo.wrap);
     var descripcion = campoTexto('Descripción', item.descripcion, true);
-    caja.appendChild(descripcion.wrap);
+    camposEditables.appendChild(descripcion.wrap);
 
     var wrapMundo = el('div', 'adm-detalle-campo');
     var labMundo = el('label', null, 'Mundo');
@@ -637,19 +684,14 @@
     selMundo.value = item.mundo;
     labMundo.appendChild(selMundo);
     wrapMundo.appendChild(labMundo);
-    caja.appendChild(wrapMundo);
+    camposEditables.appendChild(wrapMundo);
 
     var sub = armarSelectorSubcategoria(function () { return selMundo.value; }, item.subcategoriaId);
     // Cambiar de mundo invalida la subcategoría elegida (es de otro mundo).
     selMundo.addEventListener('change', function () { sub.repoblar(null); });
-    caja.appendChild(sub.wrap);
-    caja.appendChild(sub.nuevoWrap);
-
-    // Precio y stock NO se editan acá: los va a sincronizar el worker de
-    // Búho contra el ERP del local (ver SPEC-catalogo-admin.md, sección 1).
-    caja.appendChild(campoSoloLectura('Código (del POS)', item.codigo || '—'));
-    caja.appendChild(campoSoloLectura('Precio (lo sincroniza el POS)', plata(item.precio)));
-    caja.appendChild(campoSoloLectura('Stock (lo sincroniza el POS)', item.stock == null ? '—' : String(item.stock)));
+    camposEditables.appendChild(sub.wrap);
+    camposEditables.appendChild(sub.nuevoWrap);
+    caja.appendChild(camposEditables);
 
     file.addEventListener('change', function () {
       var elegido = file.files && file.files[0];
@@ -711,11 +753,16 @@
     caja.appendChild(el('p', 'adm-detalle-solo-lectura',
       'Tarjeta escrita a mano en el HTML: título, foto y mundo viven en el código de la página, no en la base. Desde acá se editan los datos que sí guarda la base.'));
 
+    // Resumen — sólo el código: una tarjeta del HTML no trae precio/stock
+    // propios acá (el precio es el fijo editable de abajo, o el del código).
+    caja.appendChild(armarResumen([
+      campoResumenItem('adm-detalle-resumen-codigo', 'Código', item.codigo || '(el del HTML)')
+    ]));
     caja.appendChild(campoSoloLectura('Mundo', nombreMundo(partes[0])));
-    caja.appendChild(campoSoloLectura('Código', item.codigo || '(el del HTML)'));
 
+    var camposEditables = el('div', 'adm-detalle-campos-editables');
     var nota = campoTexto('Nota (se muestra en la tarjeta)', item.nota, true);
-    caja.appendChild(nota.wrap);
+    camposEditables.appendChild(nota.wrap);
 
     var wrapPrecio = el('div', 'adm-detalle-campo');
     var labPrecio = el('label', null, 'Precio fijo (vacío = usa el precio del código)');
@@ -727,11 +774,12 @@
     precioIn.value = item.precio == null ? '' : String(item.precio);
     labPrecio.appendChild(precioIn);
     wrapPrecio.appendChild(labPrecio);
-    caja.appendChild(wrapPrecio);
+    camposEditables.appendChild(wrapPrecio);
 
     var sub = armarSelectorSubcategoria(function () { return partes[0]; }, item.subcategoriaId);
-    caja.appendChild(sub.wrap);
-    caja.appendChild(sub.nuevoWrap);
+    camposEditables.appendChild(sub.wrap);
+    camposEditables.appendChild(sub.nuevoWrap);
+    caja.appendChild(camposEditables);
 
     var guardar = el('button', 'btn btn-primary adm-detalle-guardar', 'Guardar');
     guardar.type = 'button';
@@ -1202,6 +1250,22 @@
       aviso.hidden = !texto;
     }
 
+    // Datos que manda Búho — no se editan desde acá (el worker los
+    // resincroniza y pisaría cualquier cambio local). El nombre ya está en
+    // el <h2> de arriba; código/familia/precio/stock/tipo van agrupados en
+    // el resumen, de un vistazo y antes que nada editable.
+    caja.appendChild(campoSoloLectura('Nombre (lo manda Búho)', fila.nombre || '—'));
+
+    var estadoEsp = estadoStock(fila.stock === 0, fila.stock, pub.umbral);
+    var resumenEsp = [
+      campoResumenItem('adm-detalle-resumen-codigo', 'Código', fila.codigo || '—'),
+      campoResumenItem('adm-detalle-resumen-familia', 'Familia', fila.familia || '—'),
+      campoResumenItem('adm-detalle-resumen-precio', 'Precio', plata(fila.precio)),
+      campoResumenItem('adm-detalle-resumen-stock es-' + estadoEsp, 'Stock', fila.stock == null ? '—' : String(fila.stock))
+    ];
+    if (fila.es_combo) resumenEsp.push(campoResumenItem('adm-detalle-resumen-tipo', 'Tipo', 'Combo'));
+    caja.appendChild(armarResumen(resumenEsp, 'Lo manda Búho y lo sincroniza el POS — no se edita acá.'));
+
     var fotos = [];
     var tira = el('div', 'adm-detalle-fotos');
     function pintarFotos() {
@@ -1222,6 +1286,8 @@
     }
     caja.appendChild(tira);
 
+    var camposEditables = el('div', 'adm-detalle-campos-editables');
+
     var subir = el('div', 'adm-detalle-campo');
     var labSubir = el('label', null, 'Foto (se ajusta sola a 1080×1080 con fondo blanco)');
     var file = document.createElement('input');
@@ -1230,16 +1296,7 @@
     file.className = 'adm-detalle-foto-input';
     labSubir.appendChild(file);
     subir.appendChild(labSubir);
-    caja.appendChild(subir);
-
-    // Datos que manda Búho — no se editan desde acá (el worker los
-    // resincroniza y pisaría cualquier cambio local).
-    caja.appendChild(campoSoloLectura('Nombre (lo manda Búho)', fila.nombre || '—'));
-    caja.appendChild(campoSoloLectura('Código (de Búho)', fila.codigo || '—'));
-    caja.appendChild(campoSoloLectura('Familia (lo manda Búho)', fila.familia || '—'));
-    caja.appendChild(campoSoloLectura('Precio (lo sincroniza el POS)', plata(fila.precio)));
-    caja.appendChild(campoSoloLectura('Stock (lo sincroniza el POS)', fila.stock == null ? '—' : String(fila.stock)));
-    if (fila.es_combo) caja.appendChild(campoSoloLectura('Tipo', 'Combo'));
+    camposEditables.appendChild(subir);
 
     var wrapMundo = el('div', 'adm-detalle-campo');
     var labMundo = el('label', null, 'Mundo');
@@ -1253,12 +1310,13 @@
     selMundo.value = '';
     labMundo.appendChild(selMundo);
     wrapMundo.appendChild(labMundo);
-    caja.appendChild(wrapMundo);
+    camposEditables.appendChild(wrapMundo);
 
     var sub = armarSelectorSubcategoria(function () { return selMundo.value; }, null);
     selMundo.addEventListener('change', function () { sub.repoblar(null); });
-    caja.appendChild(sub.wrap);
-    caja.appendChild(sub.nuevoWrap);
+    camposEditables.appendChild(sub.wrap);
+    camposEditables.appendChild(sub.nuevoWrap);
+    caja.appendChild(camposEditables);
 
     file.addEventListener('change', function () {
       var elegido = file.files && file.files[0];
