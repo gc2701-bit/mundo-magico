@@ -228,8 +228,18 @@
 
   function plata(n) { return n == null ? '—' : fmt.format(n); }
 
+  // mostrarPanel() corre en cada evento mm:sesion, y esos son varios: cuenta.js
+  // avisa tanto por getSession() como por onAuthStateChange (suelen disparar
+  // los dos al cargar), y Supabase manda TOKEN_REFRESHED cada tanto mientras
+  // la pestaña sigue abierta. Sin este flag, cada uno de esos eventos volvía a
+  // pedir todo y repintaba #adm-panel-publicado de cero — pisando el detalle
+  // abierto con las ediciones sin guardar, incluida una foto ya subida a
+  // Storage cuya URL todavía sólo vive en el estado local del formulario.
+  var pubIniciado = false;
+
   function iniciarPublicado(sbCliente) {
-    if (!panelPublicado) return Promise.resolve();
+    if (!panelPublicado || pubIniciado) return Promise.resolve();
+    pubIniciado = true;
     panelPublicado.textContent = '';
     panelPublicado.appendChild(el('p', 'adm-detalle-solo-lectura', 'Cargando catálogo…'));
     return Promise.all([
@@ -240,12 +250,24 @@
       sbCliente.from('catalogo_subcategorias').select('id, pagina, nombre, slug, orden'),
       sbCliente.from('catalogo_config').select('umbral_pocas_unidades')
     ]).then(function (r) {
+      // Si las subcategorías no se pudieron leer hay que cortar acá, igual que
+      // hace cargarPublicado() con sus tres selects: quedarse con la lista
+      // vacía dejaría el <select> del detalle en "Sin subcategoría" y el
+      // siguiente "Guardar" de CUALQUIER fila escribiría subcategoria_id:null,
+      // desasignando la subcategoría real sin que el admin se entere.
+      if (r[1] && r[1].error) throw r[1].error;
       pub.lista = r[0] || [];
       pub.subcats = (r[1] && r[1].data) || [];
+      // El umbral sí es degradable: si catalogo_config no se puede leer se
+      // sigue con el default (5) y lo único que pasa es que el badge "quedan
+      // pocas" use otro número. No se escribe nada a partir de este dato.
       var cfg = (r[2] && r[2].data && r[2].data[0]) || null;
       if (cfg && cfg.umbral_pocas_unidades != null) pub.umbral = cfg.umbral_pocas_unidades;
       renderLista();
     }).catch(function (err) {
+      // Falló la carga: no hay formulario abierto que proteger, así que se
+      // libera el flag para que el próximo mm:sesion pueda reintentar.
+      pubIniciado = false;
       panelPublicado.textContent = '';
       panelPublicado.appendChild(el('p', 'adm-msg-error',
         'No se pudo cargar el catálogo: ' + ((err && err.message) || 'error desconocido')));

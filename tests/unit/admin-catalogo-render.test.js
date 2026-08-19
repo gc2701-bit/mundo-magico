@@ -52,15 +52,31 @@ const DATOS_BASE = () => ({
   catalogo_config: [{ umbral_pocas_unidades: 5 }]
 });
 
-let escrituras;
+// Un error de PostgREST: la promesa RESUELVE con {data:null, error} — no
+// rechaza. Es justo la forma que hace fácil comerse un error sin querer.
+function resultadoError(mensaje) {
+  const p = Promise.resolve({ data: null, error: new Error(mensaje) });
+  p.select = () => p;
+  p.order = () => p;
+  p.eq = () => p;
+  return p;
+}
 
-function mockSb(datos) {
+let escrituras;
+let lecturas;
+
+function mockSb(datos, errores) {
   escrituras = [];
+  lecturas = [];
+  errores = errores || {};
   const sb = {
     rpc: () => Promise.resolve({ data: true, error: null }),
     from(tabla) {
       return {
-        select: () => resultado(datos[tabla] || []),
+        select: () => {
+          lecturas.push(tabla);
+          return errores[tabla] ? resultadoError(errores[tabla]) : resultado(datos[tabla] || []);
+        },
         update(campos) {
           const registro = { tabla, tipo: 'update', campos, eqs: [] };
           escrituras.push(registro);
@@ -88,9 +104,9 @@ function mockSb(datos) {
 
 const flush = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); await new Promise((r) => setTimeout(r, 0)); };
 
-async function arrancar(datos) {
+async function arrancar(datos, errores) {
   montarDOM();
-  mockSb(datos || DATOS_BASE());
+  mockSb(datos || DATOS_BASE(), errores);
   loadScript('assets/admin-catalogo.js');
   await flush();
 }
@@ -333,6 +349,51 @@ describe('detalle de una tarjeta de catalogo_tarjetas', () => {
     expect(escrituras[0].tabla).toBe('catalogo_tarjetas');
     expect(escrituras[0].campos).toEqual({ oculta: true });
     expect(escrituras.some((w) => w.tipo === 'delete')).toBe(false);
+  });
+});
+
+describe('carga degradada y re-entrada', () => {
+  it('si falla la lectura de catalogo_subcategorias avisa y NO pinta la lista (nunca se puede guardar con subcategorías vacías)', async () => {
+    await arrancar(DATOS_BASE(), { catalogo_subcategorias: 'permission denied' });
+
+    expect(panel().querySelector('table')).toBeNull();
+    expect(panel().querySelector('.adm-msg-error').textContent).toContain('permission denied');
+    expect(escrituras).toHaveLength(0);
+  });
+
+  it('si falla catalogo_config sigue andando con el umbral por default (5)', async () => {
+    await arrancar(DATOS_BASE(), { catalogo_config: 'relation does not exist' });
+
+    expect(filas()).toHaveLength(3);
+    expect(window.__MM_ADMIN_CATALOGO_TEST__.estado.umbral).toBe(5);
+  });
+
+  it('después de un error, un mm:sesion nuevo puede reintentar la carga', async () => {
+    await arrancar(DATOS_BASE(), { catalogo_subcategorias: 'network' });
+    expect(panel().querySelector('table')).toBeNull();
+
+    // Segunda vuelta, esta vez sin el error: mockSb() nuevo sobre el mismo DOM.
+    mockSb(DATOS_BASE());
+    document.dispatchEvent(new Event('mm:sesion'));
+    await flush();
+
+    expect(filas()).toHaveLength(3);
+  });
+
+  it('un mm:sesion posterior (TOKEN_REFRESHED, doble aviso al cargar) NO repinta ni pisa el detalle abierto', async () => {
+    await arrancar();
+    const lecturasIniciales = lecturas.length;
+    abrirPorTitulo('Capa roja');
+    panel().querySelector('input[type="text"]').value = 'Edición sin guardar';
+
+    document.dispatchEvent(new Event('mm:sesion'));
+    await flush();
+
+    expect(panel().querySelector('.adm-detalle')).toBeTruthy();
+    expect(panel().querySelector('input[type="text"]').value).toBe('Edición sin guardar');
+    // El único select extra es el es_admin() del gate: ninguna tabla se
+    // volvió a leer.
+    expect(lecturas.length).toBe(lecturasIniciales);
   });
 });
 
