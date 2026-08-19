@@ -12,6 +12,10 @@ test('sin sesión: admin-catalogo.html muestra el gate de login, nunca el panel'
   await page.goto('/admin-catalogo.html');
   await expect(page.locator('#adm-gate')).toBeVisible();
   await expect(page.locator('#adm-panel')).toBeHidden();
+  // La cabecera de sesión (mismo markup que admin-pedidos.html) está cableada:
+  // sin sesión no muestra ni el "Conectado como" ni el botón de salir.
+  await expect(page.locator('#adm-sesion')).toBeHidden();
+  await expect(page.locator('#adm-logout-btn')).toBeHidden();
 });
 
 test('permalink real: la URL sirve admin-catalogo.html, no admin-catalogo/index.html', async ({ page }) => {

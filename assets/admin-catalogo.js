@@ -28,6 +28,12 @@
   var gate = $('#adm-gate');
   var loginBtn = $('#adm-login-btn');
   var panel = $('#adm-panel');
+  // Mismos dos elementos que ya tienen admin-pedidos.html/admin-envios.html
+  // en su .adm-head (y que admin-catalogo.html copió): quién está conectado y
+  // el botón de salir. Se cablean igual que en admin-pedidos.js — sin esto el
+  // markup estaba en la página pero muerto.
+  var sesionInfo = $('#adm-sesion');
+  var logoutBtn = $('#adm-logout-btn');
   var tabPublicado = $('#adm-tab-publicado');
   var tabEspejo = $('#adm-tab-espejo');
   var panelPublicado = $('#adm-panel-publicado');
@@ -59,6 +65,12 @@
   function mostrarPanel() {
     gate.hidden = true;
     panel.hidden = false;
+    if (sesionInfo) {
+      sesionInfo.hidden = false;
+      sesionInfo.textContent = 'Conectado como ' +
+        ((window.MMCuenta && (MMCuenta.nombre() || MMCuenta.email())) || '');
+    }
+    if (logoutBtn) logoutBtn.hidden = false;
     if (!tabsIniciados) {
       tabsIniciados = true;
       cambiarTab('publicado');
@@ -70,6 +82,8 @@
   function mostrarGate() {
     gate.hidden = false;
     panel.hidden = true;
+    if (sesionInfo) sesionInfo.hidden = true;
+    if (logoutBtn) logoutBtn.hidden = true;
   }
 
   function chequear() {
@@ -83,6 +97,10 @@
 
   if (loginBtn) loginBtn.addEventListener('click', function () {
     if (window.MMCuenta && MMCuenta.abrirLogin) MMCuenta.abrirLogin();
+  });
+
+  if (logoutBtn) logoutBtn.addEventListener('click', function () {
+    if (window.MMCuenta) MMCuenta.cerrarSesion();
   });
 
   document.addEventListener('mm:sesion', chequear);

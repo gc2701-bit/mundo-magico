@@ -13,6 +13,8 @@ import { loadScript } from '../helpers/loadScript.js';
 
 function montarDOM() {
   document.body.innerHTML =
+    '<div class="adm-head"><p id="adm-sesion" class="adm-sesion-info" hidden></p>' +
+    '  <button type="button" class="adm-logout-btn" id="adm-logout-btn" hidden>Cerrar sesión</button></div>' +
     '<div id="adm-gate" class="adm-gate"><button id="adm-login-btn"></button></div>' +
     '<div id="adm-panel" class="adm-panel" hidden>' +
     '  <div class="adm-tabs"><button id="adm-tab-publicado" class="adm-tab is-active"></button><button id="adm-tab-espejo" class="adm-tab"></button></div>' +
@@ -65,11 +67,13 @@ function resultadoError(mensaje) {
 let escrituras;
 let lecturas;
 let rpcPrecios;
+let sesionCerrada;
 
 function mockSb(datos, errores) {
   escrituras = [];
   lecturas = [];
   rpcPrecios = [];
+  sesionCerrada = 0;
   errores = errores || {};
   const sb = {
     // catalogo_precios_admin(p_codigos): la función security definer de
@@ -115,7 +119,13 @@ function mockSb(datos, errores) {
       })
     }
   };
-  window.MMCuenta = { sesionActiva: () => true, cliente: () => sb };
+  window.MMCuenta = {
+    sesionActiva: () => true,
+    cliente: () => sb,
+    nombre: () => 'Local Mundo Mágico',
+    email: () => 'local@mundomagico.test',
+    cerrarSesion: () => { sesionCerrada++; return Promise.resolve({}); }
+  };
   return sb;
 }
 
@@ -477,6 +487,33 @@ describe('precios: la consulta está acotada a los códigos de la lista', () => 
     await arrancar(DATOS_BASE(), { catalogo_precios_admin: 'permission denied for function' });
     expect(panel().querySelector('table')).toBeNull();
     expect(panel().querySelector('.adm-msg-error')).toBeTruthy();
+  });
+});
+
+describe('cabecera de sesión (#adm-sesion / #adm-logout-btn)', () => {
+  it('con sesión admin muestra quién está conectado y el botón de salir', async () => {
+    await arrancar();
+    const info = document.getElementById('adm-sesion');
+    const btn = document.getElementById('adm-logout-btn');
+    expect(info.hidden).toBe(false);
+    expect(info.textContent).toBe('Conectado como Local Mundo Mágico');
+    expect(btn.hidden).toBe(false);
+  });
+
+  it('el botón de salir cierra la sesión de verdad', async () => {
+    await arrancar();
+    document.getElementById('adm-logout-btn').click();
+    expect(sesionCerrada).toBe(1);
+  });
+
+  it('sin sesión quedan ocultos, igual que el panel', async () => {
+    montarDOM();
+    delete window.MMCuenta;
+    loadScript('assets/admin-catalogo.js');
+    await flush();
+    expect(document.getElementById('adm-sesion').hidden).toBe(true);
+    expect(document.getElementById('adm-logout-btn').hidden).toBe(true);
+    expect(document.getElementById('adm-panel').hidden).toBe(true);
   });
 });
 
