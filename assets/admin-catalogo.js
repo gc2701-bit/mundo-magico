@@ -274,16 +274,6 @@
     });
   }
 
-  // Placeholder de la pestaña "Sin activar" (espejo de Búho) — el contenido
-  // real es otra tarea; hasta que el worker exista la tabla está vacía a
-  // propósito (ver SPEC-catalogo-admin.md, sección 1).
-  function iniciarEspejo() {
-    if (!panelEspejo) return;
-    panelEspejo.textContent = '';
-    panelEspejo.appendChild(el('p', 'adm-detalle-solo-lectura',
-      'El espejo de Búho todavía no está conectado.'));
-  }
-
   /* --- Lista ------------------------------------------------------------- */
 
   var tbodyLista = null;
@@ -834,9 +824,9 @@
   // == ESPEJO ================================================================
   // Pestaña "Sin activar": códigos que ya llegaron del ERP del local vía el
   // espejo de Búho (catalogo_buho_espejo, Task 1) pero todavía no tienen
-  // producto propio en el catálogo. Acá sólo van las funciones puras de
-  // listado y armado del flujo de activación — el render de la lista y el
-  // formulario de activación en sí son la Parte B de esta tarea.
+  // producto propio en el catálogo. Primero las funciones de datos
+  // (cargarEspejo/armarFilaActivacion/activarCodigo) y después el render de
+  // la lista y del formulario de activación.
   function cargarEspejo(sbCliente, opts) {
     opts = opts || {};
     var q = sbCliente.from('catalogo_buho_espejo').select('*').eq('publicado', false).order('nombre');
@@ -899,6 +889,318 @@
     });
   }
 
+  /* --- Espejo: lista ------------------------------------------------------ */
+
+  // A diferencia de "Publicado" (que se trae todo una vez y filtra en
+  // memoria), acá la búsqueda vuelve a pegarle a la red: el espejo completo
+  // de Búho va a ser mucho más grande que el catálogo publicado y no tiene
+  // sentido bajarlo entero al browser (ver SPEC-catalogo-admin.md, 2.1/2.4 —
+  // los índices trgm existen justo para que esta búsqueda sea server-side).
+  var esp = { lista: [], busqueda: '' };
+  var tbodyEspejo = null;
+  var espAviso = null;
+  var espTimer = null;
+  var espToken = 0;
+  var ESPEJO_DEBOUNCE_MS = 250;
+
+  // Mismo motivo que pubIniciado (ver arriba): mostrarPanel() corre en cada
+  // mm:sesion — al cargar suelen ser dos, y después uno por cada
+  // TOKEN_REFRESHED. Sin el flag, cada uno repintaría #adm-panel-espejo y
+  // pisaría un formulario de activación abierto (con su foto ya subida a
+  // Storage y todavía no guardada en ninguna tabla).
+  var espIniciado = false;
+
+  function iniciarEspejo(sbCliente) {
+    if (!panelEspejo || espIniciado) return Promise.resolve();
+    espIniciado = true;
+    panelEspejo.textContent = '';
+    panelEspejo.appendChild(el('p', 'adm-detalle-solo-lectura', 'Cargando el espejo de Búho…'));
+    // Promise.resolve().then(): que cargarEspejo() tire sincrónicamente (por
+    // ejemplo si la tabla todavía no existe en el proyecto y el builder se
+    // rompe) tiene que terminar en el aviso de abajo, no propagarse hasta el
+    // .catch() de chequear() — ahí mandaría al admin de vuelta a la pantalla
+    // de login por un problema de UNA pestaña.
+    return Promise.resolve().then(function () {
+      return cargarEspejo(sbCliente);
+    }).then(function (filas) {
+      esp.lista = filas || [];
+      renderEspejo();
+    }).catch(function (err) {
+      // Igual que iniciarPublicado(): al fallar no hay formulario que
+      // proteger, así que se libera el flag para poder reintentar.
+      espIniciado = false;
+      panelEspejo.textContent = '';
+      panelEspejo.appendChild(el('p', 'adm-msg adm-msg-error',
+        'No se pudo cargar el espejo de Búho: ' + ((err && err.message) || 'error desconocido')));
+    });
+  }
+
+  // El texto de búsqueda va interpolado dentro del filtro .or() de PostgREST
+  // (`nombre.ilike.%X%,codigo.ilike.%X%,...`). Una coma o un paréntesis ahí
+  // no es un problema de datos —esta tabla es solo-admin por RLS— pero rompe
+  // el parseo del filtro y devuelve un 400 en vez de resultados.
+  function limpiarBusquedaEspejo(s) {
+    return (s || '').replace(/[(),*%\\]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Devuelve true si la respuesta que llegó es la de la última búsqueda
+  // pedida; false si quedó vieja (el admin siguió tipeando y hay otra en
+  // vuelo) — así una respuesta lenta no pisa una lista más nueva.
+  function refrescarEspejo() {
+    var mio = ++espToken;
+    return cargarEspejo(sb, { busqueda: esp.busqueda }).then(function (filas) {
+      if (mio !== espToken) return false;
+      esp.lista = filas || [];
+      return true;
+    });
+  }
+
+  function avisoEspejo(texto, esError) {
+    if (!espAviso) return;
+    espAviso.textContent = texto || '';
+    espAviso.className = 'adm-msg ' + (esError ? 'adm-msg-error' : 'adm-msg-ok');
+    espAviso.hidden = !texto;
+  }
+
+  function buscarEnEspejo(texto) {
+    esp.busqueda = limpiarBusquedaEspejo(texto);
+    if (espTimer) clearTimeout(espTimer);
+    espTimer = setTimeout(function () {
+      espTimer = null;
+      refrescarEspejo().then(function (aplicada) {
+        if (aplicada) { avisoEspejo('', false); renderFilasEspejo(); }
+      }).catch(function (err) {
+        avisoEspejo('No se pudo buscar: ' + ((err && err.message) || 'error desconocido'), true);
+      });
+    }, ESPEJO_DEBOUNCE_MS);
+  }
+
+  // El buscador y el <table> se arman una sola vez; cada resultado de
+  // búsqueda repinta sólo el <tbody> (si se repintara todo, el input
+  // perdería el foco en la mitad de una palabra).
+  function renderEspejo(mensajeOk) {
+    panelEspejo.textContent = '';
+    tbodyEspejo = null;
+
+    var toolbar = el('div', 'adm-lista-toolbar');
+    var buscar = document.createElement('input');
+    buscar.type = 'search';
+    buscar.id = 'adm-espejo-buscar';
+    buscar.placeholder = 'Buscar por nombre, código o familia';
+    buscar.setAttribute('aria-label', 'Buscar en el espejo de Búho');
+    buscar.value = esp.busqueda;
+    buscar.addEventListener('input', function () { buscarEnEspejo(buscar.value); });
+    toolbar.appendChild(buscar);
+    panelEspejo.appendChild(toolbar);
+
+    espAviso = el('p', 'adm-msg');
+    espAviso.hidden = true;
+    panelEspejo.appendChild(espAviso);
+    if (mensajeOk) avisoEspejo(mensajeOk, false);
+
+    var tabla = el('table', 'adm-lista-tabla');
+    var thead = document.createElement('thead');
+    var trh = document.createElement('tr');
+    // Sin orden por columna: el orden lo fija la consulta (por nombre) y la
+    // lista se pagina/filtra del lado del servidor.
+    ['Código', 'Nombre', 'Familia', 'Precio', 'Stock', 'Tipo', ''].forEach(function (txt) {
+      trh.appendChild(el('th', null, txt));
+    });
+    thead.appendChild(trh);
+    tabla.appendChild(thead);
+    tbodyEspejo = document.createElement('tbody');
+    tabla.appendChild(tbodyEspejo);
+    panelEspejo.appendChild(tabla);
+
+    renderFilasEspejo();
+  }
+
+  function renderFilasEspejo() {
+    if (!tbodyEspejo) return;
+    tbodyEspejo.textContent = '';
+
+    if (!esp.lista.length) {
+      // Vacío NO es un error: hasta que el worker de Búho exista y corra su
+      // primer ciclo, esta tabla está vacía a propósito (SPEC, sección 1).
+      var trVacio = document.createElement('tr');
+      var tdVacio = el('td', 'adm-detalle-solo-lectura', esp.busqueda
+        ? 'No hay artículos sin activar que coincidan con la búsqueda.'
+        : 'No hay artículos para activar todavía.');
+      tdVacio.colSpan = 7;
+      trVacio.appendChild(tdVacio);
+      tbodyEspejo.appendChild(trVacio);
+      return;
+    }
+
+    esp.lista.forEach(function (fila) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-codigo', fila.codigo);
+      tr.appendChild(el('td', null, fila.codigo || '—'));
+      tr.appendChild(el('td', null, fila.nombre || ''));
+      tr.appendChild(el('td', null, fila.familia || '—'));
+      tr.appendChild(el('td', null, plata(fila.precio)));
+      // El stock sí se muestra acá: es una pantalla de admin, no algo que
+      // llegue a un visitante (la prohibición del SPEC es sobre
+      // catalogo_publico(), no sobre este panel).
+      tr.appendChild(el('td', null, fila.stock == null ? '—' : String(fila.stock)));
+      tr.appendChild(el('td', null, fila.es_combo ? 'Combo' : 'Artículo'));
+
+      var tdBtn = document.createElement('td');
+      var btn = el('button', 'btn btn-primary adm-espejo-activar', 'Activar');
+      btn.type = 'button';
+      btn.addEventListener('click', function () { abrirActivacion(fila); });
+      tdBtn.appendChild(btn);
+      tr.appendChild(tdBtn);
+
+      tbodyEspejo.appendChild(tr);
+    });
+  }
+
+  /* --- Espejo: formulario de activación ----------------------------------- */
+
+  // Lo único que el admin decide al activar es dónde va (mundo +
+  // subcategoría) y con qué foto: nombre, precio, stock y familia los manda
+  // Búho y son de sólo lectura acá. Reusa el mismo selector de subcategoría
+  // y las mismas procesarFoto()/subirFoto() del detalle de "Publicado".
+  function abrirActivacion(fila) {
+    panelEspejo.textContent = '';
+    tbodyEspejo = null;
+
+    var caja = el('div', 'adm-detalle');
+    caja.setAttribute('data-origen', 'espejo');
+    caja.setAttribute('data-codigo', fila.codigo);
+    caja.appendChild(el('h2', null, fila.nombre || '(sin nombre)'));
+
+    var aviso = el('p', 'adm-msg');
+    aviso.hidden = true;
+    function mostrar(texto, esError) {
+      aviso.textContent = texto || '';
+      aviso.className = 'adm-msg ' + (esError ? 'adm-msg-error' : 'adm-msg-ok');
+      aviso.hidden = !texto;
+    }
+
+    var fotos = [];
+    var tira = el('div', 'adm-detalle-fotos');
+    function pintarFotos() {
+      tira.textContent = '';
+      fotos.forEach(function (f, idx) {
+        var fig = document.createElement('figure');
+        var img = document.createElement('img');
+        img.src = f.src;
+        img.alt = f.cap || fila.nombre || '';
+        img.loading = 'lazy';
+        fig.appendChild(img);
+        var quitar = el('button', 'adm-detalle-quitar-foto', 'Quitar');
+        quitar.type = 'button';
+        quitar.addEventListener('click', function () { fotos.splice(idx, 1); pintarFotos(); });
+        fig.appendChild(quitar);
+        tira.appendChild(fig);
+      });
+    }
+    caja.appendChild(tira);
+
+    var subir = el('div', 'adm-detalle-campo');
+    var labSubir = el('label', null, 'Foto (se ajusta sola a 1080×1080 con fondo blanco)');
+    var file = document.createElement('input');
+    file.type = 'file';
+    file.accept = 'image/*';
+    file.className = 'adm-detalle-foto-input';
+    labSubir.appendChild(file);
+    subir.appendChild(labSubir);
+    caja.appendChild(subir);
+
+    // Datos que manda Búho — no se editan desde acá (el worker los
+    // resincroniza y pisaría cualquier cambio local).
+    caja.appendChild(campoSoloLectura('Nombre (lo manda Búho)', fila.nombre || '—'));
+    caja.appendChild(campoSoloLectura('Código (de Búho)', fila.codigo || '—'));
+    caja.appendChild(campoSoloLectura('Familia (lo manda Búho)', fila.familia || '—'));
+    caja.appendChild(campoSoloLectura('Precio (lo sincroniza el POS)', plata(fila.precio)));
+    caja.appendChild(campoSoloLectura('Stock (lo sincroniza el POS)', fila.stock == null ? '—' : String(fila.stock)));
+    if (fila.es_combo) caja.appendChild(campoSoloLectura('Tipo', 'Combo'));
+
+    var wrapMundo = el('div', 'adm-detalle-campo');
+    var labMundo = el('label', null, 'Mundo');
+    var selMundo = document.createElement('select');
+    selMundo.className = 'adm-detalle-mundo';
+    // Sin preselección: activar en el mundo equivocado publica el artículo
+    // en una página que no le corresponde, así que es una elección
+    // explícita, no un default.
+    agregarOpcion(selMundo, '', 'Elegí a qué mundo va…');
+    MUNDOS.forEach(function (m) { agregarOpcion(selMundo, m.pagina, m.nombre); });
+    selMundo.value = '';
+    labMundo.appendChild(selMundo);
+    wrapMundo.appendChild(labMundo);
+    caja.appendChild(wrapMundo);
+
+    var sub = armarSelectorSubcategoria(function () { return selMundo.value; }, null);
+    selMundo.addEventListener('change', function () { sub.repoblar(null); });
+    caja.appendChild(sub.wrap);
+    caja.appendChild(sub.nuevoWrap);
+
+    file.addEventListener('change', function () {
+      var elegido = file.files && file.files[0];
+      if (!elegido) return;
+      // subirFoto() arma la ruta en Storage a partir del mundo destino; sin
+      // mundo elegido la foto terminaría en la raíz del bucket.
+      if (!selMundo.value) { file.value = ''; mostrar('Elegí primero a qué mundo va, así la foto se guarda en su carpeta.', true); return; }
+      file.disabled = true;
+      mostrar('Procesando la foto…', false);
+      procesarFoto(elegido).then(function (blob) {
+        return subirFoto(blob, selMundo.value, slug(fila.nombre) || 'producto', fotos.length + 1);
+      }).then(function (url) {
+        fotos.push({ src: url, cap: '' });
+        pintarFotos();
+        file.value = '';
+        file.disabled = false;
+        mostrar('Foto lista — apretá "Confirmar activación".', false);
+      }).catch(function (err) {
+        file.disabled = false;
+        mostrar((err && err.message) || 'No se pudo subir la foto.', true);
+      });
+    });
+
+    var confirmar = el('button', 'btn btn-primary adm-espejo-confirmar', 'Confirmar activación');
+    confirmar.type = 'button';
+    confirmar.addEventListener('click', function () {
+      // Los mismos dos chequeos los vuelve a hacer armarFilaActivacion()
+      // dentro de activarCodigo(); acá adelante el mensaje sin gastar un
+      // viaje a la red ni crear una subcategoría nueva al pedo.
+      if (!selMundo.value) { mostrar('Elegí a qué mundo va este artículo.', true); return; }
+      if (!fotos.length) { mostrar('Subí al menos una foto antes de activar.', true); return; }
+      confirmar.disabled = true;
+      mostrar('Activando…', false);
+      var mundoElegido = selMundo.value;
+      sub.resolver(mundoElegido).then(function (subcategoriaId) {
+        return activarCodigo(sb, fila, { mundo: mundoElegido, subcategoriaId: subcategoriaId, fotos: fotos });
+      }).then(function () {
+        // Ya está activado: de acá en más nada puede "desactivarlo", así que
+        // si el refresco de la lista falla igual se vuelve a la lista (con
+        // la fila sacada a mano) en vez de mostrar un error que haría pensar
+        // que la activación no salió.
+        return refrescarEspejo().catch(function () {
+          esp.lista = esp.lista.filter(function (f) { return f.codigo !== fila.codigo; });
+          return true;
+        });
+      }).then(function () {
+        renderEspejo('«' + (fila.nombre || fila.codigo) + '» quedó activado y visible en ' + nombreMundo(mundoElegido) + '.');
+      }).catch(function (err) {
+        // Falló la activación: se deja el formulario como está (mundo,
+        // subcategoría y fotos ya subidas incluidas) para poder reintentar
+        // sin volver a cargar todo.
+        confirmar.disabled = false;
+        mostrar(mensajeError(err, 'No se pudo activar.'), true);
+      });
+    });
+    var cancelar = el('button', 'btn btn-ghost adm-espejo-cancelar', 'Cancelar');
+    cancelar.type = 'button';
+    cancelar.addEventListener('click', function () { renderEspejo(); });
+
+    caja.appendChild(aviso);
+    caja.appendChild(confirmar);
+    caja.appendChild(cancelar);
+    panelEspejo.appendChild(caja);
+  }
+
   // Ganchos SOLO para tests unitarios — no se usan en producción. Mismo
   // patrón sería "exportar" en un módulo ES real; este repo no usa ESM en
   // runtime (ver mundo-magico/CLAUDE.md), así que se expone acotado detrás
@@ -910,6 +1212,8 @@
     nombreMundo: nombreMundo,
     armarFilaActivacion: armarFilaActivacion,
     activarCodigo: activarCodigo,
-    estado: pub
+    limpiarBusquedaEspejo: limpiarBusquedaEspejo,
+    estado: pub,
+    estadoEspejo: esp
   };
 })();

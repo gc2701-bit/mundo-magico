@@ -18,7 +18,17 @@ function montarDOM() {
 
 function mockMMCuenta({ sesionActiva, esAdminRpc }) {
   const rpc = vi.fn(() => Promise.resolve(esAdminRpc));
-  const from = vi.fn(() => ({ select: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }));
+  // Builder mínimo pero completo: las dos pestañas encadenan
+  // .select()/.eq()/.order()/.or() en distinto orden, y este test no mira
+  // los datos — sólo que el gate abra o no el panel.
+  const from = vi.fn(() => {
+    const chain = Promise.resolve({ data: [], error: null });
+    chain.select = () => chain;
+    chain.eq = () => chain;
+    chain.order = () => chain;
+    chain.or = () => chain;
+    return chain;
+  });
   window.MMCuenta = { sesionActiva: () => sesionActiva, cliente: () => ({ rpc, from }) };
   return { rpc, from };
 }

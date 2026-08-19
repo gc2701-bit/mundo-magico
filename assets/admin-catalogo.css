@@ -157,6 +157,7 @@
 .adm-msg-error { color: #b91c1c; }
 .adm-msg-ok { color: #15803d; }
 .adm-detalle-volver { margin-left: 8px; }
+.adm-espejo-cancelar { margin-left: 8px; }
 
 .adm-badge-pocas { color: #b5530c; font-size: 0.8rem; }
 .adm-badge-sin-stock { color: #b91c1c; font-size: 0.8rem; }

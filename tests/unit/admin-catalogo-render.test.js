@@ -398,8 +398,14 @@ describe('carga degradada y re-entrada', () => {
 });
 
 describe('pestaña "Sin activar" (espejo)', () => {
-  it('queda con un aviso mínimo — el contenido real es de otra tarea', async () => {
+  // El render completo del espejo se prueba en admin-catalogo-espejo.test.js;
+  // acá sólo que se arranca junto con "Publicado" y que la tabla vacía (el
+  // estado esperado hasta que exista el worker) no se muestra como error.
+  it('arranca junto con la otra pestaña y muestra el vacío como aviso, no como error', async () => {
     await arrancar();
-    expect(document.getElementById('adm-panel-espejo').textContent).toContain('Búho');
+    const espejo = document.getElementById('adm-panel-espejo');
+    expect(espejo.querySelector('table.adm-lista-tabla')).toBeTruthy();
+    expect(espejo.textContent).toContain('No hay artículos para activar todavía.');
+    expect(espejo.querySelector('.adm-msg-error')).toBeNull();
   });
 });
