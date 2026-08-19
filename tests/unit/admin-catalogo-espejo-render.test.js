@@ -392,8 +392,15 @@ describe('formulario de activación', () => {
     expect(escrituras).toHaveLength(0);
   });
 
-  it('un mm:sesion posterior (TOKEN_REFRESHED) NO pisa el formulario abierto', async () => {
+  // mostrarPanel() vuelve a correr en cada mm:sesion (doble aviso al cargar +
+  // un TOKEN_REFRESHED por hora). No alcanza con que sobrevivan los datos del
+  // formulario: tiene que seguir estando A LA VISTA. Antes, el
+  // cambiarTab('publicado') incondicional de mostrarPanel() dejaba el
+  // formulario vivo pero escondido abajo del panel de "Publicado", y el admin
+  // perdía de vista una activación a medio hacer (con la foto ya en Storage).
+  it('un mm:sesion posterior (TOKEN_REFRESHED) NO pisa el formulario abierto ni cambia de pestaña', async () => {
     await arrancar();
+    document.getElementById('adm-tab-espejo').click();
     abrirPorNombre('Sombrero de mago');
     elegirMundo('disfraces-v2.html');
     await subirUnaFoto();
@@ -404,6 +411,11 @@ describe('formulario de activación', () => {
     expect(detalle()).toBeTruthy();
     expect(detalle().querySelector('.adm-detalle-mundo').value).toBe('disfraces-v2.html');
     expect(detalle().querySelectorAll('.adm-detalle-fotos img')).toHaveLength(1);
+    // …y sigue visible: la pestaña "Sin activar" no se cambió sola.
+    expect(panel().hidden).toBe(false);
+    expect(document.getElementById('adm-panel-publicado').hidden).toBe(true);
+    expect(document.getElementById('adm-tab-espejo').classList.contains('is-active')).toBe(true);
+    expect(document.getElementById('adm-tab-publicado').classList.contains('is-active')).toBe(false);
   });
 });
 

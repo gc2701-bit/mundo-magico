@@ -66,6 +66,24 @@ describe('admin-catalogo.js — gate de es_admin()', () => {
     expect(document.getElementById('adm-panel-espejo').hidden).toBe(true);
   });
 
+  // mostrarPanel() corre en cada mm:sesion (doble aviso al cargar + un
+  // TOKEN_REFRESHED por hora). El default "Publicado" es sólo para la primera
+  // vez: si no, un refresh de token silencioso cambiaba de pestaña abajo de
+  // los pies del admin, escondiendo una activación a medio hacer.
+  it('un mm:sesion posterior respeta la pestaña elegida, no vuelve sola a "Publicado"', async () => {
+    mockMMCuenta({ sesionActiva: true, esAdminRpc: { data: true, error: null } });
+    loadScript('assets/admin-catalogo.js');
+    await new Promise((r) => setTimeout(r, 0));
+
+    document.getElementById('adm-tab-espejo').click();
+    document.dispatchEvent(new Event('mm:sesion'));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(document.getElementById('adm-panel-espejo').hidden).toBe(false);
+    expect(document.getElementById('adm-panel-publicado').hidden).toBe(true);
+    expect(document.getElementById('adm-tab-espejo').classList.contains('is-active')).toBe(true);
+  });
+
   it('click en la pestaña "Sin activar": alterna qué panel está visible y la clase is-active', async () => {
     mockMMCuenta({ sesionActiva: true, esAdminRpc: { data: true, error: null } });
     loadScript('assets/admin-catalogo.js');

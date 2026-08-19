@@ -47,10 +47,22 @@
   tabPublicado.addEventListener('click', function () { cambiarTab('publicado'); });
   tabEspejo.addEventListener('click', function () { cambiarTab('espejo'); });
 
+  // "Publicado" es la pestaña por default sólo la PRIMERA vez que se abre el
+  // panel. mostrarPanel() vuelve a correr en cada mm:sesion (el doble aviso
+  // al cargar, y después un TOKEN_REFRESHED por hora): sin este flag, un
+  // refresh de token silencioso pateaba al admin de "Sin activar" de vuelta a
+  // "Publicado" en la mitad de una activación — el formulario seguía vivo en
+  // el DOM, pero abajo de un panel oculto (los flags pubIniciado/espIniciado
+  // protegen los DATOS de cada pestaña, no cuál se está viendo).
+  var tabsIniciados = false;
+
   function mostrarPanel() {
     gate.hidden = true;
     panel.hidden = false;
-    cambiarTab('publicado');
+    if (!tabsIniciados) {
+      tabsIniciados = true;
+      cambiarTab('publicado');
+    }
     iniciarPublicado(sb);
     iniciarEspejo(sb);
   }
