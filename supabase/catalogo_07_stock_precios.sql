@@ -6,7 +6,21 @@
 alter table public.catalogo_precios
   add column if not exists stock integer;
 
-grant update (precio, sin_stock, stock) on public.catalogo_precios to authenticated;
+-- Los DOS grants, no sólo el de update. El de insert de catalogo_00_base.sql
+-- (línea 126) es `grant insert (codigo, precio, sin_stock, nombre_pos)`: sin
+-- `stock` acá, el upsert de activarCodigo() en assets/admin-catalogo.js
+-- (`{codigo, precio, stock, sin_stock}`) revienta con
+-- `42501 permission denied for column stock` justo en la rama INSERT — o sea
+-- en la PRIMERA activación de cada código, la que todavía no tiene fila de
+-- precio — y encima después de que el insert en catalogo_productos ya salió
+-- bien, dejando un producto publicado sin precio. La rama
+-- `on conflict (codigo) do update` (código que ya tenía precio) siempre
+-- funcionó: esa usa el grant de update de abajo, que sí incluye stock.
+-- Los grants de columna son acumulativos: volver a correr esta línea sobre
+-- una base donde catalogo_07 ya se aplicó es inofensivo (y necesario, si se
+-- aplicó antes de este arreglo).
+grant insert (codigo, precio, sin_stock, nombre_pos, stock) on public.catalogo_precios to authenticated;
+grant update (precio, sin_stock, stock)                     on public.catalogo_precios to authenticated;
 
 create or replace function public.catalogo_publico()
 returns jsonb

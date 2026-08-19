@@ -143,10 +143,12 @@ grant delete                                                                 on 
 -- tarjetas se quedarían sin precio en silencio. Por eso la web nunca hace
 -- select directo a estas tablas: pide este único JSON ya agregado.
 --
--- No es security definer: las políticas de lectura pública de arriba ya
--- alcanzan, así que si el día de mañana se restringe algo de lectura, esta
--- función se restringe sola con eso (corre con los privilegios de quien
--- llama, no con los del dueño de la función).
+-- Nació sin security definer (las políticas de lectura pública de arriba
+-- alcanzaban). OJO: eso ya NO es así — catalogo_08_stock_privado.sql la
+-- redefine como `security definer`, porque desde ese archivo `stock` deja de
+-- ser una columna legible por anon/authenticated y la función necesita
+-- poder leerla igual para armar `pocasUnidades`. La versión viva de esta
+-- función es la de catalogo_08, no la de acá.
 create or replace function public.catalogo_publico()
 returns jsonb
 language sql
