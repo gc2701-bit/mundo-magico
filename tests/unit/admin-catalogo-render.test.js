@@ -64,13 +64,30 @@ function resultadoError(mensaje) {
 
 let escrituras;
 let lecturas;
+let rpcPrecios;
 
 function mockSb(datos, errores) {
   escrituras = [];
   lecturas = [];
+  rpcPrecios = [];
   errores = errores || {};
   const sb = {
-    rpc: () => Promise.resolve({ data: true, error: null }),
+    // catalogo_precios_admin(p_codigos): la función security definer de
+    // supabase/catalogo_08_stock_privado.sql. Devuelve SÓLO los códigos
+    // pedidos — igual que Postgres con `codigo = any(p_codigos)`, que es lo
+    // que hace que valga la pena testear que el panel manda la lista corta.
+    rpc: (nombre, args) => {
+      if (nombre !== 'catalogo_precios_admin') return Promise.resolve({ data: true, error: null });
+      const pedidos = (args && args.p_codigos) || [];
+      rpcPrecios.push(pedidos);
+      if (errores.catalogo_precios_admin) {
+        return Promise.resolve({ data: null, error: new Error(errores.catalogo_precios_admin) });
+      }
+      return Promise.resolve({
+        data: (datos.catalogo_precios || []).filter((p) => pedidos.indexOf(p.codigo) !== -1),
+        error: null
+      });
+    },
     from(tabla) {
       return {
         select: () => {
@@ -394,6 +411,72 @@ describe('carga degradada y re-entrada', () => {
     // El único select extra es el es_admin() del gate: ninguna tabla se
     // volvió a leer.
     expect(lecturas.length).toBe(lecturasIniciales);
+  });
+});
+
+describe('precios: la consulta está acotada a los códigos de la lista', () => {
+  it('pide catalogo_precios_admin() SÓLO con los códigos que la lista usa, nunca la tabla entera', async () => {
+    await arrancar();
+    // '111' y '222' de los productos, '333' del codigo_override de la tarjeta.
+    expect(rpcPrecios).toHaveLength(1);
+    expect(rpcPrecios[0].sort()).toEqual(['111', '222', '333']);
+    // Y nunca por la tabla: `stock` no tiene GRANT de select ni para un admin
+    // desde catalogo_08_stock_privado.sql.
+    expect(lecturas).not.toContain('catalogo_precios');
+  });
+
+  it('una tabla de precios enorme no entra a la lista: sólo se usan los códigos referenciados', async () => {
+    // 5000 filas de precios (más que el límite de 1000 de PostgREST, que es
+    // justo lo que hacía que el `.select()` pelado devolviera basura sin
+    // avisar). Sólo tres códigos están referenciados por productos/tarjetas.
+    const datos = DATOS_BASE();
+    for (let i = 0; i < 5000; i++) {
+      datos.catalogo_precios.push({ codigo: 'X' + i, precio: 100 + i, sin_stock: false, stock: 7 });
+    }
+    await arrancar(datos);
+
+    expect(rpcPrecios).toHaveLength(1);
+    expect(rpcPrecios[0]).not.toContain('X0');
+    expect(rpcPrecios[0].length).toBe(3);
+    expect(filas()).toHaveLength(3);
+    // El precio de la Capa roja (código 111) sigue resolviendo aunque haya
+    // 5000 filas de ruido antes que él en la tabla.
+    const capa = filas().find((tr) => tr.children[1].textContent === 'Capa roja');
+    expect(capa.children[3].textContent).toContain('5.000');
+  });
+
+  it('más de 200 códigos se piden en tandas, ninguna cerca del límite de PostgREST', async () => {
+    const datos = DATOS_BASE();
+    datos.catalogo_productos = [];
+    for (let i = 0; i < 450; i++) {
+      datos.catalogo_productos.push({
+        id: 'p' + i, pagina: 'disfraces-v2.html', subcategoria_id: null,
+        titulo: 'Art ' + i, slug: 'art-' + i, codigo: 'C' + i, descripcion: '', fotos: [], publicado: true
+      });
+      datos.catalogo_precios.push({ codigo: 'C' + i, precio: 1000 + i, sin_stock: false, stock: 3 });
+    }
+    datos.catalogo_tarjetas = [];
+    await arrancar(datos);
+
+    // 450 códigos → 200 + 200 + 50.
+    expect(rpcPrecios.map((t) => t.length)).toEqual([200, 200, 50]);
+    expect(filas()).toHaveLength(450);
+  });
+
+  it('sin ningún código referenciado no se pide nada de precios', async () => {
+    const datos = DATOS_BASE();
+    datos.catalogo_productos = [{ id: 'p9', pagina: 'combos-v2.html', subcategoria_id: null, titulo: 'Sin código', slug: 'sin-codigo', codigo: '', descripcion: '', fotos: [], publicado: true }];
+    datos.catalogo_tarjetas = [];
+    await arrancar(datos);
+
+    expect(rpcPrecios).toEqual([]);
+    expect(filas()).toHaveLength(1);
+  });
+
+  it('si catalogo_precios_admin() falla, el panel avisa en vez de mostrar la lista a medias', async () => {
+    await arrancar(DATOS_BASE(), { catalogo_precios_admin: 'permission denied for function' });
+    expect(panel().querySelector('table')).toBeNull();
+    expect(panel().querySelector('.adm-msg-error')).toBeTruthy();
   });
 });
 

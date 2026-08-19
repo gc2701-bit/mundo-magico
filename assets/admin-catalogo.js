@@ -206,17 +206,70 @@
     return { productos: productos, tarjetas: tarjetas };
   }
 
+  // Los códigos que esta lista realmente usa: el de cada producto de
+  // catalogo_productos y el codigo_override de cada tarjeta. Sin repetir y
+  // sin vacíos — es la clave para no pedir la tabla de precios entera (ver
+  // cargarPrecios() abajo). Object.create(null) y no {}: un código es texto
+  // arbitrario y '__proto__'/'constructor' como clave de un objeto normal
+  // haría cualquier cosa menos marcar "ya lo vi".
+  function codigosDe(productos, tarjetas) {
+    var vistos = Object.create(null);
+    var out = [];
+    function sumar(c) {
+      var k = (c == null ? '' : String(c)).trim();
+      if (!k || vistos[k]) return;
+      vistos[k] = true;
+      out.push(k);
+    }
+    (productos || []).forEach(function (p) { sumar(p.codigo); });
+    (tarjetas || []).forEach(function (t) { sumar(t.codigo_override); });
+    return out;
+  }
+
+  // De a 200 códigos por viaje: catalogo_precios tiene ~3713 filas y un
+  // `.select()` pelado corta en el límite de PostgREST (1000 por default) SIN
+  // NINGÚN ERROR — el panel mostraba precio y stock en blanco para la mayoría
+  // del catálogo real y no había forma de darse cuenta (está escrito en el
+  // comentario de cabecera de supabase/catalogo_00_base.sql). Tandas chicas
+  // acotan también el largo de la URL.
+  var PRECIOS_POR_TANDA = 200;
+
+  // No es `.from('catalogo_precios')`: desde catalogo_08_stock_privado.sql la
+  // columna `stock` no tiene GRANT de select para anon NI para authenticated
+  // (el número real de stock no es público — regla dura del spec), y los
+  // GRANT son por ROL, así que la sesión de un admin tampoco la tiene. El
+  // acceso de admin va por esta función security definer, que se chequea
+  // es_admin() adentro y devuelve cero filas a cualquier otro.
+  function cargarPrecios(sbCliente, codigos) {
+    if (!codigos.length) return Promise.resolve([]);
+    var tandas = [];
+    for (var i = 0; i < codigos.length; i += PRECIOS_POR_TANDA) {
+      tandas.push(codigos.slice(i, i + PRECIOS_POR_TANDA));
+    }
+    return Promise.all(tandas.map(function (tanda) {
+      return sbCliente.rpc('catalogo_precios_admin', { p_codigos: tanda }).then(function (r) {
+        if (r.error) throw r.error;
+        return r.data || [];
+      });
+    })).then(function (partes) {
+      return partes.reduce(function (acc, p) { return acc.concat(p); }, []);
+    });
+  }
+
   // Fetch real — RLS exige sesión admin, mismo criterio que
   // admin-pedidos.js (sb viene ya autenticado desde chequear() de Task 10).
+  // Los precios se piden DESPUÉS (no en el mismo Promise.all) porque hace
+  // falta saber primero qué códigos pedir.
   function cargarPublicado(sbCliente) {
     return Promise.all([
       sbCliente.from('catalogo_productos').select('id, pagina, subcategoria_id, titulo, slug, codigo, specs, descripcion, fotos, publicado').order('titulo'),
-      sbCliente.from('catalogo_tarjetas').select('pagina, slug, oculta, sin_stock, precio_fijo, titulo_ref, nota, subcategoria_id, codigo_override, colores_sin_stock'),
-      sbCliente.from('catalogo_precios').select('codigo, precio, sin_stock, stock')
+      sbCliente.from('catalogo_tarjetas').select('pagina, slug, oculta, sin_stock, precio_fijo, titulo_ref, nota, subcategoria_id, codigo_override, colores_sin_stock')
     ]).then(function (r) {
       var errs = r.filter(function (x) { return x.error; });
       if (errs.length) throw errs[0].error;
-      return unificarLista(r[0].data, r[1].data, r[2].data);
+      return cargarPrecios(sbCliente, codigosDe(r[0].data, r[1].data)).then(function (precios) {
+        return unificarLista(r[0].data, r[1].data, precios);
+      });
     });
   }
 
@@ -1259,6 +1312,7 @@
   // de un nombre que deja claro que es de test.
   window.__MM_ADMIN_CATALOGO_TEST__ = {
     unificarLista: unificarLista,
+    codigosDe: codigosDe,
     filtrarYOrdenar: filtrarYOrdenar,
     proximoSort: proximoSort,
     nombreMundo: nombreMundo,

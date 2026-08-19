@@ -14,7 +14,7 @@ import { loadScript } from '../helpers/loadScript.js';
 // chequear() cae en mostrarGate() (rama segura, no hace ninguna llamada de
 // red) y deja el resto del módulo (unificarLista/filtrarYOrdenar/etc.,
 // expuestos en window.__MM_ADMIN_CATALOGO_TEST__) disponible para probar.
-let unificarLista, filtrarYOrdenar, agruparPorOrigen;
+let unificarLista, filtrarYOrdenar, agruparPorOrigen, codigosDe;
 beforeAll(() => {
   document.body.innerHTML =
     '<div id="adm-gate"><button id="adm-login-btn"></button></div>' +
@@ -24,7 +24,25 @@ beforeAll(() => {
     '  <div id="adm-panel-espejo" hidden></div>' +
     '</div>';
   loadScript('assets/admin-catalogo.js');
-  ({ unificarLista, filtrarYOrdenar, agruparPorOrigen } = window.__MM_ADMIN_CATALOGO_TEST__);
+  ({ unificarLista, filtrarYOrdenar, agruparPorOrigen, codigosDe } = window.__MM_ADMIN_CATALOGO_TEST__);
+});
+
+describe('codigosDe()', () => {
+  it('junta el código de cada producto y el codigo_override de cada tarjeta, sin repetir ni vacíos', () => {
+    const productos = [{ codigo: '111' }, { codigo: '222' }, { codigo: '' }, { codigo: null }];
+    const tarjetas = [{ codigo_override: '333' }, { codigo_override: '111' }, { codigo_override: null }];
+    expect(codigosDe(productos, tarjetas)).toEqual(['111', '222', '333']);
+  });
+
+  it('recorta espacios y no se confunde con claves heredadas de Object.prototype', () => {
+    expect(codigosDe([{ codigo: '  555  ' }], [])).toEqual(['555']);
+    expect(codigosDe([{ codigo: 'constructor' }, { codigo: 'constructor' }], [])).toEqual(['constructor']);
+  });
+
+  it('sin nada referenciado devuelve la lista vacía (no hay consulta de precios que hacer)', () => {
+    expect(codigosDe([], [])).toEqual([]);
+    expect(codigosDe(null, null)).toEqual([]);
+  });
 });
 
 describe('unificarLista()', () => {
