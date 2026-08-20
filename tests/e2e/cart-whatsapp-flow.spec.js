@@ -4,57 +4,61 @@
  * mundo-magico/CLAUDE.md) — si esto se rompe, el negocio deja de recibir
  * pedidos.
  *
- * Se bloquean Supabase y Nominatim a propósito (ver `page.route` abajo): el
- * carrito y el envío del pedido no deberían depender de que la base esté
- * arriba ni de pegarle a la producción real desde un test. El catálogo cae
- * solo al respaldo estático (assets/precios-datos.js) — es exactamente la
- * cascada que prueba tests/unit/catalogo.test.js, acá se comprueba que el
- * resto de la página se banca ese escenario sin romperse.
+ * Nominatim/Turnstile/Analytics se siguen bloqueando (no hacen falta para
+ * este flujo). Supabase YA NO se bloquea: desde la migración a Next.js
+ * (Sprint 1, ver docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md)
+ * los dos productos de ejemplo de este archivo son filas de
+ * catalogo_productos (antes eran tarjetas escritas a mano en el HTML con
+ * respaldo estático si Supabase caía) — ya no existe ningún producto
+ * "simple" que siga siendo HTML puro, así que probar el camino sin red
+ * dejó de ser posible con estos ejemplos. Es un hueco de cobertura
+ * temporal y aceptado (decisión con el usuario, 2026-08-20): las páginas
+ * de familia del sitio nuevo (Sprint 2+, con ISR) van a ser MÁS
+ * resilientes que esto de todos modos — sirven la última versión generada
+ * aunque Supabase esté caída en el momento de la visita.
  *
- * ⚠️ Los dos tests de abajo están marcados `test.fixme()` desde la
- * migración a Next.js (Sprint 1, ver
- * docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md):
- * "Alas mariposa" y "Alas mariposa lunares" eran tarjetas escritas a mano
- * en el HTML de disfraces-v2.html — se migraron a `catalogo_productos`
- * como parte de esa tanda, y ya no existe ningún producto "simple" que
- * siga siendo HTML puro (con Supabase bloqueado, ya no aparece ninguno).
- * Se intentó arreglar apuntando estos tests a productos reales de
- * `catalogo_productos` sin bloquear Supabase, pero eso destapó un bug
- * aparte del sitio (no de esta migración): con Supabase realmente
- * accesible, `.cart-scrim` queda con la clase `is-on` desde el arranque
- * de la página e intercepta cualquier click — nunca se había probado este
- * flujo con Supabase vivo antes (el test siempre lo bloqueó), así que es
- * la primera vez que se detecta. Queda pendiente, sin tocar acá:
- *   1. Investigar por qué `.cart-scrim` abre solo al cargar con Supabase
- *      real (assets/carrito.js) — issue de producto, no de test.
- *   2. Una vez resuelto, decidir si estos dos tests vuelven a probar el
- *      camino sin red (necesitaría algún producto simple en el respaldo
- *      estático) o pasan a probar el camino con Supabase real.
- * Hasta entonces, la cobertura de "el carrito se banca que Supabase esté
- * caída" queda con este hueco conocido — las páginas de familia del sitio
- * nuevo (Sprint 2+, con ISR) van a ser más resilientes que este escenario
- * de todos modos.
+ * `mm_bienvenida_v1` precargado en localStorage: es el flag de "primera
+ * visita" de assets/cuenta.js — sin él, un visitante sin sesión ve un
+ * modal de bienvenida a los 1.5s (gateado por el chequeo de sesión de
+ * Supabase, que antes nunca se resolvía porque este test bloqueaba
+ * Supabase). No es un bug: se confirmó que el modal se comporta bien y
+ * desaparece solo para cualquiera que ya visitó el sitio — acá se precarga
+ * el flag para probar el flujo de carrito de un visitante recurrente, sin
+ * que un modal no relacionado tape la tarjeta.
+ *
+ * El primer test ("...antes de WhatsApp") queda `test.fixme()`: con
+ * Supabase real, el paso final (click en "Enviar pedido" debería abrir
+ * `.cart-acc`, la puerta de cuenta) es flaky — parece timing de
+ * `MMCuenta.sesionActiva()` contra el `getSession()` real de Supabase Auth,
+ * no algo específico de esta migración. No se investigó más a fondo para
+ * no desviarse de la migración en curso (decisión con el usuario,
+ * 2026-08-20) — el segundo test (selector de colores/talles) sí quedó en
+ * verde con Supabase real.
  */
 const { test, expect } = require('@playwright/test');
 
 async function bloquearRedExterna(page) {
-  await page.route('**/*.supabase.co/**', (route) => route.abort());
   await page.route('**/nominatim.openstreetmap.org/**', (route) => route.abort());
   await page.route('**/challenges.cloudflare.com/**', (route) => route.abort());
   await page.route('**/googletagmanager.com/**', (route) => route.abort());
   await page.route('**/*.clarity.ms/**', (route) => route.abort());
   await page.route('**/google-analytics.com/**', (route) => route.abort());
+  await page.addInitScript(() => localStorage.setItem('mm_bienvenida_v1', '1'));
 }
 
 test.describe('Carrito → WhatsApp', () => {
   test.fixme('agregar un producto simple al pedido y llegar hasta la puerta de cuenta antes de WhatsApp', async ({ page }) => {
     await bloquearRedExterna(page);
     await page.goto('/disfraces-v2.html');
+    await page.waitForLoadState('networkidle');
 
-    // Tarjeta data-pos="39073" ("Alas mariposa tornasolada"): ya no existe
-    // como HTML — se migró a catalogo_productos (ver cabecera). Con
-    // Supabase bloqueado, este producto no aparece más (ver nota de
-    // arriba). Dejado tal cual para cuando se retome.
+    // "Alas mariposa" (catalogo_productos, código 39073) — antes tarjeta
+    // del HTML, migrada en el Sprint 1. Se localiza por data-pos: el <h3>
+    // y el <span class="sub"> son nodos separados sin espacio entre sí,
+    // así que el texto visible concatenado no arma "Alas mariposa
+    // tornasolada" como substring — y el título que termina en el
+    // carrito (assets/producto.js `titulo()`) es solo el <h3>, "Alas
+    // mariposa", sin el color.
     const card = page.locator('a.pcard[data-pos="39073"]').first();
     await expect(card).toBeVisible();
     await card.locator('.pcard-add').click();
@@ -82,14 +86,18 @@ test.describe('Carrito → WhatsApp', () => {
     await expect(page.locator('.cart-acc.is-on')).toContainText('cuenta');
   });
 
-  test.fixme('un producto con variantes obligatorias abre el selector de colores/talles antes de agregar', async ({ page }) => {
+  test('un producto con variantes obligatorias abre el selector de colores/talles antes de agregar', async ({ page }) => {
     await bloquearRedExterna(page);
     await page.goto('/disfraces-v2.html');
+    await page.waitForLoadState('networkidle');
 
-    // "Alas mariposa lunares" ya no existe como HTML — se migró a
-    // catalogo_productos y además quedó publicado=false (estaba oculta en
-    // el panel de admin desde antes de la migración). Ver cabecera.
-    const card = page.locator('a.pcard', { hasText: 'Alas mariposa lunares' }).first();
+    // "Alas mariposa de lentejuelas" (catalogo_productos, ya existía antes
+    // del Sprint 1 — no es la "Alas mariposa lunares" que este test usaba
+    // antes: esa quedó publicado=false, oculta desde el panel de admin
+    // desde antes de la migración, nunca debería aparecer). Tiene galería
+    // de 3 colores sin código único a nivel tarjeta: elegir es obligatorio
+    // (ver comentario de cabecera de assets/carrito.js).
+    const card = page.locator('a.pcard', { hasText: 'Alas mariposa de lentejuelas' }).first();
     await expect(card).toBeVisible();
     await card.locator('.pcard-add').click();
 
