@@ -18,12 +18,17 @@ module.exports = function (eleventyConfig) {
     if (fs.existsSync(outDir)) fs.rmSync(outDir, { recursive: true, force: true });
   });
 
-  eleventyConfig.addPassthroughCopy("assets");
-  eleventyConfig.addPassthroughCopy("Logo");
-  eleventyConfig.addPassthroughCopy({ "Header categories": "Header categories" });
-  eleventyConfig.addPassthroughCopy("_headers");
-  eleventyConfig.addPassthroughCopy("_redirects");
-  eleventyConfig.addPassthroughCopy("productos");
+  // assets/Logo/"Header categories"/productos viven en public/ desde el
+  // Sprint 2 (ver plan) — Next.js los sirve tal cual en la misma URL
+  // (public/assets/x → /assets/x), y el build de Eleventy (mientras
+  // conviva con el sitio viejo, hasta el Sprint 7) los sigue copiando a
+  // los mismos nombres de siempre en _site/, sólo cambia de dónde los lee.
+  eleventyConfig.addPassthroughCopy({ "public/assets": "assets" });
+  eleventyConfig.addPassthroughCopy({ "public/Logo": "Logo" });
+  eleventyConfig.addPassthroughCopy({ "public/Header categories": "Header categories" });
+  eleventyConfig.addPassthroughCopy({ "public/_headers": "_headers" });
+  eleventyConfig.addPassthroughCopy({ "public/_redirects": "_redirects" });
+  eleventyConfig.addPassthroughCopy({ "public/productos": "productos" });
 
   // productos/Mejor calidad/ (48MB de los 94MB de productos/) no la referencia
   // ningún HTML del sitio, solo .claude/replace-quality.js (herramienta local
