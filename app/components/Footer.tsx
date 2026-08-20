@@ -1,11 +1,14 @@
+import Link from "next/link";
+import { slugifyFamilia } from "@/lib/catalogo-familia";
+
 /**
  * Porteo de _includes/footer.njk (Eleventy). La columna "Mundos" del
  * footer viejo listaba las 7 páginas de mundo hardcodeadas — igual que en
- * Nav.tsx, ese listado pasa a ser dinámico por familia en el Sprint 2
- * (Task 2.4). El resto (marca, contacto, redes) no depende de la
- * categorización y se portó tal cual.
+ * Nav.tsx, `familias` llega como prop desde app/layout.tsx. El resto
+ * (marca, contacto, redes) no depende de la categorización y se portó tal
+ * cual.
  */
-export default function Footer() {
+export default function Footer({ familias }: { familias: string[] }) {
   return (
     <footer className="site-footer">
       <div className="wrap foot-grid">
@@ -13,7 +16,14 @@ export default function Footer() {
           <div className="fname">Mundo Mágico ✨</div>
           <p>El cotillón de Tucumán desde 1994. La misma familia, el mismo mostrador, la misma alegría.</p>
         </div>
-        {/* TODO Sprint 2 (Task 2.4): columna "Mundos"/familias dinámica */}
+        <nav className="foot-col" aria-label="Familias">
+          <b>Familias</b>
+          {familias.map((familia) => (
+            <Link key={familia} href={'/' + slugifyFamilia(familia)}>
+              {familia}
+            </Link>
+          ))}
+        </nav>
         <nav className="foot-col" aria-label="La casa">
           <b>La casa</b>
           <a href="/historia">Nuestra historia</a>

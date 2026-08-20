@@ -60,3 +60,23 @@ export function familiaDesdeSlug(productos: ProductoPublico[], slug: string): st
   const familias = familiasDisponibles(productos);
   return familias.find((f) => slugifyFamilia(f) === slug) || null;
 }
+
+// Buscador de Explorar (Task 2.5) — sin acentos ni mayúsculas de por
+// medio, sobre título y specs (no busca por código: eso es un dato de
+// admin/pedido, no algo que un cliente tipee).
+function normalizarTexto(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+export function buscarProductos(productos: ProductoPublico[], texto: string): ProductoPublico[] {
+  const q = normalizarTexto(texto).trim();
+  if (!q) return productos;
+  return productos.filter((p) => {
+    const titulo = normalizarTexto(p.titulo);
+    const specs = (p.specs || []).map(normalizarTexto).join(' ');
+    return titulo.includes(q) || specs.includes(q);
+  });
+}

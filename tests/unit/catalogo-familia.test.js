@@ -7,7 +7,8 @@ import {
   slugifyFamilia,
   familiasDisponibles,
   productosDeFamilia,
-  familiaDesdeSlug
+  familiaDesdeSlug,
+  buscarProductos
 } from '../../lib/catalogo-familia.ts';
 
 function producto(overrides) {
@@ -61,5 +62,29 @@ describe('catalogo-familia — familiaDesdeSlug', () => {
   it('slug sin match da null', () => {
     const productos = [producto({ familia: 'RUIDO' })];
     expect(familiaDesdeSlug(productos, 'no-existe')).toBeNull();
+  });
+});
+
+describe('catalogo-familia — buscarProductos', () => {
+  it('sin texto devuelve todos', () => {
+    const productos = [producto({ titulo: 'Globo' }), producto({ titulo: 'Vaso' })];
+    expect(buscarProductos(productos, '')).toEqual(productos);
+  });
+
+  it('busca por título, sin acentos ni mayúsculas', () => {
+    const globo = producto({ titulo: 'Globo estándar' });
+    const vaso = producto({ titulo: 'Vaso' });
+    expect(buscarProductos([globo, vaso], 'ESTANDAR')).toEqual([globo]);
+  });
+
+  it('busca también dentro de specs', () => {
+    const a = producto({ titulo: 'X', specs: ['Colores: rosa, celeste'] });
+    const b = producto({ titulo: 'Y', specs: ['Material: madera'] });
+    expect(buscarProductos([a, b], 'rosa')).toEqual([a]);
+  });
+
+  it('sin coincidencias da lista vacía', () => {
+    const productos = [producto({ titulo: 'Globo' })];
+    expect(buscarProductos(productos, 'inexistente')).toEqual([]);
   });
 });

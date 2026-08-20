@@ -16,7 +16,8 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:next": "playwright test --config=playwright.next.config.js"
   },
   "repository": {
     "type": "git",

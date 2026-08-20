@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { slugifyFamilia } from "@/lib/catalogo-familia";
 
 /**
  * Porteo de _includes/nav.njk (Eleventy). El dropdown "Nuestros mundos" del
  * sitio viejo listaba las 7 páginas de mundo hardcodeadas — con la
  * migración a familias (ver docs/superpowers/specs/2026-08-20-nextjs-migracion-familias-design.md,
- * sección 4) ese listado pasa a ser dinámico, armado a partir de las
- * familias distintas presentes en productos publicados. Eso se implementa
- * en el Sprint 2 (Task 2.4) — acá solo queda el placeholder para no portar
- * dos veces el mismo menú.
+ * sección 4) ese listado es dinámico: `familias` llega como prop desde
+ * app/layout.tsx (Server Component, ya resolvió el catálogo una vez para
+ * toda la página — Next dedupea el fetch, no se repite por componente).
  */
-export default function Nav() {
+export default function Nav({ familias }: { familias: string[] }) {
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -34,7 +34,16 @@ export default function Nav() {
       </button>
       <div className="nav-links" id="nav-links" hidden={!abierto}>
         <Link href="/">Inicio</Link>
-        {/* TODO Sprint 2 (Task 2.4): dropdown "Nuestros mundos" dinámico por familia */}
+        <div className="nav-item has-dropdown">
+          <span aria-haspopup="true">Nuestros mundos</span>
+          <div className="nav-dropdown" role="menu">
+            {familias.map((familia) => (
+              <Link key={familia} href={'/' + slugifyFamilia(familia)} role="menuitem">
+                {familia}
+              </Link>
+            ))}
+          </div>
+        </div>
         <Link href="/explorar">Explorar</Link>
         <Link href="/eventos">Eventos a medida</Link>
         <a href="/#visitanos">Visitanos</a>
