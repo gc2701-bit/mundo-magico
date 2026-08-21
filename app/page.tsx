@@ -5,15 +5,17 @@
  * 2026-08-21 (ver docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md,
  * "Corte a producción").
  *
- * Simplificación deliberada: se usa el logo estático en vez del video +
- * campo de estrellas animado por JS del original — decorativo, se puede
- * sumar después. Las secciones "Especial de temporada" y "Comprar por
+ * El hero animado (video del logo + campo de estrellas con parallax) se
+ * había simplificado a un logo estático en el primer pase — restaurado
+ * tal cual estaba en HeroAnimado.tsx, a pedido explícito del usuario
+ * (2026-08-21). Las secciones "Especial de temporada" y "Comprar por
  * ocasión" están comentadas en el original (sin contenido vigente) y se
  * omiten acá también. "Combos" en la grilla de mundos apunta a /explorar,
  * no a /combos: esos 15 productos nunca se migraron (ver "RECORDATORIO"
  * en el plan) y /combos daría 404.
  */
 import type { Metadata } from 'next';
+import HeroAnimado from './components/HeroAnimado';
 
 export const metadata: Metadata = {
   title: 'Mundo Mágico · Cotillón, decoración y fiestas en Tucumán',
@@ -80,9 +82,7 @@ export default function Home() {
       <link rel="stylesheet" href="/assets/home.css" />
 
       <header className="hero" id="inicio">
-        <div className="hero-logo-static" aria-hidden="true">
-          <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="" width={128} height={128} />
-        </div>
+        <HeroAnimado />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
           <span className="w">Todo</span> <span className="w">para</span> <span className="w">tu</span>{' '}
@@ -97,6 +97,11 @@ export default function Home() {
           <a className="btn btn-primary" href="#mundos">Armá tu pedido</a>
           <a className="btn btn-ghost" href="/explorar">Explorar</a>
         </div>
+
+        <a className="hero-cue" href="#historia">
+          <span>Conocé la historia</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
+        </a>
       </header>
 
       <main>
@@ -162,14 +167,7 @@ export default function Home() {
               <b>¿Casamiento, 15 años o compra por cantidad?</b>
               <small>Te armamos el evento completo. Y si comprás por cantidad o sos mayorista, también tenemos lo tuyo.</small>
             </div>
-            <a
-              className="btn banda-btn"
-              href="https://wa.me/5493813006343?text=%C2%A1Hola%20Mundo%20M%C3%A1gico!%20Quiero%20consultar%20por%20un%20evento%20a%20medida."
-              target="_blank"
-              rel="noopener"
-            >
-              Consultanos →
-            </a>
+            <a className="btn banda-btn" href="/eventos">Ver servicios especiales →</a>
           </div>
         </section>
 
@@ -200,9 +198,7 @@ export default function Home() {
                 <div className="hchip"><b>+1.000</b><span>Productos</span></div>
                 <div className="hchip"><b>Nº&nbsp;1</b><span>En cotillón</span></div>
               </div>
-              {/* "Ver toda nuestra historia" (historia-v2.html) no está migrada
-                  todavía — ver RECORDATORIO en el plan. Sin link roto por
-                  ahora, se suma cuando esa página exista en Next.js. */}
+              <a className="btn btn-ghost" href="/historia">Ver toda nuestra historia →</a>
             </div>
           </div>
         </section>

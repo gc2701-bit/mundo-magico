@@ -167,7 +167,7 @@ function RecuperarForm({ sb, visible, onVolver }: FormProps & { visible: boolean
     setError('');
     setOk('');
     setCargando(true);
-    const redirectTo = window.location.origin + '/recuperar.html';
+    const redirectTo = window.location.origin + '/recuperar';
     const r = await sb.auth.resetPasswordForEmail(em, { redirectTo, captchaToken: tw.token });
     tw.reset();
     setCargando(false);

@@ -2,32 +2,68 @@
  * había quedado como placeholder de Sprint 0 sin reemplazar nunca (bug
  * encontrado en producción real, 2026-08-21 — ver
  * docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md,
- * sección "Corte a producción"). Mismo CSS que index.html, con dos
- * simplificaciones deliberadas para portar esto rápido y sin riesgo:
- *   - Se usa siempre el logo estático (.hero-logo-static), no el video +
- *     campo de estrellas animado por JS del original (parallax, twinkle) —
- *     decorativo, no crítico, se puede sumar después con calma.
- *   - Las animaciones de entrada (wordUp, riseIn) se mantienen vía CSS
- *     puro, sin el JS de detección de mouse.
+ * sección "Corte a producción"). Mismo CSS que index.html, sin recortes —
+ * el hero animado (video + campo de estrellas, HeroAnimado.tsx) se había
+ * simplificado a un logo estático en el primer pase y se restauró tal
+ * cual estaba, a pedido explícito del usuario (2026-08-21).
  */
 
 /* ===================== HERO ===================== */
+/* El video del logo ES el fondo: sus bordes son los de la pantalla,
+   y su blanco se funde con el blanco de la página. */
 .hero{
-  position:relative; min-height:70svh; overflow:hidden;
+  position:relative; min-height:100svh; overflow:hidden;
   display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
   text-align:left; padding:calc(var(--nav-h) + var(--s4)) clamp(var(--s3), 6vw, var(--s10)) var(--s8);
   background:#fff;
 }
 .hero > *{position:relative; z-index:2}
+/* velo inferior: transición suave del blanco del video al crema de la página */
 .hero::after{
   content:''; position:absolute; inset:auto 0 0 0; height:120px; z-index:1; pointer-events:none;
   background:linear-gradient(to bottom, rgba(253,251,245,0), var(--bg));
 }
 
-.hero-logo-static{display:grid; width:152px; height:152px; border-radius:36px; background:#fff;
+/* Campo de estrellas de la marca · 3 capas de profundidad con drift + twinkle */
+.starfield{position:absolute; inset:0; z-index:1; pointer-events:none}
+.star{position:absolute; opacity:0; will-change:transform;
+  animation:starIn .9s var(--ease) both, twinkle 5s var(--ease) 1s infinite}
+.star svg{display:block; filter:drop-shadow(0 4px 8px rgba(28,26,22,.10)); animation:drift 9s ease-in-out infinite}
+.star:nth-child(2n){animation-delay:.15s, 1.4s; animation-duration:.9s, 6.2s}
+.star:nth-child(2n) svg{animation-duration:11s; animation-delay:.8s}
+.star:nth-child(3n){animation-delay:.3s, 2.6s; animation-duration:.9s, 7.4s}
+.star:nth-child(3n) svg{animation-duration:13s; animation-delay:1.6s}
+.star:nth-child(5n){animation-delay:.45s, .7s}
+@keyframes starIn{from{opacity:0; transform:scale(0) rotate(-90deg)}to{opacity:.9; transform:scale(1) rotate(0)}}
+@keyframes twinkle{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){ .star{animation:none; opacity:.6} .star svg{animation:none} }
+
+/* Video del logo animado · ocupa la mitad derecha, contenido (sin recortes):
+   el blanco del video se funde con el blanco del hero, sin bordes visibles. */
+.hero-anim{position:absolute; top:0; bottom:0; left:34%; right:0; z-index:0; animation:animIn 1.4s var(--ease) both}
+.hero-anim video{
+  width:100%; height:100%; object-fit:contain; object-position:60% 50%;
+  display:block; border:0;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+@keyframes animIn{from{opacity:0}to{opacity:1}}
+/* Fallback estático si el usuario prefiere menos movimiento */
+.hero-logo-static{display:none; width:152px; height:152px; border-radius:36px; background:#fff;
   box-shadow:0 24px 48px -16px rgba(28,26,22,.22), 0 4px 12px rgba(28,26,22,.08);
   place-items:center; margin-bottom:var(--s4)}
 .hero-logo-static img{width:128px; height:128px; object-fit:cover; border-radius:28px; display:block}
+@media(prefers-reduced-motion:reduce){
+  .hero-anim{display:none}
+  .hero-logo-static{display:grid}
+}
 
 .hero .eyebrow{margin-bottom:var(--s3); animation:riseIn .7s var(--ease) .25s both}
 .hero h1{
@@ -52,9 +88,24 @@
 @media(prefers-reduced-motion:reduce){
   .hero .eyebrow, .hero h1 .w, .hero-lead, .hero-cta{animation:none}
 }
+.hero-cue{
+  position:absolute; bottom:var(--s3); left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none;
+  color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  transition:color .2s var(--ease);
+}
+.hero-cue:hover{color:var(--green-ink)}
+.hero-cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
 
 @media(max-width:760px){
+  /* En vertical el video vuelve al flujo (arriba, sin recortes raros) */
   .hero{align-items:center; text-align:center; padding-bottom:var(--s9)}
+  .hero-anim{position:relative; inset:auto; width:100vw; margin:0 0 var(--s2)}
+  .hero-anim video{aspect-ratio:4/3; object-fit:cover; object-position:50% 50%; transform:none}
+  /* fundido arriba y abajo para que el video se disuelva en el blanco */
+  .hero-anim::before, .hero-anim::after{content:''; position:absolute; left:0; right:0; height:56px; z-index:1; pointer-events:none}
+  .hero-anim::before{top:0; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0))}
+  .hero-anim::after{bottom:0; background:linear-gradient(to top, #fff, rgba(255,255,255,0))}
   .hero h1{font-size:clamp(31px, 9.5vw, 39px); max-width:16ch}
   .hero-lead{font-size:var(--fs1); margin-bottom:var(--s4); max-width:44ch}
   .hero-cta{width:100%; flex-direction:column; align-items:stretch; max-width:360px; justify-content:center}
