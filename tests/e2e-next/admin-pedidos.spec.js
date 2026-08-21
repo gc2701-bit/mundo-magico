@@ -15,6 +15,6 @@ test('visitante sin sesión ve el gate, nunca el panel', async ({ page }) => {
 
 test('el botón "Iniciar sesión" del gate abre el modal de cuenta real', async ({ page }) => {
   await page.goto('/admin/pedidos');
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.locator('.adm-gate').getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page.locator('.cart-acc').first()).toHaveClass(/is-on/);
 });
