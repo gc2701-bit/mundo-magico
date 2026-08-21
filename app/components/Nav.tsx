@@ -34,7 +34,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           <path d="M3 6h18M3 12h18M3 18h18" />
         </svg>
       </button>
-      <div className="nav-links" id="nav-links" hidden={!abierto}>
+      <div className={"nav-links" + (abierto ? " open" : "")} id="nav-links">
         <Link href="/">Inicio</Link>
         <div className="nav-item has-dropdown">
           <span aria-haspopup="true">Nuestros mundos</span>
