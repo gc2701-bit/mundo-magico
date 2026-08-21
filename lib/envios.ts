@@ -60,6 +60,68 @@ export function nombreCorredor(grupo: string): string {
   return CORREDOR_TXT[grupo] || grupo;
 }
 
+// Vocabulario de estados de pedido — usado por el panel de administración
+// (Sprint 5, Task 5.3) y por el historial de pedidos del cliente
+// (lib/cuenta.ts tiene un subconjunto más chico, sólo lo que el cliente ve).
+export const ESTADOS = [
+  'nuevo', 'confirmado', 'en_preparacion', 'en_transito', 'listo',
+  'en_reparto', 'entregado', 'ausente', 'reprogramado', 'cancelado',
+] as const;
+export type Estado = (typeof ESTADOS)[number];
+
+export const ESTADOS_TXT: Record<string, string> = {
+  nuevo: 'Nuevo',
+  confirmado: 'Confirmado',
+  en_preparacion: 'En preparación',
+  en_transito: 'En viaje a Yerba Buena',
+  listo: 'Listo',
+  en_reparto: 'En reparto',
+  entregado: 'Entregado',
+  ausente: 'No había nadie',
+  reprogramado: 'Reprogramado',
+  cancelado: 'Cancelado',
+};
+
+export const MOTIVOS_AUSENTE = ['nadie_en_domicilio', 'direccion_inexistente', 'cliente_reprogramo', 'zona_inundada', 'vehiculo', 'otro'] as const;
+export const MOTIVOS_AUSENTE_TXT: Record<string, string> = {
+  nadie_en_domicilio: 'No había nadie en el domicilio',
+  direccion_inexistente: 'La dirección no existe o no se encontró',
+  cliente_reprogramo: 'El cliente pidió reprogramar',
+  zona_inundada: 'Zona inundada / no se pudo llegar',
+  vehiculo: 'Problema con el vehículo',
+  otro: 'Otro motivo',
+};
+
+// `en_transito` sólo aplica a un retiro en una sucursal que requiere
+// traslado (hoy, Yerba Buena); `en_reparto` sólo a un envío. `metodo` y
+// `sucursalId` desambiguan esas dos ramas.
+export function siguientes(estado: string, metodo: string | null | undefined, sucursalId: string | null | undefined, sucursales: Sucursal[] = []): string[] {
+  const transferencia = sucursalId ? !!sucursales.find((s) => s.id === sucursalId)?.requiere_transferencia : false;
+  switch (estado) {
+    case 'nuevo': return ['confirmado', 'cancelado'];
+    case 'confirmado': return ['en_preparacion', 'cancelado'];
+    case 'en_preparacion':
+      return metodo === 'retiro' && transferencia ? ['en_transito', 'cancelado'] : ['listo', 'cancelado'];
+    case 'en_transito': return ['listo', 'cancelado'];
+    case 'listo': return metodo === 'envio' ? ['en_reparto', 'cancelado'] : ['entregado', 'cancelado'];
+    case 'en_reparto': return ['entregado', 'ausente', 'cancelado'];
+    case 'ausente': return ['reprogramado', 'cancelado'];
+    case 'reprogramado': return ['listo', 'cancelado'];
+    default: return [];
+  }
+}
+
+// Normaliza un teléfono argentino escrito de cualquier forma al formato que
+// espera wa.me: 549 + característico + número, sin 0 ni 15.
+export function telWa(txt: string | null | undefined): string {
+  let d = String(txt || '').replace(/\D/g, '');
+  d = d.replace(/^54/, '');
+  d = d.replace(/^9/, '');
+  d = d.replace(/^0/, '');
+  d = d.replace(/^(\d{2,4})15/, '$1');
+  return '549' + d;
+}
+
 // Respaldo si Supabase no responde — espeja el seed de envios_01_config.sql.
 export const RESPALDO: DatosEnvios = {
   tarifas: [

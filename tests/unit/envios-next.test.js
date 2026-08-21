@@ -7,6 +7,7 @@ import {
   RESPALDO, plata, zonaPorIdOSlug, tarifaDe, costoDe, franjasDelDia, franjaDelTurno,
   fechaLegible, hoyISO, isodow, sumarDiasISO, horaActualHHMM, mesCorto, distanciaKm,
   permisivo, cargarEnvios, cuposDisponibles, nombreCorredor,
+  ESTADOS, ESTADOS_TXT, MOTIVOS_AUSENTE, MOTIVOS_AUSENTE_TXT, siguientes, telWa,
 } from '../../lib/envios';
 
 describe('funciones puras', () => {
@@ -146,5 +147,57 @@ describe('cuposDisponibles', () => {
     const dias = await cuposDisponibles(sb, '2026-01-05', '2026-01-06', 'z1');
     expect(dias.every((d) => d.motivo !== 'cupo_pedidos')).toBe(true);
     expect(dias).toEqual(permisivo('2026-01-05', '2026-01-06'));
+  });
+});
+
+describe('vocabulario de estados (Sprint 5, Task 5.3)', () => {
+  it('ESTADOS/ESTADOS_TXT cubren los 10 estados de pedidos_estado_check', () => {
+    expect(ESTADOS).toHaveLength(10);
+    ESTADOS.forEach((e) => expect(ESTADOS_TXT[e]).toBeTruthy());
+  });
+
+  it('MOTIVOS_AUSENTE/MOTIVOS_AUSENTE_TXT cubren los 6 motivos del CHECK', () => {
+    expect(MOTIVOS_AUSENTE).toHaveLength(6);
+    MOTIVOS_AUSENTE.forEach((m) => expect(MOTIVOS_AUSENTE_TXT[m]).toBeTruthy());
+  });
+
+  it('telWa arma el formato de wa.me (549 + resto), sacando 54/9/0 y el "15" cuando lo detecta al frente del número', () => {
+    // Mismos casos y mismos resultados que public/assets/envios.js — el
+    // heurístico de "sacar el 15" mira sólo el frente del número sin saber
+    // si esos dígitos son el marcador de celular o parte del número real
+    // (ver el mismo comentario ahí); acá se prueba el comportamiento tal
+    // cual existe hoy en producción, no una versión "corregida".
+    expect(telWa('0381 15 555-5555')).toBe('5493815555555');
+    expect(telWa('+54 9 381 555-5555')).toBe('54938555555');
+    expect(telWa('381 555 5555')).toBe('54938555555');
+    expect(telWa('')).toBe('549');
+    expect(telWa(null)).toBe('549');
+  });
+
+  describe('siguientes', () => {
+    it('nuevo → confirmado o cancelado', () => {
+      expect(siguientes('nuevo', 'retiro', null)).toEqual(['confirmado', 'cancelado']);
+    });
+    it('en_preparacion en retiro normal → listo; en retiro con transferencia → en_transito', () => {
+      const sucursales = [{ id: 's1', nombre: 'Yerba Buena', requiere_transferencia: true }];
+      expect(siguientes('en_preparacion', 'retiro', 's1', sucursales)).toEqual(['en_transito', 'cancelado']);
+      expect(siguientes('en_preparacion', 'retiro', null, sucursales)).toEqual(['listo', 'cancelado']);
+      expect(siguientes('en_preparacion', 'envio', null, sucursales)).toEqual(['listo', 'cancelado']);
+    });
+    it('listo en envío → en_reparto; en retiro → entregado', () => {
+      expect(siguientes('listo', 'envio', null)).toEqual(['en_reparto', 'cancelado']);
+      expect(siguientes('listo', 'retiro', null)).toEqual(['entregado', 'cancelado']);
+    });
+    it('en_reparto → entregado, ausente o cancelado', () => {
+      expect(siguientes('en_reparto', 'envio', null)).toEqual(['entregado', 'ausente', 'cancelado']);
+    });
+    it('ausente → reprogramado o cancelado; reprogramado → listo o cancelado', () => {
+      expect(siguientes('ausente', 'envio', null)).toEqual(['reprogramado', 'cancelado']);
+      expect(siguientes('reprogramado', 'envio', null)).toEqual(['listo', 'cancelado']);
+    });
+    it('estado terminal (entregado/cancelado) no tiene siguientes', () => {
+      expect(siguientes('entregado', 'envio', null)).toEqual([]);
+      expect(siguientes('cancelado', 'envio', null)).toEqual([]);
+    });
   });
 });
