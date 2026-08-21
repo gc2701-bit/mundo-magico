@@ -72,9 +72,7 @@ describe('B4 — _headers: Cache-Control para assets estáticos', () => {
   // hash, así que el test verifica eso — no un max-age largo, que sí
   // rompería el sitio en el próximo deploy sin hash de por medio.
   it('assets/, productos/ y Logo/ tienen Cache-Control con stale-while-revalidate, sin max-age largo', () => {
-    // _headers vive en public/ desde la migración a Next.js (Netlify lo
-    // mueve a .next/ en el build) — ver netlify.toml.
-    const headers = readHtml('public/_headers');
+    const headers = readHtml('_headers');
     for (const prefix of ['/assets/*', '/productos/*', '/Logo/*']) {
       const bloque = headers.split(prefix + '\n')[1];
       expect(bloque, prefix + ' debería existir en _headers').toBeTruthy();

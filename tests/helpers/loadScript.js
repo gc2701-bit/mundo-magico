@@ -16,21 +16,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
 
-// assets/ (y Logo/, productos/, "Header categories/") viven físicamente
-// bajo public/ desde el Sprint 2 de la migración a Next.js (ver
-// docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md) —
-// Eleventy y Next los sirven en la misma URL de siempre, así que los
-// tests siguen pidiendo 'assets/x.js' tal cual, sin tocar cada call site;
-// solo este helper sabe dónde vive de verdad el archivo en disco.
-function resolverRuta(relPath) {
-  if (relPath === 'assets' || relPath.startsWith('assets/')) {
-    return path.join(ROOT, 'public', relPath);
-  }
-  return path.join(ROOT, relPath);
-}
-
 export function loadScript(relPath) {
-  const full = resolverRuta(relPath);
+  const full = path.join(ROOT, relPath);
   const code = fs.readFileSync(full, 'utf8');
   // Mismo scope global que un <script> clásico: `window`, `document`,
   // `sessionStorage`, `localStorage`, etc. ya están en el global de jsdom
@@ -41,7 +28,7 @@ export function loadScript(relPath) {
 }
 
 export function readAsset(relPath) {
-  return fs.readFileSync(resolverRuta(relPath), 'utf8');
+  return fs.readFileSync(path.join(ROOT, relPath), 'utf8');
 }
 
 export function readHtml(relPath) {
