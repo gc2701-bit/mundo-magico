@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import { obtenerCatalogoPublico } from "@/lib/catalogo-server";
-import { familiasDisponibles } from "@/lib/catalogo-familia";
+import { mundosDisponibles } from "@/lib/catalogo-mundo";
 import { CuentaProvider } from "./components/cuenta/CuentaProvider";
 import CuentaOverlays from "./components/cuenta/CuentaOverlays";
 import { CarritoProvider } from "./components/carrito/CarritoProvider";
@@ -16,9 +16,12 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Un solo fetch de catalogo_publico() para todo el layout — Next dedupea
   // automáticamente el mismo fetch (misma URL/opciones) si una página hija
-  // (ej. app/[familia]/page.tsx) lo vuelve a pedir en el mismo render.
+  // (ej. app/[mundo]/page.tsx) lo vuelve a pedir en el mismo render.
   const catalogo = await obtenerCatalogoPublico();
-  const familias = familiasDisponibles(catalogo.productos);
+  const slugsConProductos = new Set(mundosDisponibles(catalogo.productos));
+  const mundos = catalogo.mundos
+    .filter((m) => slugsConProductos.has(m.slug))
+    .sort((a, b) => a.orden - b.orden);
 
   return (
     <html lang="es">
@@ -39,9 +42,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CuentaProvider>
           <CarritoProvider>
-            <Nav familias={familias} />
+            <Nav mundos={mundos} />
             {children}
-            <Footer familias={familias} />
+            <Footer mundos={mundos} />
             <CuentaOverlays />
           </CarritoProvider>
         </CuentaProvider>

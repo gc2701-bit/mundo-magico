@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
+import { slugifyMundo } from '@/lib/catalogo-mundo';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -17,10 +18,11 @@ type FilaEspejo = {
 
 /**
  * Pestaña "Sin activar" — códigos que ya llegaron del worker de Búho pero
- * todavía no tienen producto propio en el catálogo. Con familias
- * reemplazando mundos, activar ya no pide elegir dónde va: la familia la
- * manda Búho directo (fila.familia) — sólo falta la foto, que Búho no
- * trae. Filtro por Familia en esta lista queda fuera de esta tanda (ver
+ * todavía no tienen producto propio en el catálogo. La familia la manda
+ * Búho directo (fila.familia, dato interno desde Sprint 5.5) — pero el
+ * mundo (categorización pública) nadie lo manda automático, así que
+ * activar SÍ pide elegirlo (ver plan, Sprint 5.5, Task 5.5.6). Filtro por
+ * Familia en esta lista queda fuera de esta tanda (ver
  * docs/superpowers/plans/2026-08-20-catalogo-admin-huerfanos.md, Task 3).
  */
 export default function EspejoTab() {
@@ -117,6 +119,17 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
   const [subiendo, setSubiendo] = useState(false);
   const [activando, setActivando] = useState(false);
   const [error, setError] = useState('');
+  const [mundos, setMundos] = useState<{ slug: string; nombre: string }[]>([]);
+  const [mundo, setMundo] = useState('');
+  const [mundoNuevo, setMundoNuevo] = useState('');
+
+  useEffect(() => {
+    supabaseBrowser()
+      .from('catalogo_mundos')
+      .select('slug, nombre')
+      .order('orden')
+      .then(({ data }) => setMundos(data || []));
+  }, []);
 
   async function agregarFoto(file: File) {
     setSubiendo(true);
@@ -138,6 +151,12 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
       setError('Subí al menos una foto antes de activar.');
       return;
     }
+    const mundoNuevoTrim = mundoNuevo.trim();
+    const mundoFinal = mundoNuevoTrim ? slugifyMundo(mundoNuevoTrim) : mundo;
+    if (!mundoFinal) {
+      setError('Elegí a qué mundo pertenece antes de activar.');
+      return;
+    }
     setActivando(true);
     setError('');
     try {
@@ -149,11 +168,19 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
 
+      if (mundoNuevoTrim) {
+        const { error: errMundo } = await sb
+          .from('catalogo_mundos')
+          .insert({ slug: mundoFinal, nombre: mundoNuevoTrim, orden: mundos.length + 1 });
+        if (errMundo) throw errMundo;
+      }
+
       const { error: err1 } = await sb.from('catalogo_productos').insert({
         titulo: fila.nombre,
         slug: slugTitulo,
         codigo: fila.codigo,
         familia: fila.familia,
+        mundo: mundoFinal,
         fotos,
         publicado: true
       });
@@ -211,6 +238,23 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
               e.target.value = '';
             }}
           />
+        </label>
+      </div>
+      <div className="adm-detalle-campo">
+        <label>
+          Mundo (obligatorio para activar)
+          <select value={mundo} onChange={(e) => { setMundo(e.target.value); setMundoNuevo(''); }}>
+            <option value="">— elegir mundo —</option>
+            {mundos.map((m) => (
+              <option key={m.slug} value={m.slug}>
+                {m.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          o escribir uno nuevo
+          <input type="text" value={mundoNuevo} onChange={(e) => setMundoNuevo(e.target.value)} placeholder="Nombre de mundo nuevo" />
         </label>
       </div>
 

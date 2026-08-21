@@ -12,7 +12,7 @@
 const { test, expect } = require('@playwright/test');
 
 test('agregar un producto simple lo suma al contador del header y al panel', async ({ page }) => {
-  await page.goto('/luminosos');
+  await page.goto('/globos-fiesta');
   const tarjeta = page.locator('a.pcard[data-codigo]').first();
   const titulo = await tarjeta.locator('h3').textContent();
 
@@ -26,7 +26,7 @@ test('agregar un producto simple lo suma al contador del header y al panel', asy
 });
 
 test('el − N + del panel ajusta la cantidad y "Quitar" saca el renglón', async ({ page }) => {
-  await page.goto('/luminosos');
+  await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
   await page.locator('.cart-nav').click();
 
@@ -41,7 +41,7 @@ test('el − N + del panel ajusta la cantidad y "Quitar" saca el renglón', asyn
 });
 
 test('el corazón de favoritos se prende y el producto aparece en "Mis favoritos"', async ({ page }) => {
-  await page.goto('/luminosos');
+  await page.goto('/globos-fiesta');
   const tarjeta = page.locator('a.pcard[data-codigo]').first();
   const titulo = await tarjeta.locator('h3').textContent();
 
@@ -53,7 +53,7 @@ test('el corazón de favoritos se prende y el producto aparece en "Mis favoritos
 });
 
 test('elegir método de entrega antes de mandar: sin elegir nada, no se puede seguir', async ({ page }) => {
-  await page.goto('/luminosos');
+  await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
   await page.locator('.cart-nav').click();
 
@@ -67,7 +67,7 @@ test('elegir método de entrega antes de mandar: sin elegir nada, no se puede se
 });
 
 test('elegir "Envío a domicilio" muestra los campos de dirección y zona', async ({ page }) => {
-  await page.goto('/luminosos');
+  await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
   await page.locator('.cart-nav').click();
 

@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { slugifyFamilia } from "@/lib/catalogo-familia";
+import type { Mundo } from "@/lib/catalogo-server";
 import CuentaNavButton from "./cuenta/CuentaNavButton";
 import CarritoNavButton from "./carrito/CarritoNavButton";
 
 /**
  * Porteo de _includes/nav.njk (Eleventy). El dropdown "Nuestros mundos" del
- * sitio viejo listaba las 7 páginas de mundo hardcodeadas — con la
- * migración a familias (ver docs/superpowers/specs/2026-08-20-nextjs-migracion-familias-design.md,
- * sección 4) ese listado es dinámico: `familias` llega como prop desde
+ * sitio viejo listaba las 7 páginas de mundo hardcodeadas — desde
+ * Sprint 5.5 sigue siendo "mundo" (no familia), pero dinámico y
+ * extensible desde el panel admin: `mundos` llega como prop desde
  * app/layout.tsx (Server Component, ya resolvió el catálogo una vez para
  * toda la página — Next dedupea el fetch, no se repite por componente).
  */
-export default function Nav({ familias }: { familias: string[] }) {
+export default function Nav({ mundos }: { mundos: Mundo[] }) {
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -39,9 +39,9 @@ export default function Nav({ familias }: { familias: string[] }) {
         <div className="nav-item has-dropdown">
           <span aria-haspopup="true">Nuestros mundos</span>
           <div className="nav-dropdown" role="menu">
-            {familias.map((familia) => (
-              <Link key={familia} href={'/' + slugifyFamilia(familia)} role="menuitem">
-                {familia}
+            {mundos.map((mundo) => (
+              <Link key={mundo.slug} href={'/' + mundo.slug} role="menuitem">
+                {mundo.nombre}
               </Link>
             ))}
           </div>

@@ -2,7 +2,7 @@ import type { ProductoPublico } from './catalogo-familia';
 
 /**
  * Lectura del catálogo para páginas de servidor (ISR) — SOLO se importa
- * desde Server Components (app/[familia]/page.tsx, etc.), nunca desde
+ * desde Server Components (app/[mundo]/page.tsx, etc.), nunca desde
  * componentes cliente. Pega directo al RPC catalogo_publico() (mismo RPC
  * que ya usa el sitio viejo, assets/catalogo.js) vía fetch en vez de
  * @supabase/supabase-js: así se puede pasar `next: { tags }` para que
@@ -17,9 +17,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Q-M5uG2ChZIg0c1zPfNXiQ_unIG1hZ8';
 
 export const CATALOGO_TAG = 'catalogo';
 
+export type Mundo = { slug: string; nombre: string; orden: number };
+
 export type CatalogoPublico = {
   v: number;
   productos: ProductoPublico[];
+  mundos: Mundo[];
 };
 
 export async function obtenerCatalogoPublico(): Promise<CatalogoPublico> {

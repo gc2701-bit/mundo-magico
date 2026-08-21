@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useCarrito } from './CarritoProvider';
 import { cargarFavoritos, guardarFavoritos, toggleFavorito, claveFavorito } from '@/lib/favoritos';
-import { slugifyFamilia, type ProductoPublico } from '@/lib/catalogo-familia';
+import type { ProductoPublico } from '@/lib/catalogo-familia';
 
 /**
  * Botón "Agregar al pedido" + corazón de favoritos de una tarjeta — puerto
@@ -35,7 +35,7 @@ export function FavoritoBoton({ producto }: { producto: ProductoPublico }) {
     const siguiente = toggleFavorito(favoritos, claveFav, {
       title: producto.titulo,
       img: '/' + (producto.fotos[0]?.src || ''),
-      url: producto.familia ? '/' + slugifyFamilia(producto.familia) : '/explorar',
+      url: producto.mundo ? '/' + producto.mundo : '/explorar',
     });
     guardarFavoritos(siguiente);
     setFavorito(!!siguiente[claveFav]);

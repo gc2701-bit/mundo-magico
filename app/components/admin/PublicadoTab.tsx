@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { slugifyMundo } from '@/lib/catalogo-mundo';
 import {
   validarCodigo,
   codigoNormalizado,
@@ -20,6 +21,7 @@ const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS',
 
 export default function PublicadoTab() {
   const [productos, setProductos] = useState<ProductoAdmin[]>([]);
+  const [mundos, setMundos] = useState<{ slug: string; nombre: string }[]>([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [soloSinFamilia, setSoloSinFamilia] = useState(false);
@@ -27,6 +29,11 @@ export default function PublicadoTab() {
 
   useEffect(() => {
     cargar();
+    supabaseBrowser()
+      .from('catalogo_mundos')
+      .select('slug, nombre')
+      .order('orden')
+      .then(({ data }) => setMundos(data || []));
   }, []);
 
   async function cargar() {
@@ -34,7 +41,7 @@ export default function PublicadoTab() {
     const sb = supabaseBrowser();
     const { data, error } = await sb
       .from('catalogo_productos')
-      .select('id, titulo, slug, codigo, specs, descripcion, tags, talles, fotos, familia, publicado, pagina, subcategoriaId:subcategoria_id, orden')
+      .select('id, titulo, slug, codigo, specs, descripcion, tags, talles, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden')
       .order('titulo');
     if (!error && data) setProductos(data as ProductoAdmin[]);
     setCargando(false);
@@ -69,6 +76,7 @@ export default function PublicadoTab() {
       <DetalleProducto
         producto={seleccionado}
         familiasConocidas={familias}
+        mundosConocidos={mundos}
         todos={productos}
         onVolver={() => setSeleccionado(null)}
         onActualizado={actualizarLocal}
@@ -97,6 +105,7 @@ export default function PublicadoTab() {
           <tr>
             <th>Código</th>
             <th>Título</th>
+            <th>Mundo</th>
             <th>Familia</th>
             <th>Estado</th>
             <th></th>
@@ -105,7 +114,7 @@ export default function PublicadoTab() {
         <tbody>
           {visibles.length === 0 ? (
             <tr>
-              <td colSpan={5} className="adm-detalle-solo-lectura">
+              <td colSpan={6} className="adm-detalle-solo-lectura">
                 No hay artículos que coincidan.
               </td>
             </tr>
@@ -114,6 +123,7 @@ export default function PublicadoTab() {
               <tr key={p.id}>
                 <td>{p.codigo || '—'}</td>
                 <td>{p.titulo}</td>
+                <td>{mundos.find((m) => m.slug === p.mundo)?.nombre || p.mundo}</td>
                 <td>{p.familia || <span className="adm-badge-sin-stock">sin familia</span>}</td>
                 <td>{p.publicado ? 'Visible' : 'Oculto'}</td>
                 <td>
@@ -133,6 +143,7 @@ export default function PublicadoTab() {
 function DetalleProducto({
   producto,
   familiasConocidas,
+  mundosConocidos,
   todos,
   onVolver,
   onActualizado,
@@ -140,6 +151,7 @@ function DetalleProducto({
 }: {
   producto: ProductoAdmin;
   familiasConocidas: string[];
+  mundosConocidos: { slug: string; nombre: string }[];
   todos: ProductoAdmin[];
   onVolver: () => void;
   onActualizado: (id: string, campos: Partial<ProductoAdmin>) => void;
@@ -151,6 +163,8 @@ function DetalleProducto({
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null);
   const [familia, setFamilia] = useState(producto.familia || '');
   const [familiaNueva, setFamiliaNueva] = useState('');
+  const [mundo, setMundo] = useState(producto.mundo);
+  const [mundoNuevo, setMundoNuevo] = useState('');
   const [fotos, setFotos] = useState(producto.fotos || []);
   const [guardando, setGuardando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
@@ -170,17 +184,34 @@ function DetalleProducto({
       setErrorCodigo(err);
       return;
     }
+    const mundoNuevoTrim = mundoNuevo.trim();
+    const mundoFinal = mundoNuevoTrim ? slugifyMundo(mundoNuevoTrim) : mundo;
+    if (!mundoFinal) {
+      setError('Elegí a qué mundo pertenece antes de guardar.');
+      return;
+    }
     setGuardando(true);
     setError('');
+    const sb = supabaseBrowser();
+    if (mundoNuevoTrim) {
+      const { error: errMundo } = await sb
+        .from('catalogo_mundos')
+        .insert({ slug: mundoFinal, nombre: mundoNuevoTrim, orden: mundosConocidos.length + 1 });
+      if (errMundo) {
+        setGuardando(false);
+        setError(errMundo.message);
+        return;
+      }
+    }
     const familiaFinal = familiaNueva.trim() || familia || null;
     const campos = {
       titulo: titulo.trim(),
       descripcion: descripcion.trim() || null,
       codigo: esTalles ? producto.codigo : codigoNormalizado(codigo),
       familia: familiaFinal,
+      mundo: mundoFinal,
       fotos
     };
-    const sb = supabaseBrowser();
     const { error: err2 } = await sb.from('catalogo_productos').update(campos).eq('id', producto.id);
     setGuardando(false);
     if (err2) {
@@ -307,7 +338,23 @@ function DetalleProducto({
         </div>
         <div className="adm-detalle-campo">
           <label>
-            Familia
+            Mundo (categorización pública, obligatorio)
+            <select value={mundo} onChange={(e) => { setMundo(e.target.value); setMundoNuevo(''); }}>
+              {mundosConocidos.map((m) => (
+                <option key={m.slug} value={m.slug}>
+                  {m.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            o escribir uno nuevo
+            <input type="text" value={mundoNuevo} onChange={(e) => setMundoNuevo(e.target.value)} placeholder="Nombre de mundo nuevo" />
+          </label>
+        </div>
+        <div className="adm-detalle-campo">
+          <label>
+            Familia (dato interno, sólo referencia — lo manda Búho)
             <select value={familia} onChange={(e) => { setFamilia(e.target.value); setFamiliaNueva(''); }}>
               <option value="">— sin familia —</option>
               {familiasConocidas.map((f) => (
