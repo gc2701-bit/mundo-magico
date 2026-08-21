@@ -1,9 +1,17 @@
 # Migración a Next.js (ver docs/superpowers/specs/2026-08-20-nextjs-migracion-familias-design.md,
-# fuera de este repo). Netlify detecta Next.js automáticamente vía su
-# adapter de código abierto (OpenNext) — no hace falta declarar el plugin a
-# mano, y la doc de Netlify recomienda explícitamente NO pinear su versión
-# (se actualiza solo en cada build). `publish = ".next"` es la convención
-# que espera ese adapter.
+# fuera de este repo). `publish = ".next"` es la convención que espera el
+# Next Runtime de Netlify (@netlify/plugin-nextjs, adapter OpenNext).
+#
+# `[[plugins]]` de abajo se declara A MANO a propósito — la doc de Netlify
+# dice que la autodetección alcanza sola, pero en el primer intento de
+# deploy real de esta migración (2026-08-21) el sitio quedó marcado como
+# framework "eleventy" (quedó fijado así desde que se creó el sitio, y/o
+# porque este repo todavía tiene eleventy.config.js conviviendo con Next
+# hasta el Sprint 7) y NUNCA inyectó el runtime — `next build` corrió pero
+# `.next/` se publicó tal cual, sin adaptador, y el sitio dio 404 en todas
+# las rutas. Declarar el plugin explícito lo fuerza sin importar qué
+# framework haya detectado el dashboard. Sin pinear versión (recomendación
+# de Netlify: se actualiza sola en cada build).
 #
 # `_headers`/`_redirects` viven ahora en `public/` (Next los mueve a `.next`
 # en el build) — antes vivían en la raíz porque Eleventy los pasaba con
@@ -16,3 +24,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
