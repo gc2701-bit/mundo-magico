@@ -1,0 +1,16 @@
+# Alias legacy de antes de esta migración — apuntan directo al slug final
+# de mundo (evita encadenar dos 301 vía la página -v2.html intermedia).
+/cotillon-v2.html /globos-fiesta 301
+/para-lucir-v2.html /disfraces 301
+/mesa-v2.html /decoracion 301
+
+# Sprint 5.5: las 7 páginas de mundo del sitio Eleventy viejo pasan a
+# /[mundo] en Next.js — mismos slugs que ya usaba catalogo_mundos (ver
+# migración catalogo_09_mundos), sin ambigüedad.
+/globos-fiesta-v2.html /globos-fiesta 301
+/cumpleanos-v2.html /cumpleanos 301
+/decoracion-v2.html /decoracion 301
+/disfraces-v2.html /disfraces 301
+/reposteria-v2.html /reposteria 301
+/combos-v2.html /combos 301
+/especiales-v2.html /especiales 301

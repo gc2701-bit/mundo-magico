@@ -7,13 +7,17 @@
     "doc": "docs"
   },
   "scripts": {
-    "build": "eleventy",
-    "build:watch": "eleventy --serve",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "build:eleventy": "eleventy",
+    "build:eleventy:watch": "eleventy --serve",
     "test": "npm run test:unit",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:next": "playwright test --config=playwright.next.config.js"
   },
   "repository": {
     "type": "git",
@@ -22,7 +26,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/gc2701-bit/mundo-magico/issues"
   },
@@ -30,7 +33,17 @@
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
     "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "next": "^16.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   }
 }
