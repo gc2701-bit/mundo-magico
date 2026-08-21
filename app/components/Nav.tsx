@@ -1,21 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { Mundo } from "@/lib/catalogo-server";
 import CuentaNavButton from "./cuenta/CuentaNavButton";
 import CarritoNavButton from "./carrito/CarritoNavButton";
 
 /**
- * Porteo de _includes/nav.njk (Eleventy). El dropdown "Nuestros mundos" del
- * sitio viejo listaba las 7 páginas de mundo hardcodeadas — desde
- * Sprint 5.5 sigue siendo "mundo" (no familia), pero dinámico y
- * extensible desde el panel admin: `mundos` llega como prop desde
- * app/layout.tsx (Server Component, ya resolvió el catálogo una vez para
- * toda la página — Next dedupea el fetch, no se repite por componente).
+ * Porteo de _includes/nav.njk (Eleventy). Restaurado a fidelidad completa
+ * con el original a pedido explícito del usuario (2026-08-21) — un primer
+ * pase había simplificado el link "Inicio/Historia" (siempre "Inicio") y
+ * el dropdown de mundos (lista plana, sin los puntos de color ni el label
+ * "Mundos" que tenía nav.njk).
+ *
+ * "Inicio" vs "Historia": el original lo decidía por `navVariant` en el
+ * front matter de cada página Nunjucks — acá se resuelve con el pathname
+ * actual, mismo criterio (en el home no tiene sentido un link a "Inicio").
+ *
+ * Colores del dropdown: nav.njk los tenía hardcodeados para los 6 mundos
+ * de siempre. Desde Sprint 5.5 los mundos son extensibles desde el panel
+ * admin — se guarda el mismo color por slug para los 6 originales, y un
+ * gris neutro de respaldo para cualquier mundo nuevo que se cree después
+ * (no había un color "correcto" que inventarle, y no se pidió crear uno).
  */
+const COLOR_MUNDO: Record<string, string> = {
+  "globos-fiesta": "#2f63cf",
+  cumpleanos: "#e23b30",
+  disfraces: "#a23e8c",
+  reposteria: "#ec6a9c",
+  decoracion: "#6f9e5b",
+  combos: "#f0913a",
+};
+const COLOR_MUNDO_DEFAULT = "#9a938a";
+
 export default function Nav({ mundos }: { mundos: Mundo[] }) {
   const [abierto, setAbierto] = useState(false);
+  const pathname = usePathname();
+  const enHome = pathname === "/";
+  const enHistoria = pathname === "/historia";
 
   return (
     <nav className="nav" id="nav">
@@ -35,12 +58,23 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
         </svg>
       </button>
       <div className={"nav-links" + (abierto ? " open" : "")} id="nav-links">
-        <Link href="/">Inicio</Link>
+        {enHome ? (
+          <a href="#historia">Historia</a>
+        ) : enHistoria ? (
+          <>
+            <Link href="/">Inicio</Link>
+            <Link href="/historia" aria-current="page">Historia</Link>
+          </>
+        ) : (
+          <Link href="/">Inicio</Link>
+        )}
         <div className="nav-item has-dropdown">
           <span aria-haspopup="true">Nuestros mundos</span>
           <div className="nav-dropdown" role="menu">
+            <span className="nd-label">Mundos</span>
             {mundos.map((mundo) => (
               <Link key={mundo.slug} href={'/' + mundo.slug} role="menuitem">
+                <span className="nd-dot" style={{ background: COLOR_MUNDO[mundo.slug] || COLOR_MUNDO_DEFAULT }} />
                 {mundo.nombre}
               </Link>
             ))}
