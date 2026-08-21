@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { slugifyFamilia } from "@/lib/catalogo-familia";
+import CuentaNavButton from "./cuenta/CuentaNavButton";
 
 /**
  * Porteo de _includes/nav.njk (Eleventy). El dropdown "Nuestros mundos" del
@@ -49,6 +50,7 @@ export default function Nav({ familias }: { familias: string[] }) {
         <a href="/#visitanos">Visitanos</a>
         <a href="/#contacto">Contacto</a>
       </div>
+      <CuentaNavButton />
     </nav>
   );
 }
