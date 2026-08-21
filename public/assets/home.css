@@ -288,6 +288,22 @@
 .res-author small{display:block; font-size:12px; color:var(--muted)}
 @media(prefers-reduced-motion:reduce){ .res-card:hover{transform:none} }
 
+/* ===================== BANDA · SERVICIOS ESPECIALES =====================
+ * Sección completa que faltaba en el primer pase (se portó el HTML pero
+ * no este bloque de CSS) — encontrado por el usuario en producción: sin
+ * esto, el ícono de anillos (dos <circle> del SVG) renderiza al tamaño
+ * por default del navegador, con fill sólido en vez de sólo el trazo. */
+.banda-especial{padding:var(--s4) 0; background:linear-gradient(100deg,#c39b3f 0%,#e6cf8f 26%,#faf5e6 50%,#e6cf8f 74%,#c39b3f 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.banda-inner{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.banda-ic{width:56px; height:56px; flex:none; border-radius:18px; background:#fff; display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.banda-ic svg{width:30px; height:30px; stroke:#9a7524; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.banda-txt{flex:1 1 320px; min-width:0}
+.banda-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:#5f4a12}
+.banda-txt small{display:block; font-size:15px; color:#7a621f; margin-top:2px}
+.banda-btn{background:#5f4a12; color:#fff; box-shadow:0 12px 24px -10px rgba(95,74,18,.5)}
+.banda-btn:hover{background:#9a7524; color:#fff; transform:translateY(-2px)}
+@media(max-width:640px){ .banda-inner{flex-direction:column; align-items:flex-start} .banda-txt{flex:0 1 auto} }
+
 /* ===================== CONTACTO ===================== */
 .contacto{padding:58px 0; background:var(--bg); border-top:1px solid var(--line)}
 .contacto .head{text-align:center; max-width:640px; margin:0 auto 22px}

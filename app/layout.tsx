@@ -26,6 +26,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="es">
       <head>
+        {/* Preload de las fuentes autoalojadas (Fraunces/Nunito Sans) — cada
+            página del sitio viejo lo tenía en el <head>. v2.css las carga
+            con font-display:optional (corta al fallback si no llegan a
+            tiempo, sin reintentar más tarde) — sin este preload el
+            navegador las descubre recién al parsear el CSS, mucho más
+            tarde, y el texto puede quedar en la fuente de reemplazo
+            (Georgia/system-ui) para toda la carga. Encontrado en
+            producción real, 2026-08-21. */}
+        <link rel="preload" href="/assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* v2.css vive ahora en public/assets (Sprint 2, ver plan) — mismo
             hoja de estilos que ya usa el sitio viejo, servida en la misma
             URL. No se reescribe el diseño de cero para esta migración. */}
