@@ -5,10 +5,10 @@ node_modules_broken_win/
 _site/
 _archive/
 tests/
+productos/
+assets/
+Logo/
+Header categories/
 docs/
 plantilla-precios/
 supabase/
-.next/
-app/
-public/
-lib/
