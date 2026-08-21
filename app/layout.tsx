@@ -5,6 +5,7 @@ import { obtenerCatalogoPublico } from "@/lib/catalogo-server";
 import { familiasDisponibles } from "@/lib/catalogo-familia";
 import { CuentaProvider } from "./components/cuenta/CuentaProvider";
 import CuentaOverlays from "./components/cuenta/CuentaOverlays";
+import { CarritoProvider } from "./components/carrito/CarritoProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,10 +38,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <CuentaProvider>
-          <Nav familias={familias} />
-          {children}
-          <Footer familias={familias} />
-          <CuentaOverlays />
+          <CarritoProvider>
+            <Nav familias={familias} />
+            {children}
+            <Footer familias={familias} />
+            <CuentaOverlays />
+          </CarritoProvider>
         </CuentaProvider>
       </body>
     </html>

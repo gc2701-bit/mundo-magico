@@ -1,9 +1,12 @@
 import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
 
 /**
- * Tarjeta de producto — Server Component. Sin interactividad propia
- * (carrito llega en Sprint 5); el precio se hidrata después, client-side,
- * vía CatalogoPrecios.tsx (Task 2.3) usando los data-attributes de acá.
+ * Tarjeta de producto — Server Component. El precio se hidrata después,
+ * client-side, vía CatalogoPrecios.tsx (Task 2.3) usando los
+ * data-attributes de acá; el carrito/favoritos (Task 5.2) se hidratan del
+ * mismo modo con FavoritoBoton/AgregarControl, dos client components chicos
+ * en vez de toda la tarjeta.
  *
  * Reusa exactamente las clases de public/assets/v2.css (.pcard, .pgrid,
  * .pcard-ph, .pcard-body, .specs, .pricetag) — mismo diseño visual que el
@@ -47,6 +50,7 @@ export default function ProductoCard({ producto }: { producto: ProductoPublico }
           />
         )}
         <span className="pricetag" />
+        <FavoritoBoton producto={producto} />
       </div>
       <div className="pcard-body">
         <h3>{producto.titulo}</h3>
@@ -57,6 +61,7 @@ export default function ProductoCard({ producto }: { producto: ProductoPublico }
             ))}
           </ul>
         )}
+        <AgregarControl producto={producto} />
       </div>
     </a>
   );
