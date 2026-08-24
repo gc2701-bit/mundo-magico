@@ -9,6 +9,7 @@
  * lib/catalogo-cliente.ts (Client Component).
  */
 import type { ProductoPublico } from './catalogo-familia';
+import { plata } from './envios';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -55,4 +56,35 @@ export function resolverEstadoProducto(
   const algunaPoca = codigos.some((c) => !!pocasUnidades[c]);
 
   return { texto, sinStock: todosSinStock, pocasUnidades: !todosSinStock && algunaPoca };
+}
+
+/**
+ * Badge/precio de oferta (Sprint 3 del rediseño de frontend, ver
+ * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md) —
+ * función aparte de resolverEstadoProducto() a propósito: no toca su
+ * contrato (usado en varios lugares, con tests que hacen toEqual estricto
+ * sobre la forma exacta del objeto) y es un concern genuinamente
+ * distinto — precio_oferta no depende de stock/talles.
+ *
+ * Sólo hay oferta real si el precio de oferta es MENOR al precio real ya
+ * resuelto (nunca inventa una oferta con datos incompletos/inconsistentes
+ * cargados mal desde el panel admin).
+ */
+export type EstadoOferta = {
+  enOferta: boolean;
+  precioAntes: string | null;
+  precioAhora: string | null;
+  porcentajeOff: number | null;
+};
+
+export function resolverOferta(precioReal: number | null, precioOferta: number | null | undefined): EstadoOferta {
+  if (precioReal == null || precioOferta == null || precioOferta >= precioReal) {
+    return { enOferta: false, precioAntes: null, precioAhora: null, porcentajeOff: null };
+  }
+  return {
+    enOferta: true,
+    precioAntes: plata(precioReal),
+    precioAhora: plata(precioOferta),
+    porcentajeOff: Math.round((1 - precioOferta / precioReal) * 100)
+  };
 }

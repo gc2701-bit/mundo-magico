@@ -7,6 +7,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { fraunces } from "../fonts";
+import Breadcrumbs from "../components/Breadcrumbs";
+import { GrillaSkeleton } from "../components/ProductoCardSkeleton";
+import EmptyState from "../components/EmptyState";
 
 /**
  * Página interna de verificación de los tokens de diseño (Sprint 0 del
@@ -75,6 +78,48 @@ export default function DesignPreviewPage() {
             Ficha técnica de ejemplo, en Fraunces itálica cuando corresponda.
           </CardContent>
         </Card>
+      </section>
+
+      <section className="mt-s5">
+        <h2 className="font-display text-fs2 text-ink">Breadcrumbs (Sprint 3)</h2>
+        <div className="mt-s2">
+          <Breadcrumbs
+            items={[
+              { label: "Inicio", href: "/" },
+              { label: "Cotillón", href: "/globos-fiesta" },
+              { label: "Anteojos" },
+            ]}
+          />
+        </div>
+      </section>
+
+      <section className="mt-s5">
+        <h2 className="font-display text-fs2 text-ink">Skeleton de carga (Sprint 3)</h2>
+        <div className="mt-s2">
+          <GrillaSkeleton n={4} />
+        </div>
+      </section>
+
+      <section className="mt-s5">
+        <h2 className="font-display text-fs2 text-ink">Estados vacíos (Sprint 3)</h2>
+        <div className="mt-s2 grid gap-s3 md:grid-cols-3">
+          <EmptyState
+            icono="🔍"
+            titulo='No encontramos nada para "sombrero rosa xl"'
+            descripcion="Probá con otra palabra"
+          />
+          <EmptyState
+            icono="🎃"
+            titulo="Halloween está por venir"
+            descripcion="Todavía no cargamos productos acá"
+            accion={{ label: "Ver otros mundos", href: "/explorar" }}
+          />
+          <EmptyState
+            icono="🛒"
+            titulo="Tu carrito está vacío"
+            accion={{ label: "Ver los mundos", href: "/explorar" }}
+          />
+        </div>
       </section>
     </main>
   );

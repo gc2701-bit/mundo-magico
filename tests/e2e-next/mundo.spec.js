@@ -14,8 +14,12 @@ test('una página de mundo sirve HTML estático con productos y el precio se hid
   // inyectado después de un fetch.
   const res = await page.goto('/globos-fiesta');
   const htmlCrudo = await res.text();
-  expect(htmlCrudo).toContain('<h3>');
-  expect(htmlCrudo).toMatch(/class="pcard"/);
+  // Sin el "=" ni el nombre exacto de la clase: desde Sprint 3 el <h3> y
+  // el <a> de la card llevan varias clases de Tailwind además de
+  // pcard/font-semibold — lo que importa acá es que el tag exista con
+  // contenido real, no la lista exacta de clases.
+  expect(htmlCrudo).toContain('<h3');
+  expect(htmlCrudo).toMatch(/class="[^"]*\bpcard\b/);
 
   // Tarjeta puntual con precio real en catalogo_precios (a diferencia del
   // primer producto del mundo, que no tiene fila de precio — dato

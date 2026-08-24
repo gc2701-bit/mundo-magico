@@ -2,7 +2,7 @@
  * nuevo (Sprint 2, Task 2.3).
  */
 import { describe, it, expect } from 'vitest';
-import { resolverEstadoProducto } from '../../lib/precios-familia.ts';
+import { resolverEstadoProducto, resolverOferta } from '../../lib/precios-familia.ts';
 
 // El formateador de Intl.NumberFormat('es-AR', ...) usa un espacio
 // irrompible ( ) entre "$" y el número — se arma acá el mismo string
@@ -57,5 +57,27 @@ describe('precios-familia — resolverEstadoProducto', () => {
     expect(r1.sinStock).toBe(false);
     const r2 = resolverEstadoProducto({ codigo: null, talles }, { A: 2000, B: 3500 }, { A: true, B: true }, {});
     expect(r2.sinStock).toBe(true);
+  });
+});
+
+describe('precios-familia — resolverOferta', () => {
+  it('precio de oferta menor al real: hay oferta, con los dos precios y el % calculado', () => {
+    const r = resolverOferta(5600, 4500);
+    expect(r).toEqual({ enOferta: true, precioAntes: money(5600), precioAhora: money(4500), porcentajeOff: 20 });
+  });
+
+  it('sin precio de oferta: no hay oferta, no inventa nada', () => {
+    const r = resolverOferta(5600, null);
+    expect(r).toEqual({ enOferta: false, precioAntes: null, precioAhora: null, porcentajeOff: null });
+  });
+
+  it('sin precio real todavía (no hidrató): no hay oferta, aunque venga precioOferta', () => {
+    const r = resolverOferta(null, 4500);
+    expect(r.enOferta).toBe(false);
+  });
+
+  it('precio de oferta igual o mayor al real: se ignora, nunca "oferta" que encarece', () => {
+    expect(resolverOferta(4500, 4500).enOferta).toBe(false);
+    expect(resolverOferta(4500, 5000).enOferta).toBe(false);
   });
 });
