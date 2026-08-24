@@ -21,6 +21,11 @@ import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
  * curación en el panel admin no es parte de este proyecto; los sprints
  * de páginas que sí lo usen, como el hero del home, lo van a pasar acá).
  *
+ * data-id: siempre presente (a diferencia de data-codigo, que falta en
+ * los productos sin código de POS — hallazgo de Sprint 5) — es el único
+ * identificador estable para tests e2e que verifican paginación sin
+ * duplicar/saltear productos.
+ *
  * Nota sobre el link: sigue siendo `href="#"` (no navega a ningún lado),
  * igual que antes de este rediseño — hoy no existe página de producto
  * propia, todo pasa en la tarjeta (agregar/favoritos). Cuando el Sprint 7
@@ -38,7 +43,7 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
   const esGaleria = !esTalles && fotos.length > 1;
   const sinFoto = fotos.length === 0;
 
-  const dataAttrs: Record<string, string> = {};
+  const dataAttrs: Record<string, string> = { 'data-id': producto.id };
   if (esTalles && producto.talles) {
     dataAttrs['data-talles-codigos'] = producto.talles.map((t) => t.codigo).join(',');
   } else if (producto.codigo) {

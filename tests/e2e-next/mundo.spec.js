@@ -33,8 +33,10 @@ test('una página de mundo sirve HTML estático con productos y el precio se hid
 });
 
 test('el título de la página usa el nombre de display del mundo, no el slug crudo', async ({ page }) => {
+  // Sprint 5: .catsec-head h2 (porteo viejo) fue reemplazado por un <h1>
+  // real debajo del breadcrumb.
   await page.goto('/globos-fiesta');
-  await expect(page.locator('.catsec-head h2')).toHaveText('Cotillón');
+  await expect(page.getByRole('heading', { level: 1, name: 'Cotillón' })).toBeVisible();
 });
 
 test('mundo inexistente da 404', async ({ page }) => {
@@ -51,15 +53,56 @@ test('la nav lista los mundos con nombre de display, con link al slug', async ({
   await expect(link).toHaveAttribute('href', '/globos-fiesta');
 });
 
-test('Explorar: el buscador filtra la grilla sin recargar la página', async ({ page }) => {
+test('Explorar: elegir un mundo lo usa como filtro sin cambiar de URL', async ({ page }) => {
+  // Sprint 5: el buscador de texto libre de ExplorarGrid.tsx (client-side
+  // sobre el catálogo completo) se retiró — la búsqueda real es Sprint 6.
+  // Acá "Mundo" pasa a ser un filtro más de MundoContenido, no un segmento
+  // de URL, a diferencia de /[mundo].
   await page.goto('/explorar');
-  const contadorInicial = await page.locator('[aria-live="polite"]').textContent();
+  await expect(page.getByRole('heading', { level: 1, name: 'Explorar el catálogo' })).toBeVisible();
 
-  await page.getByPlaceholder('Buscar productos').fill('globo');
-  await expect(page.locator('[aria-live="polite"]')).not.toHaveText(contadorInicial || '');
+  const checkboxCotillon = page.locator('aside[aria-label="Filtros"] label', { hasText: 'Cotillón' }).locator('input[type="checkbox"]');
+  await checkboxCotillon.check();
+
+  await expect(page).toHaveURL('/explorar');
 
   const cards = page.locator('a.pcard');
-  const total = await cards.count();
-  expect(total).toBeGreaterThan(0);
-  await expect(cards.first().locator('h3')).toContainText(/globo/i);
+  await expect(cards.first()).toBeVisible();
+});
+
+test('filtrar por familia dentro de un mundo actualiza la grilla y el breadcrumb', async ({ page }) => {
+  await page.goto('/globos-fiesta');
+  await expect(page.getByRole('heading', { level: 1, name: 'Cotillón' })).toBeVisible();
+
+  // Sidebar de escritorio: primer checkbox de familia disponible en este mundo.
+  const primeraFamilia = page.locator('aside[aria-label="Filtros"] label').filter({ has: page.locator('input[type="checkbox"]') });
+  const totalFamilias = await primeraFamilia.count();
+  test.skip(totalFamilias === 0, 'Este mundo no tiene familias cargadas todavía');
+
+  const nombreFamilia = (await primeraFamilia.first().textContent())?.trim();
+  await primeraFamilia.first().locator('input[type="checkbox"]').check();
+
+  // El breadcrumb suma un tercer nivel con el nombre de la familia activa
+  // (el último <li> trae también el separador "›" visual, por eso se
+  // apunta al span[aria-current="page"] de adentro, no al <li> entero).
+  await expect(page.locator('nav[aria-label="Ruta de navegación"] [aria-current="page"]')).toHaveText(nombreFamilia || '');
+});
+
+test('Cargar más trae la página siguiente sin duplicar productos', async ({ page }) => {
+  await page.goto('/explorar');
+  const cards = page.locator('a.pcard');
+  await expect(cards.first()).toBeVisible();
+
+  const botonCargarMas = page.getByRole('button', { name: /Cargar más/ });
+  test.skip(!(await botonCargarMas.isVisible().catch(() => false)), 'No hay suficientes productos para paginar en este catálogo');
+
+  const codigosAntes = await cards.evaluateAll((els) => els.map((el) => el.getAttribute('data-id')));
+  await botonCargarMas.click();
+  await expect(cards).not.toHaveCount(codigosAntes.length, { timeout: 5000 });
+
+  const codigosDespues = await cards.evaluateAll((els) => els.map((el) => el.getAttribute('data-id')));
+  expect(codigosDespues.length).toBeGreaterThan(codigosAntes.length);
+  const sinDuplicados = new Set(codigosDespues);
+  expect(sinDuplicados.size).toBe(codigosDespues.length);
+  expect(codigosDespues.slice(0, codigosAntes.length)).toEqual(codigosAntes);
 });

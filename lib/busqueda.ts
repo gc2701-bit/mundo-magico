@@ -21,31 +21,51 @@
  * catalogo_buho_espejo, sólo catalogo_productos publicados (mismo
  * criterio que catalogo_publico(), ver lib/catalogo-server.ts).
  *
- * A diferencia de obtenerCatalogoPublico() (lib/catalogo-server.ts), acá
- * NO hay `next: { tags }` — los resultados son dinámicos por request
- * (query/filtros/cursor cambian todo el tiempo), no tiene sentido
- * cachearlos con ISR.
+ * Mismo tag de ISR que obtenerCatalogoPublico() (CATALOGO_TAG) — cada
+ * combinación de filtros es su propia entrada de caché (Next cachea por
+ * URL+body), pero el CONTENIDO para una combinación dada sólo cambia
+ * cuando cambia el catálogo, así que tiene el mismo criterio de
+ * invalidación (revalidateTag('catalogo') on-demand, nunca por tiempo).
+ * Precio/stock siguen sin vivir acá — eso lo resuelve CatalogoPrecios.tsx
+ * aparte, siempre fresco.
+ *
+ * OJO al tocar esto: sin el `next: { tags }` (ej. volviendo a
+ * `cache: 'no-store'`), Next deja de poder pre-generar `/[mundo]` como
+ * estático — encontrado en Sprint 5 armando la página de mundo, el build
+ * pasó de generar los 9 mundos a marcar la ruta entera como dinámica.
  */
 
-import type { Foto } from './catalogo-familia';
+import type { Foto, Talle } from './catalogo-familia';
+import { CATALOGO_TAG } from './catalogo-server';
 
 const SUPABASE_URL = 'https://kyuilrlewynqrzebouww.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Q-M5uG2ChZIg0c1zPfNXiQ_unIG1hZ8';
 
+// Mismos campos que ProductoPublico (lib/catalogo-familia.ts) + orden —
+// a propósito: así ProductoListado/ProductoBuscado son compatibles con
+// ProductoCard.tsx sin adaptar nada (Sprint 5, encontrado armando la
+// página de mundo: catalogo_listar() al principio no traía specs/talles/
+// etc. y ProductoCard/AccionesProducto los necesitan).
 export type ProductoBase = {
   id: string;
   mundo: string;
+  subcategoriaId: string | null;
   titulo: string;
   slug: string;
   codigo: string | null;
-  familia: string | null;
+  specs: string[] | null;
+  descripcion: string | null;
+  tags: string[] | null;
+  talles: Talle[] | null;
   fotos: Foto[];
+  orden: number;
+  familia: string | null;
   destacadoHome: boolean;
   precioOferta: number | null;
   precio: number | null;
 };
 
-export type ProductoListado = ProductoBase & { sinStock: boolean; orden: number };
+export type ProductoListado = ProductoBase & { sinStock: boolean };
 export type ProductoBuscado = ProductoBase & { score: number };
 
 export type CursorListado = { orden: number; titulo: string; id: string };
@@ -77,7 +97,7 @@ async function llamarRpc(nombre: string, params: Record<string, unknown>): Promi
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(params),
-    cache: 'no-store'
+    next: { tags: [CATALOGO_TAG] }
   });
   if (!res.ok) {
     throw new Error(`No se pudo llamar a ${nombre}: ${res.status}`);
