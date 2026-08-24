@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Mundo } from "@/lib/catalogo-server";
 import CuentaNavButton from "./cuenta/CuentaNavButton";
 import CarritoNavButton from "./carrito/CarritoNavButton";
+import BuscadorPredictivo from "./BuscadorPredictivo";
 
 /**
  * Rediseño del nav (Sprint 2, ver
@@ -27,9 +28,10 @@ import CarritoNavButton from "./carrito/CarritoNavButton";
  * esa función (convención estándar), no hace falta un link de texto
  * aparte como tenía nav.njk.
  *
- * La búsqueda predictiva de verdad es Sprint 6 — acá el botón "Buscar"
- * sólo abre/cierra un input simple que manda a /explorar?q=... al
- * confirmar, como pide el plan.
+ * Búsqueda predictiva (Sprint 6): el botón "Buscar" abre/cierra
+ * BuscadorPredictivo.tsx (dropdown en desktop, pantalla completa en
+ * mobile) — Nav.tsx sólo maneja el estado abierto/cerrado, la lógica de
+ * búsqueda vive toda en ese componente.
  *
  * IMPORTANTE - por que hay "!" en algunas utilidades de color sobre <a>:
  * v2.css define a{color:inherit} sin capa (@layer) - Tailwind v4 mete
@@ -171,17 +173,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           </div>
 
           {buscarDesktopAbierto ? (
-            <form action="/explorar" className="w-56">
-              <input
-                type="search"
-                name="q"
-                autoFocus
-                placeholder="Buscar disfraces, globos, cotillón..."
-                aria-label="Buscar"
-                className="w-full rounded-brand border border-line px-s2 py-1 font-body text-fs0"
-                onBlur={() => setBuscarDesktopAbierto(false)}
-              />
-            </form>
+            <BuscadorPredictivo variante="desktop" onCerrar={() => setBuscarDesktopAbierto(false)} />
           ) : (
             <button
               type="button"
@@ -238,23 +230,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
 
       {buscarMobileAbierto && (
         <div className="fixed inset-0 z-30 flex flex-col bg-background p-s3 md:hidden" role="dialog" aria-label="Buscar">
-          <form action="/explorar" className="flex items-center gap-s2">
-            <input
-              type="search"
-              name="q"
-              autoFocus
-              placeholder="Buscar disfraces, globos, cotillón..."
-              aria-label="Buscar"
-              className="flex-1 rounded-brand border border-line px-s2 py-2 font-body text-fs0"
-            />
-            <button
-              type="button"
-              onClick={() => setBuscarMobileAbierto(false)}
-              className="font-body text-fs-1 text-muted"
-            >
-              Cancelar
-            </button>
-          </form>
+          <BuscadorPredictivo variante="mobile" onCerrar={() => setBuscarMobileAbierto(false)} />
         </div>
       )}
 

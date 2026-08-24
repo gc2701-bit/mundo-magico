@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { listarCatalogo, type ProductoListado } from '@/lib/busqueda';
-import { siguienteCursorListado } from '@/lib/busqueda-cursor';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { listarCatalogo, buscarCatalogo, type ProductoBase, type ProductoListado, type ProductoBuscado } from '@/lib/busqueda';
+import { siguienteCursorListado, siguienteCursorBusqueda } from '@/lib/busqueda-cursor';
 import Breadcrumbs from './Breadcrumbs';
 import ProductoCard from './ProductoCard';
 import EmptyState from './EmptyState';
@@ -25,16 +26,43 @@ import { GrillaSkeleton } from './ProductoCardSkeleton';
  * el tercer nivel del breadcrumb (`Inicio › Mundo › Familia`) depende del
  * filtro de familia activo, que es estado de cliente — no se puede
  * resolver en el server component de la page.
+ *
+ * Modo búsqueda (Sprint 6): si la URL trae `?q=`, se dispara
+ * `buscarCatalogo` client-side y reemplaza la lista server-rendered.
+ * `useSearchParams()` fuerza al Client Component tree hasta el `Suspense`
+ * más cercano a renderizarse sólo client-side — por eso NO se llama
+ * directo acá (haría que TODO el breadcrumb/h1/grilla dejaran de servirse
+ * como HTML estático real, aunque no haya `?q=` en la URL). Se aísla en
+ * `LectorQueryUrl`, un leaf sin salida visual envuelto en su propio
+ * `<Suspense>` al final del archivo — el resto de este componente sigue
+ * siendo HTML estático de verdad, y sólo se entera de la búsqueda vía el
+ * callback `onQuery`, después de hidratar.
+ *
+ * Con búsqueda activa, `listarCatalogo` se reemplaza por `buscarCatalogo`
+ * en TODO — filtros, "Cargar más" — hasta que se limpia la búsqueda.
+ * `soloStock` no aplica ahí: `catalogo_buscar()` no tiene ese parámetro
+ * (Sprint 1, ranking por relevancia no cruza con ese filtro).
  */
+type ProductoItem = ProductoBase & { score?: number };
+
 type Props = {
   mundoSlug?: string;
   mundoNombre?: string;
   tituloExplorar?: string;
   mundos?: { slug: string; nombre: string }[];
   familiasPorMundo: Record<string, string[]>;
-  productosIniciales: ProductoListado[];
+  productosIniciales: ProductoBase[];
   hayMasInicial: boolean;
 };
+
+function LectorQueryUrl({ onQuery }: { onQuery: (q: string) => void }) {
+  const q = (useSearchParams().get('q') || '').trim();
+  useEffect(() => {
+    if (q.length >= 2) onQuery(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
+  return null;
+}
 
 export default function MundoContenido({
   mundoSlug,
@@ -45,13 +73,27 @@ export default function MundoContenido({
   productosIniciales,
   hayMasInicial,
 }: Props) {
+  const router = useRouter();
+
   const [mundo, setMundo] = useState<string | undefined>(mundoSlug);
   const [familia, setFamilia] = useState<string | undefined>(undefined);
   const [soloStock, setSoloStock] = useState(false);
-  const [productos, setProductos] = useState(productosIniciales);
+  const [query, setQuery] = useState<string>('');
+  const [productos, setProductos] = useState<ProductoItem[]>(productosIniciales);
   const [hayMas, setHayMas] = useState(hayMasInicial);
   const [cargando, setCargando] = useState(false);
   const [filtroAbierto, setFiltroAbierto] = useState(false);
+
+  function iniciarBusquedaDesdeUrl(q: string) {
+    if (q === query) return;
+    setQuery(q);
+    setCargando(true);
+    buscarCatalogo(q, { mundo, familia, limite: 24 }).then((r) => {
+      setProductos(r.productos);
+      setHayMas(r.hayMas);
+      setCargando(false);
+    });
+  }
 
   const familiasDisponibles = mundo ? familiasPorMundo[mundo] || [] : [];
   const hayFiltrosActivos = !!familia || soloStock || (!mundoSlug && !!mundo);
@@ -65,14 +107,16 @@ export default function MundoContenido({
     : [{ label: 'Inicio', href: '/' }, { label: 'Explorar' }];
   const titulo = mundoSlug ? mundoNombre ?? '' : tituloExplorar;
 
-  async function recargar(params: { mundo?: string; familia?: string; soloStock: boolean }) {
+  async function recargar(params: { mundo?: string; familia?: string; soloStock: boolean }, queryActiva = query) {
     setCargando(true);
-    const r = await listarCatalogo({
-      mundo: params.mundo,
-      familia: params.familia,
-      soloStock: params.soloStock,
-      limite: 24,
-    });
+    const r = queryActiva
+      ? await buscarCatalogo(queryActiva, { mundo: params.mundo, familia: params.familia, limite: 24 })
+      : await listarCatalogo({
+          mundo: params.mundo,
+          familia: params.familia,
+          soloStock: params.soloStock,
+          limite: 24,
+        });
     setProductos(r.productos);
     setHayMas(r.hayMas);
     setCargando(false);
@@ -97,13 +141,25 @@ export default function MundoContenido({
     if (!mundoSlug) setMundo(undefined);
     recargar({ mundo: mundoSlug, familia: undefined, soloStock: false });
   }
+  function limpiarBusqueda() {
+    setQuery('');
+    router.replace(mundoSlug ? `/${mundoSlug}` : '/explorar');
+    recargar({ mundo, familia, soloStock }, '');
+  }
 
   async function cargarMas() {
     setCargando(true);
-    const cursor = siguienteCursorListado(productos);
-    const r = await listarCatalogo({ mundo, familia, soloStock, cursor, limite: 24 });
-    setProductos((prev) => [...prev, ...r.productos]);
-    setHayMas(r.hayMas);
+    if (query) {
+      const cursor = siguienteCursorBusqueda(productos as ProductoBuscado[]);
+      const r = await buscarCatalogo(query, { mundo, familia, cursor, limite: 24 });
+      setProductos((prev) => [...prev, ...r.productos]);
+      setHayMas(r.hayMas);
+    } else {
+      const cursor = siguienteCursorListado(productos as ProductoListado[]);
+      const r = await listarCatalogo({ mundo, familia, soloStock, cursor, limite: 24 });
+      setProductos((prev) => [...prev, ...r.productos]);
+      setHayMas(r.hayMas);
+    }
     setCargando(false);
   }
 
@@ -149,10 +205,12 @@ export default function MundoContenido({
           <p className="font-body text-fs-1 text-muted">Elegí un mundo para filtrar por familia.</p>
         )}
       </div>
-      <label className="flex items-center gap-2 font-body text-fs0 text-ink">
-        <input type="checkbox" checked={soloStock} onChange={(e) => onStockChange(e.target.checked)} />
-        Solo con stock
-      </label>
+      {!query && (
+        <label className="flex items-center gap-2 font-body text-fs0 text-ink">
+          <input type="checkbox" checked={soloStock} onChange={(e) => onStockChange(e.target.checked)} />
+          Solo con stock
+        </label>
+      )}
       {hayFiltrosActivos && (
         <button type="button" onClick={limpiarFiltros} className="self-start font-body text-fs-1 font-semibold text-green-ink!">
           Limpiar filtros
@@ -163,6 +221,9 @@ export default function MundoContenido({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <LectorQueryUrl onQuery={iniciarBusquedaDesdeUrl} />
+      </Suspense>
       <div className="wrap pt-s3">
         <Breadcrumbs items={crumbs} />
         <h1 className="mt-s2 font-display text-fs4 text-ink">{titulo}</h1>
@@ -205,6 +266,14 @@ export default function MundoContenido({
         )}
 
         <div className="flex-1">
+          {query && (
+            <p className="mb-s2 font-body text-fs0 text-ink">
+              Resultados para &quot;{query}&quot;{' '}
+              <button type="button" onClick={limpiarBusqueda} className="font-semibold text-green-ink! underline">
+                Ver catálogo completo
+              </button>
+            </p>
+          )}
           {cargando && productos.length === 0 ? (
             <GrillaSkeleton />
           ) : productos.length ? (
@@ -231,8 +300,8 @@ export default function MundoContenido({
           ) : (
             <EmptyState
               icono="🔍"
-              titulo="No hay productos con estos filtros"
-              descripcion="Probá sacar algún filtro para ver más resultados."
+              titulo={query ? `Sin resultados para "${query}"` : 'No hay productos con estos filtros'}
+              descripcion={query ? 'Probá con otra palabra o mirá el catálogo completo.' : 'Probá sacar algún filtro para ver más resultados.'}
             />
           )}
         </div>
