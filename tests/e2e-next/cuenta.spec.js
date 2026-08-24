@@ -11,21 +11,29 @@
  * `.first()` en los locators de .cuenta-nav: desde Sprint 2 del rediseño
  * de frontend, Nav.tsx lo renderiza dos veces (fila de escritorio + barra
  * inferior de mobile) — ver el mismo comentario en carrito.spec.js.
+ *
+ * Sprint 8: CuentaModal.tsx se reescribió con Tailwind (split imagen +
+ * formulario) y perdió las clases `cart-acc*` legacy. Sigue siempre
+ * montado (para que Turnstile esté listo), la visibilidad es
+ * `opacity`/`scale` por CSS — de ahí `toHaveCSS('opacity', '1')` en vez
+ * de `toHaveClass(/is-on/)`.
  */
 const { test, expect } = require('@playwright/test');
 
 test('el ícono de cuenta abre el modal de alta al no tener sesión', async ({ page }) => {
   await page.goto('/');
   await page.locator('.cuenta-nav').first().click();
-  await expect(page.locator('.cart-acc').first()).toHaveClass(/is-on/);
-  await expect(page.locator('.cart-acc.is-on .cart-acc-tab.is-on')).toHaveText('Crear cuenta');
+  const modal = page.getByRole('dialog', { name: 'Mi cuenta' });
+  await expect(modal).toHaveCSS('opacity', '1');
+  // Signup es la pestaña default — el campo "Nombre" sólo existe en ese form.
+  await expect(modal.getByLabel('Nombre')).toBeVisible();
 });
 
 test('crear cuenta sin completar nada muestra el error de nombre, sin llamar a Supabase', async ({ page }) => {
   await page.goto('/');
   await page.locator('.cuenta-nav').first().click();
   await page.getByRole('button', { name: 'Crear cuenta y continuar' }).click();
-  await expect(page.locator('.cart-acc-error')).toHaveText('Falta tu nombre.');
+  await expect(page.getByText('Falta tu nombre.')).toBeVisible();
 });
 
 test('pasar a "Ya tengo cuenta" cambia de pestaña y de formulario', async ({ page }) => {
@@ -38,10 +46,22 @@ test('pasar a "Ya tengo cuenta" cambia de pestaña y de formulario', async ({ pa
   await expect(page.getByRole('button', { name: 'Mandar link' })).toBeVisible();
 });
 
+test('desktop: el modal muestra la imagen del castillo; mobile: sólo el formulario', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.cuenta-nav').first().click();
+  const modal = page.getByRole('dialog', { name: 'Mi cuenta' });
+  await expect(modal.locator('img')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(modal.locator('img')).toBeHidden();
+  await expect(modal.getByLabel('Nombre')).toBeVisible();
+});
+
 test('Escape cierra el modal de cuenta', async ({ page }) => {
   await page.goto('/');
   await page.locator('.cuenta-nav').first().click();
-  await expect(page.locator('.cart-acc').first()).toHaveClass(/is-on/);
+  const modal = page.getByRole('dialog', { name: 'Mi cuenta' });
+  await expect(modal).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
-  await expect(page.locator('.cart-acc').first()).not.toHaveClass(/is-on/);
+  await expect(modal).toHaveCSS('opacity', '0');
 });

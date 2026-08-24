@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { useCarrito } from './CarritoProvider';
 import { useCuenta } from '../cuenta/CuentaProvider';
-import { claveItem, precioUnidad, formatoPlata } from '@/lib/carrito';
+import { claveItem, formatoPlata } from '@/lib/carrito';
 import { nombreDe, emailDe } from '@/lib/cuenta';
+import CarritoItemRow from './CarritoItemRow';
 import EnvioForm from './EnvioForm';
 
 /**
@@ -21,11 +23,15 @@ import EnvioForm from './EnvioForm';
  * (public/assets/carrito.css) sigue en `z-index:1300` legacy, este panel
  * necesita superarlo.
  *
- * `<EnvioForm />` (adentro, más abajo) queda TAL CUAL con sus clases
- * legacy por ahora — reestilarlo es del Sprint 8 (carrito completo +
- * cuenta), donde de nuevo hace falta ese mismo formulario en la página
- * de carrito grande. Mientras tanto conviven un panel nuevo con un
- * formulario viejo adentro — salto visual conocido, no un bug.
+ * `<EnvioForm />` (adentro, más abajo) se reestiló recién en el Sprint 8
+ * junto con `/carrito` (la página completa) — ambos la comparten tal
+ * cual, ver EnvioForm.tsx.
+ *
+ * "Ver mi carrito" (Sprint 8) lleva a `/carrito`, la página completa —
+ * distinto de "Ver pedido completo" más abajo, que arma un link
+ * compartible con el pedido codificado en el hash (`/pedido#...`, ver
+ * lib/pedido.ts) para mandarle a alguien más, no para editar el propio
+ * carrito.
  */
 export default function CarritoPanel() {
   const { items, panelAbierto, cerrarPanel, setCantidad, quitarItem, nota, setNota, precios, resumenPedido, enviando, enviarPedido, verPedidoCompleto } = useCarrito();
@@ -52,7 +58,14 @@ export default function CarritoPanel() {
       }
     >
       <div className="flex items-center justify-between border-b border-line px-s3 py-s3">
-        <h2 className="font-display text-fs2 text-ink">Mi pedido</h2>
+        <div>
+          <h2 className="font-display text-fs2 text-ink">Mi pedido</h2>
+          {items.length > 0 && (
+            <Link href="/carrito" onClick={cerrarPanel} className="font-body text-fs-1 font-semibold text-green-ink! underline">
+              Ver mi carrito
+            </Link>
+          )}
+        </div>
         <button type="button" aria-label="Cerrar" onClick={cerrarPanel} className="flex h-9 w-9 items-center justify-center rounded-full font-body text-fs1 text-ink hover:bg-background-alt">×</button>
       </div>
 
@@ -61,37 +74,15 @@ export default function CarritoPanel() {
           <p className="font-body text-fs0 text-muted">Todavía no agregaste nada. Tocá &quot;Agregar&quot; en los productos que te gusten.</p>
         ) : (
           <div className="flex flex-col gap-s3">
-            {items.map((it) => {
-              const clave = claveItem(it);
-              const u = precioUnidad(it, precios);
-              return (
-                <div key={clave} className="flex gap-s2 border-b border-line pb-s3">
-                  {it.img && <img src={it.img} alt="" loading="lazy" className="h-16 w-16 shrink-0 rounded-brand bg-background object-contain" />}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-fs0 font-semibold text-ink">{it.title}</p>
-                    {it.variant && <p className="font-body text-fs-1 text-muted">{it.variant}</p>}
-                    {it.code && <p className="font-body text-fs-1 text-muted">{'Cód. ' + it.code}</p>}
-                    {u > 0 ? (
-                      <p className="mt-1 font-body text-fs0 font-semibold text-ink">
-                        {it.qty > 1 ? `${it.qty} × ${formatoPlata(u)} = ${formatoPlata(u * it.qty)}` : formatoPlata(u)}
-                      </p>
-                    ) : precios ? (
-                      <p className="mt-1 font-body text-fs-1 text-orange-ink">Precio a confirmar</p>
-                    ) : null}
-                    <div className="mt-s2 flex items-center gap-s3">
-                      <div className="flex items-center gap-s2">
-                        <button type="button" aria-label={'Quitar uno de ' + it.title} disabled={it.qty <= 0} onClick={() => setCantidad(it, it.qty - 1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink disabled:opacity-40">−</button>
-                        <span className="w-5 text-center font-body text-fs0 text-ink">{it.qty}</span>
-                        <button type="button" aria-label={'Agregar uno de ' + it.title} onClick={() => setCantidad(it, it.qty + 1)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink">+</button>
-                      </div>
-                      <button type="button" onClick={() => quitarItem(clave)} className="font-body text-fs-1 text-muted! underline">Quitar</button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {items.map((it) => (
+              <CarritoItemRow
+                key={claveItem(it)}
+                item={it}
+                precios={precios}
+                onCantidad={(n) => setCantidad(it, n)}
+                onQuitar={() => quitarItem(claveItem(it))}
+              />
+            ))}
           </div>
         )}
 

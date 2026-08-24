@@ -13,6 +13,12 @@ const UMBRAL_KM_ZONA = 7;
  * cargados (ver CarritoProvider); mientras tanto se comporta igual que el
  * carrito viejo sin `envio-form.js` cargado — el pedido igual se puede
  * armar y mandar apenas terminan de llegar.
+ *
+ * Rediseño Sprint 8 (ver
+ * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md):
+ * Tailwind en vez de `carrito.css` — lo comparten el mini-carrito
+ * (CarritoPanel.tsx) y la página `/carrito` nueva, un solo rediseño para
+ * las dos. Sólo cambia presentación, ningún estado/handler se tocó.
  */
 export default function EnvioForm() {
   const { datosEnvios, estadoEnvio, actualizarEnvio, elegirMetodo, activarEnvioInmediato, buscandoTurno } = useCarrito();
@@ -89,39 +95,51 @@ export default function EnvioForm() {
   const isodowFecha = estadoEnvio.fecha ? isodow(estadoEnvio.fecha) : null;
   const franjasDia = isodowFecha != null ? franjasDelDia(datosEnvios.franjas, isodowFecha) : [];
 
-  return (
-    <div className="cart-envio-form">
-      <h3 className="cart-foot-t">Tus datos</h3>
+  const campo = 'rounded-brand border border-line px-s3 py-s2 font-body text-fs0 text-ink';
+  const hint = 'font-body text-fs-1 text-muted';
+  const chip = 'rounded-full border border-line px-s3 py-1.5 font-body text-fs-1 text-ink';
+  const chipOn = 'border-green bg-green text-white!';
+  const chipOff = 'disabled:opacity-40';
 
-      <label className="cart-field">
-        <span>Nombre</span>
-        <input type="text" placeholder="Tu nombre" value={estadoEnvio.nombre} onChange={(e) => actualizarEnvio({ nombre: e.target.value })} />
+  return (
+    <div className="flex flex-col gap-s3">
+      <h3 className="font-body text-fs0 font-semibold text-ink">Tus datos</h3>
+
+      <label className="flex flex-col gap-1">
+        <span className="font-body text-fs-1 text-muted">Nombre</span>
+        <input type="text" placeholder="Tu nombre" value={estadoEnvio.nombre} onChange={(e) => actualizarEnvio({ nombre: e.target.value })} className={campo} />
       </label>
 
       {/* Un <label> envolviendo dos botones les concatena el texto del label
           a los DOS como accessible name (ambigüedad de a11y/testing) — por
           eso acá es un <div>, no <label>, a diferencia de los campos de
-          texto de más abajo. */}
-      <div className="cart-field">
-        <span>¿Retirás o te lo enviamos?</span>
-        <div className="cart-metodo">
-          <button type="button" className={'cart-metodo-b' + (estadoEnvio.metodo === 'retiro' ? ' is-on' : '')} onClick={() => elegirMetodo('retiro')}>Retiro en el local</button>
-          <button type="button" className={'cart-metodo-b' + (estadoEnvio.metodo === 'envio' ? ' is-on' : '')} onClick={() => elegirMetodo('envio')}>Envío a domicilio</button>
+          texto de más arriba. */}
+      <div className="flex flex-col gap-1">
+        <span className="font-body text-fs-1 text-muted">¿Retirás o te lo enviamos?</span>
+        <div className="flex gap-s2">
+          <button type="button" onClick={() => elegirMetodo('retiro')}
+            className={'flex-1 rounded-brand border px-s3 py-s2 font-body text-fs0 font-semibold ' + (estadoEnvio.metodo === 'retiro' ? 'border-green bg-green text-white!' : 'border-line text-ink')}>
+            Retiro en el local
+          </button>
+          <button type="button" onClick={() => elegirMetodo('envio')}
+            className={'flex-1 rounded-brand border px-s3 py-s2 font-body text-fs0 font-semibold ' + (estadoEnvio.metodo === 'envio' ? 'border-green bg-green text-white!' : 'border-line text-ink')}>
+            Envío a domicilio
+          </button>
         </div>
       </div>
 
       {estadoEnvio.metodo === 'retiro' && (
-        <div className="cart-envio-campos">
-          <div className="cart-chips">
+        <div className="flex flex-col gap-s2">
+          <div className="flex flex-wrap gap-s2">
             {datosEnvios.sucursales.map((s) => (
-              <button key={s.id} type="button" className={'cart-chip' + (estadoEnvio.sucursalId === s.id ? ' is-on' : '')}
-                onClick={() => actualizarEnvio({ sucursalId: s.id })}>
+              <button key={s.id} type="button" onClick={() => actualizarEnvio({ sucursalId: s.id })}
+                className={chip + ' ' + (estadoEnvio.sucursalId === s.id ? chipOn : '')}>
                 {s.nombre}
               </button>
             ))}
           </div>
           {estadoEnvio.sucursalId && datosEnvios.sucursales.find((s) => s.id === estadoEnvio.sucursalId)?.requiere_transferencia && (
-            <p className="cart-suc-nota">
+            <p className={hint}>
               En {datosEnvios.sucursales.find((s) => s.id === estadoEnvio.sucursalId)?.nombre} tenemos menos stock, así que tu pedido se arma en el Centro y viaja hasta ahí. Por eso el retiro ahí necesita un día más.
             </p>
           )}
@@ -129,11 +147,11 @@ export default function EnvioForm() {
       )}
 
       {estadoEnvio.metodo === 'envio' && (
-        <div className="cart-envio-campos">
+        <div className="flex flex-col gap-s3">
           {entregaPropia && (
-            <label className="cart-field">
-              <span>Zona / barrio</span>
-              <select value={estadoEnvio.zonaId || ''} onChange={(e) => { actualizarEnvio({ zonaId: e.target.value || null }); direccionRevisada.current = ''; }}>
+            <label className="flex flex-col gap-1">
+              <span className="font-body text-fs-1 text-muted">Zona / barrio</span>
+              <select value={estadoEnvio.zonaId || ''} onChange={(e) => { actualizarEnvio({ zonaId: e.target.value || null }); direccionRevisada.current = ''; }} className={campo}>
                 <option value="" disabled>Elegí una zona…</option>
                 {Array.from(grupos.entries()).map(([grupo, zonas]) => (
                   <optgroup key={grupo} label={nombreCorredor(grupo)}>
@@ -141,48 +159,48 @@ export default function EnvioForm() {
                   </optgroup>
                 ))}
               </select>
-              {zona?.descripcion && <p className="cart-field-hint">{zona.descripcion}</p>}
+              {zona?.descripcion && <p className={hint}>{zona.descripcion}</p>}
             </label>
           )}
 
-          <label className="cart-field">
-            <span>Dirección</span>
+          <label className="flex flex-col gap-1">
+            <span className="font-body text-fs-1 text-muted">Dirección</span>
             <input type="text" placeholder="Calle, número, referencia" value={estadoEnvio.direccion}
-              onChange={(e) => actualizarEnvio({ direccion: e.target.value })} onBlur={revisarDireccion} />
+              onChange={(e) => actualizarEnvio({ direccion: e.target.value })} onBlur={revisarDireccion} className={campo} />
           </label>
-          {direccionLink && <a className="cart-direccion-maps" href={direccionLink} target="_blank" rel="noopener">Ver esta dirección en Google Maps</a>}
-          {avisoDireccion && <p className={'cart-field-hint' + (avisoDireccion.lejos ? ' cart-field-hint-alerta' : '')}>{avisoDireccion.texto}</p>}
+          {direccionLink && <a className="font-body text-fs-1 font-semibold text-green-ink! underline" href={direccionLink} target="_blank" rel="noopener">Ver esta dirección en Google Maps</a>}
+          {avisoDireccion && <p className={'font-body text-fs-1 ' + (avisoDireccion.lejos ? 'text-orange-ink' : 'text-muted')}>{avisoDireccion.texto}</p>}
 
-          <label className="cart-field">
-            <span>Entre qué calles</span>
-            <input type="text" placeholder="Entre qué calles" value={estadoEnvio.entreCalles} onChange={(e) => actualizarEnvio({ entreCalles: e.target.value })} />
+          <label className="flex flex-col gap-1">
+            <span className="font-body text-fs-1 text-muted">Entre qué calles</span>
+            <input type="text" placeholder="Entre qué calles" value={estadoEnvio.entreCalles} onChange={(e) => actualizarEnvio({ entreCalles: e.target.value })} className={campo} />
           </label>
-          <label className="cart-field">
-            <span>Piso / depto / timbre</span>
-            <input type="text" placeholder="Piso / depto / timbre" value={estadoEnvio.pisoDepto} onChange={(e) => actualizarEnvio({ pisoDepto: e.target.value })} />
+          <label className="flex flex-col gap-1">
+            <span className="font-body text-fs-1 text-muted">Piso / depto / timbre</span>
+            <input type="text" placeholder="Piso / depto / timbre" value={estadoEnvio.pisoDepto} onChange={(e) => actualizarEnvio({ pisoDepto: e.target.value })} className={campo} />
           </label>
 
-          <label className="cart-recibe-otra">
+          <label className="flex items-center gap-2">
             <input type="checkbox" checked={estadoEnvio.recibeOtra} onChange={(e) => actualizarEnvio({ recibeOtra: e.target.checked })} />
-            <span>¿Lo recibe otra persona?</span>
+            <span className="font-body text-fs0 text-ink">¿Lo recibe otra persona?</span>
           </label>
           {estadoEnvio.recibeOtra && (
-            <div className="cart-envio-campos">
-              <label className="cart-field"><span>Nombre de quien recibe</span>
-                <input type="text" value={estadoEnvio.receptorNombre} onChange={(e) => actualizarEnvio({ receptorNombre: e.target.value })} /></label>
-              <label className="cart-field"><span>Teléfono de quien recibe</span>
-                <input type="tel" value={estadoEnvio.receptorTelefono} onChange={(e) => actualizarEnvio({ receptorTelefono: e.target.value })} /></label>
+            <div className="flex flex-col gap-s3">
+              <label className="flex flex-col gap-1"><span className="font-body text-fs-1 text-muted">Nombre de quien recibe</span>
+                <input type="text" value={estadoEnvio.receptorNombre} onChange={(e) => actualizarEnvio({ receptorNombre: e.target.value })} className={campo} /></label>
+              <label className="flex flex-col gap-1"><span className="font-body text-fs-1 text-muted">Teléfono de quien recibe</span>
+                <input type="tel" value={estadoEnvio.receptorTelefono} onChange={(e) => actualizarEnvio({ receptorTelefono: e.target.value })} className={campo} /></label>
             </div>
           )}
 
           {entregaPropia && (
             <>
-              <label className="cart-recibe-otra">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" checked={estadoEnvio.envioInmediato} onChange={(e) => activarEnvioInmediato(e.target.checked)} />
-                <span>Envío inmediato — sale en el próximo turno (con recargo)</span>
+                <span className="font-body text-fs0 text-ink">Envío inmediato — sale en el próximo turno (con recargo)</span>
               </label>
               {estadoEnvio.envioInmediato && (
-                <p className="cart-field-hint">
+                <p className={hint}>
                   {buscandoTurno
                     ? 'Buscando el próximo turno disponible…'
                     : estadoEnvio.turnoInmediato
@@ -191,62 +209,60 @@ export default function EnvioForm() {
                 </p>
               )}
               {costo > 0 && (
-                <p className="cart-envio-costo">
+                <p className="font-body text-fs-1 font-semibold text-ink">
                   {`Envío a ${zona?.nombre || 'tu zona'}: ${plata(costo)}${estadoEnvio.envioInmediato ? ' (incluye recargo por envío inmediato)' : ''} (el total de los productos te lo confirmamos por WhatsApp)`}
                 </p>
               )}
               {datosEnvios.config.minimo_compra > 0 && (
-                <p className="cart-envio-minimo">{'Compra mínima para envío: ' + plata(datosEnvios.config.minimo_compra)}</p>
+                <p className={hint}>{'Compra mínima para envío: ' + plata(datosEnvios.config.minimo_compra)}</p>
               )}
             </>
           )}
 
           {!estadoEnvio.envioInmediato && (
-            <div className="cart-envio-info">
-              <p className="cart-field-hint">
-                {entregaPropia
-                  ? 'Te lo entregamos en 1 a 3 días hábiles. Te confirmamos por WhatsApp el día y el horario exacto (de 9 a 13 o de 17 a 21).'
-                  : 'El envío lo coordinás vos: pedís un remis, Uber Moto o Uber Envíos que lo retire en el local y lo lleve a la dirección que nos dejaste. El costo del viaje lo pagás directo a quien te lo lleva.'}
-              </p>
-            </div>
+            <p className={hint}>
+              {entregaPropia
+                ? 'Te lo entregamos en 1 a 3 días hábiles. Te confirmamos por WhatsApp el día y el horario exacto (de 9 a 13 o de 17 a 21).'
+                : 'El envío lo coordinás vos: pedís un remis, Uber Moto o Uber Envíos que lo retire en el local y lo lleve a la dirección que nos dejaste. El costo del viaje lo pagás directo a quien te lo lleva.'}
+            </p>
           )}
         </div>
       )}
 
       {estadoEnvio.metodo === 'retiro' && (
-        <div className="cart-fecha-franja">
-          <label className="cart-field">
-            <span>¿Para cuándo lo necesitás?</span>
-            <div className="cart-dias">
+        <div className="flex flex-col gap-s3">
+          <div className="flex flex-col gap-1">
+            <span className="font-body text-fs-1 text-muted">¿Para cuándo lo necesitás?</span>
+            <div className="flex flex-wrap gap-s2">
               {dias.map((d) => {
                 const p = d.fecha.split('-');
                 return (
-                  <button key={d.fecha} type="button" title={!d.disponible ? (MOTIVO_TXT[d.motivo || ''] || 'No disponible.') : undefined}
-                    className={'cart-chip' + (!d.disponible ? ' is-off' : '') + (d.fecha === estadoEnvio.fecha ? ' is-on' : '')}
-                    onClick={() => { if (d.disponible) actualizarEnvio({ fecha: d.fecha, franjaId: null }); }}>
+                  <button key={d.fecha} type="button" disabled={!d.disponible} title={!d.disponible ? (MOTIVO_TXT[d.motivo || ''] || 'No disponible.') : undefined}
+                    onClick={() => { if (d.disponible) actualizarEnvio({ fecha: d.fecha, franjaId: null }); }}
+                    className={chip + ' flex flex-col items-center leading-tight ' + (d.fecha === estadoEnvio.fecha ? chipOn : chipOff)}>
                     <b>{p[2]}</b>{mesCorto(p[1])}
                   </button>
                 );
               })}
             </div>
-          </label>
-          <label className="cart-field">
-            <span>Franja horaria</span>
-            <div className="cart-chips">
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="font-body text-fs-1 text-muted">Franja horaria</span>
+            <div className="flex flex-wrap gap-s2">
               {!estadoEnvio.fecha ? (
-                <p className="cart-field-hint">Elegí primero una fecha.</p>
+                <p className={hint}>Elegí primero una fecha.</p>
               ) : franjasDia.length === 0 ? (
-                <p className="cart-field-hint">{isodowFecha === 7 ? 'Los domingos el local está cerrado.' : 'No hay franjas para ese día.'}</p>
+                <p className={hint}>{isodowFecha === 7 ? 'Los domingos el local está cerrado.' : 'No hay franjas para ese día.'}</p>
               ) : (
                 franjasDia.map((f) => (
-                  <button key={f.id} type="button" className={'cart-chip' + (estadoEnvio.franjaId === f.id ? ' is-on' : '')}
-                    onClick={() => actualizarEnvio({ franjaId: f.id })}>
+                  <button key={f.id} type="button" onClick={() => actualizarEnvio({ franjaId: f.id })}
+                    className={chip + ' ' + (estadoEnvio.franjaId === f.id ? chipOn : '')}>
                     {`${f.nombre} (${f.hora_inicio.slice(0, 5)}–${f.hora_fin.slice(0, 5)})`}
                   </button>
                 ))
               )}
             </div>
-          </label>
+          </div>
         </div>
       )}
     </div>
