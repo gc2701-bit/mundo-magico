@@ -1,27 +1,45 @@
 /**
- * Home real, portado de index.html (sitio Eleventy viejo) — Sprint 0 había
- * dejado acá un placeholder ("Sitio en migración a Next.js") que nunca se
- * reemplazó en ningún sprint posterior. Se detectó en producción real,
- * 2026-08-21 (ver docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md,
- * "Corte a producción").
+ * Home — rediseño Sprint 4 (ver
+ * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md):
+ * hero compacto (el castillo animado ya no ocupa toda la pantalla) +
+ * carrusel de destacados, después 5 vidrieras de mundo con productos
+ * reales (Cumpleaños, Cotillón, Decoración, Halloween, Navidad — los
+ * otros 4 mundos siguen accesibles desde la grilla "Nuestros mundos" de
+ * siempre, el mega-menú del nav y Explorar).
  *
- * El hero animado (video del logo + campo de estrellas con parallax) se
- * había simplificado a un logo estático en el primer pase — restaurado
- * tal cual estaba en HeroAnimado.tsx, a pedido explícito del usuario
- * (2026-08-21). Las secciones "Especial de temporada" y "Comprar por
- * ocasión" están comentadas en el original (sin contenido vigente) y se
- * omiten acá también. "Combos" en la grilla de mundos apunta a /explorar,
- * no a /combos: esos 15 productos nunca se migraron (ver "RECORDATORIO"
- * en el plan) y /combos daría 404.
+ * Confianza/Reseñas/Historia/Visitanos/Contacto/banda-especial/mundos:
+ * SIN CAMBIOS a pedido explícito del usuario — mismo JSX/CSS de siempre
+ * (home.css), sólo reordenados. Reseñas siguen siendo inventadas
+ * (hardcodeadas) — el usuario lo detectó y pidió dejarlas así por ahora,
+ * ver la spec.
+ *
+ * El hero animado (video del logo + campo de estrellas, HeroAnimado.tsx)
+ * tampoco se toca — se le baja la altura mínima por fuera (inline style,
+ * gana sin pelear con la cascada de home.css) para que dexe de ser
+ * protagonista único de la pantalla, sin tocar su animación interna.
  */
 import type { Metadata } from 'next';
 import HeroAnimado from './components/HeroAnimado';
+import HeroCarrusel from './components/HeroCarrusel';
+import Vidriera from './components/Vidriera';
+import CatalogoPrecios from './components/CatalogoPrecios';
+import { obtenerCatalogoPublico } from '@/lib/catalogo-server';
+
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: 'Mundo Mágico · Cotillón, decoración y fiestas en Tucumán',
   description:
     '+30 años haciendo magia en Tucumán. Cotillón, decoración, línea de cumpleaños, repostería y disfraces, más de 1.000 productos en un solo lugar. Vos ponés la ocasión, nosotros todo lo demás.',
 };
+
+const VIDRIERAS = [
+  { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: '🎂' },
+  { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: '🎈' },
+  { mundoSlug: 'decoracion', titulo: 'Decoración', icono: '🎀' },
+  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃' },
+  { mundoSlug: 'navidad', titulo: 'Navidad', icono: '🎄' },
+];
 
 const MUNDOS_HOME = [
   { clase: 'm-globos', href: '/globos-fiesta', img: '/assets/mundos/cotillon.jpg', titulo: 'Cotillón', desc: 'Guirnaldas, luces, sombreros y anteojos para vestir cualquier fiesta.' },
@@ -55,7 +73,7 @@ const RESENAS = [
 
 function EstrellasGoogle({ n = 5 }: { n?: number }) {
   return (
-    <span className="stars" aria-label={`${n} de 5 estrellas`}>
+    <span className="stars" role="img" aria-label={`${n} de 5 estrellas`}>
       {Array.from({ length: n }).map((_, i) => (
         <svg key={i} viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.6 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" />
@@ -76,12 +94,19 @@ function GoogleMark() {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const catalogo = await obtenerCatalogoPublico();
+  const destacados = catalogo.productos.filter((p) => p.destacadoHome);
+  // Fallback mientras no exista curación real desde el panel admin (fuera
+  // de alcance de este proyecto, ver la spec) — así el carrusel nunca
+  // arranca vacío.
+  const heroItems = destacados.length ? destacados : catalogo.productos.slice(0, 6);
+
   return (
     <>
       <link rel="stylesheet" href="/assets/home.css" />
 
-      <header className="hero" id="inicio">
+      <header className="hero" id="inicio" style={{ minHeight: '58svh' }}>
         <HeroAnimado />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
@@ -104,35 +129,12 @@ export default function Home() {
         </a>
       </header>
 
+      <HeroCarrusel productos={heroItems} />
+
       <main>
-        <section className="trust" aria-label="Por qué elegirnos">
-          <div className="wrap">
-            <div className="trust-item">
-              <span className="tic">
-                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" /></svg>
-              </span>
-              <span><b>+30 años</b><small>Referentes en Tucumán</small></span>
-            </div>
-            <div className="trust-item">
-              <span className="tic">
-                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z" /><path d="M12 15l-1 2.5h2L12 21.5" /></svg>
-              </span>
-              <span><b>+1.000 productos</b><small>Todo para celebrar</small></span>
-            </div>
-            <div className="trust-item">
-              <span className="tic">
-                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9l-5 4V6z" /></svg>
-              </span>
-              <span><b>Atención personal</b><small>Te asesoramos por WhatsApp</small></span>
-            </div>
-            <div className="trust-item">
-              <span className="tic">
-                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" /></svg>
-              </span>
-              <span><b>4 sucursales a la calle</b><small>Vení a verlo en persona</small></span>
-            </div>
-          </div>
-        </section>
+        {VIDRIERAS.map((v) => (
+          <Vidriera key={v.mundoSlug} titulo={v.titulo} mundoSlug={v.mundoSlug} icono={v.icono} productos={catalogo.productos} />
+        ))}
 
         <section className="mundos" id="mundos">
           <div className="wrap">
@@ -171,34 +173,31 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="historia" id="historia">
+        <section className="trust" aria-label="Por qué elegirnos">
           <div className="wrap">
-            <div className="hist-head">
-              <div className="eyebrow">Nuestra historia</div>
-              <h2>Más de 30 años haciendo magia en Tucumán</h2>
-              <p>Desde 1994, el cotillón de referencia. La misma familia de siempre, con las mismas ganas del primer día.</p>
-              <p className="mantra">Vos ponés la ocasión. Nosotros, todo lo demás.</p>
+            <div className="trust-item">
+              <span className="tic">
+                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" /></svg>
+              </span>
+              <span><b>+30 años</b><small>Referentes en Tucumán</small></span>
             </div>
-
-            <div className="hist-track">
-              {HISTORIA_FOTOS.map((f) => (
-                <figure className="hist-frame" key={f.src}>
-                  <img src={f.src} alt={f.alt} width={1500} height={1030} loading="lazy" />
-                  <figcaption>
-                    {f.anio && <span className="hyr">{f.anio}</span>}
-                    {f.cap}
-                  </figcaption>
-                </figure>
-              ))}
+            <div className="trust-item">
+              <span className="tic">
+                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3 0 5.5 2.7 5.5 6S14.8 15 12 15s-5.5-3.2-5.5-6.5 2.5-6 5.5-6z" /><path d="M12 15l-1 2.5h2L12 21.5" /></svg>
+              </span>
+              <span><b>+1.000 productos</b><small>Todo para celebrar</small></span>
             </div>
-
-            <div className="hist-foot">
-              <div className="hist-chips">
-                <div className="hchip"><b>+30</b><span>Años</span></div>
-                <div className="hchip"><b>+1.000</b><span>Productos</span></div>
-                <div className="hchip"><b>Nº&nbsp;1</b><span>En cotillón</span></div>
-              </div>
-              <a className="btn btn-ghost" href="/historia">Ver toda nuestra historia →</a>
+            <div className="trust-item">
+              <span className="tic">
+                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9l-5 4V6z" /></svg>
+              </span>
+              <span><b>Atención personal</b><small>Te asesoramos por WhatsApp</small></span>
+            </div>
+            <div className="trust-item">
+              <span className="tic">
+                <svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9h16M9 20v-6h6v6" /></svg>
+              </span>
+              <span><b>4 sucursales a la calle</b><small>Vení a verlo en persona</small></span>
             </div>
           </div>
         </section>
@@ -278,6 +277,38 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="historia" id="historia">
+          <div className="wrap">
+            <div className="hist-head">
+              <div className="eyebrow">Nuestra historia</div>
+              <h2>Más de 30 años haciendo magia en Tucumán</h2>
+              <p>Desde 1994, el cotillón de referencia. La misma familia de siempre, con las mismas ganas del primer día.</p>
+              <p className="mantra">Vos ponés la ocasión. Nosotros, todo lo demás.</p>
+            </div>
+
+            <div className="hist-track">
+              {HISTORIA_FOTOS.map((f) => (
+                <figure className="hist-frame" key={f.src}>
+                  <img src={f.src} alt={f.alt} width={1500} height={1030} loading="lazy" />
+                  <figcaption>
+                    {f.anio && <span className="hyr">{f.anio}</span>}
+                    {f.cap}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+
+            <div className="hist-foot">
+              <div className="hist-chips">
+                <div className="hchip"><b>+30</b><span>Años</span></div>
+                <div className="hchip"><b>+1.000</b><span>Productos</span></div>
+                <div className="hchip"><b>Nº&nbsp;1</b><span>En cotillón</span></div>
+              </div>
+              <a className="btn btn-ghost" href="/historia">Ver toda nuestra historia →</a>
+            </div>
+          </div>
+        </section>
+
         <section className="contacto" id="contacto">
           <div className="wrap">
             <div className="head">
@@ -322,6 +353,8 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      <CatalogoPrecios />
     </>
   );
 }

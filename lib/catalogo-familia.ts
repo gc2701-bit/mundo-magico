@@ -25,6 +25,11 @@ export type ProductoPublico = {
   fotos: Foto[];
   orden: number;
   familia: string | null;
+  // Sumados en Sprint 4 del rediseño de frontend (catalogo_13_publico_destacados.sql)
+  // — curación del hero del home desde el panel admin (UI de esa
+  // curación fuera de alcance de este proyecto, ver la spec).
+  destacadoHome?: boolean;
+  precioOferta?: number | null;
 };
 
 // Buscador de Explorar (Task 2.5) — sin acentos ni mayúsculas de por
