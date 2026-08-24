@@ -1,11 +1,29 @@
-# Hasta ahora Netlify publicaba el repo tal cual, sin build command. Con
-# Eleventy (ver SPEC.md sección 4) hace falta correr el build y publicar
-# _site/ en vez de la raíz — _headers/_redirects/assets/productos se
-# pasan a _site/ como passthrough copy (ver eleventy.config.js), así que
-# la CSP y los redirects siguen funcionando igual desde ahí.
+# Migración a Next.js (ver docs/superpowers/specs/2026-08-20-nextjs-migracion-familias-design.md,
+# fuera de este repo). `publish = ".next"` es la convención que espera el
+# Next Runtime de Netlify (@netlify/plugin-nextjs, adapter OpenNext).
+#
+# `[[plugins]]` de abajo se declara A MANO a propósito — la doc de Netlify
+# dice que la autodetección alcanza sola, pero en el primer intento de
+# deploy real de esta migración (2026-08-21) el sitio quedó marcado como
+# framework "eleventy" (quedó fijado así desde que se creó el sitio, y/o
+# porque este repo todavía tiene eleventy.config.js conviviendo con Next
+# hasta el Sprint 7) y NUNCA inyectó el runtime — `next build` corrió pero
+# `.next/` se publicó tal cual, sin adaptador, y el sitio dio 404 en todas
+# las rutas. Declarar el plugin explícito lo fuerza sin importar qué
+# framework haya detectado el dashboard. Sin pinear versión (recomendación
+# de Netlify: se actualiza sola en cada build).
+#
+# `_headers`/`_redirects` viven ahora en `public/` (Next los mueve a `.next`
+# en el build) — antes vivían en la raíz porque Eleventy los pasaba con
+# passthrough copy a `_site/`. Mientras el sitio viejo siga en el repo
+# (hasta el Sprint 7 de la migración), se sigue pudiendo generar con
+# `npm run build:eleventy`, pero eso ya no es lo que Netlify corre acá.
 [build]
   command = "npm run build"
-  publish = "_site"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

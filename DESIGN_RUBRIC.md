@@ -61,3 +61,34 @@ If any box is unchecked, the page is not done — fix before scoring Part 2.
 ## Prompt to trigger the review
 
 > Screenshot the page (desktop + mobile). Score it 1–5 on every craft dimension in DESIGN_RUBRIC.md. For anything under 4, name the exact fix. Confirm Part 1 passes. Do not tell me it looks good — find what's mediocre.
+
+---
+
+## Scorecard final — rediseño frontend cliente (Sprint 9, 2026-08-24)
+
+Medido con Lighthouse real (`npx lighthouse` contra un build de producción,
+`npm run build && npm run start`) sobre las 4 páginas que pedía el plan
+(`docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md`).
+
+| Página | Device | Performance | Accessibility | Best Practices | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|---|
+| Home (`/`) | Desktop | 98 | 97 | 96 | 100 | 1.1s | 0 |
+| Home (`/`) | Mobile | 79 ⚠️ | 100 | 96 | 100 | 5.7s ⚠️ | 0 |
+| Mundo (`/globos-fiesta`) | Desktop | 95 | 95 | 96 | 100 | 1.6s | 0.004 |
+| Producto (`/cumpleanos/globo-estandar-12-x25`) | Desktop | 92 | 97 | 96 | 100 | 1.9s | 0 |
+| Carrito (`/carrito`) | Desktop | 100 | 96 | 96 | 100 | 0.8s | 0 |
+
+**Part 1 (objetivo, pass/fail):** pasa en las 4 páginas en desktop —
+Performance ≥90, Accessibility ≥95, LCP<2.5s, CLS<0.1. Contraste WCAG AA
+ver auditoría de `security-auditor` aparte.
+
+**⚠️ Home en mobile no pasa Performance/LCP** — mismo patrón que un
+hallazgo ya documentado en el Sprint 4 (`docs/superpowers/plans/...`):
+main-thread work (1.8s) y latencia de red (10-180ms) medidos por el
+propio Lighthouse no explican un LCP de 5.7s — sospecha fundada de
+artefacto del entorno de medición (Chromium headless + throttling 4x
+CPU simulado dentro de una VM WSL2 compartida), no un problema real de
+la página. Recomendación: remedir en un deploy real antes de decidir si
+hace falta optimizar algo — no perseguir este número a ciegas dentro de
+este entorno, ya se intentó exhaustivamente en Sprint 4 sin resultado
+concluyente.

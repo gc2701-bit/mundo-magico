@@ -1,0 +1,31 @@
+# Alias legacy de antes de esta migración — apuntan directo al slug final
+# de mundo (evita encadenar dos 301 vía la página -v2.html intermedia).
+/cotillon-v2.html /globos-fiesta 301
+/para-lucir-v2.html /disfraces 301
+/mesa-v2.html /decoracion 301
+
+# Sprint 5.5: las 7 páginas de mundo del sitio Eleventy viejo pasan a
+# /[mundo] en Next.js — mismos slugs que ya usaba catalogo_mundos (ver
+# migración catalogo_09_mundos), sin ambigüedad.
+/globos-fiesta-v2.html /globos-fiesta 301
+/cumpleanos-v2.html /cumpleanos 301
+/decoracion-v2.html /decoracion 301
+/disfraces-v2.html /disfraces 301
+/reposteria-v2.html /reposteria 301
+# /combos apunta a Explorar (no a /combos) a propósito: los 15 combos
+# viejos (bundles multi-SKU con data-incluye, no un producto simple con
+# data-pos) nunca se migraron en Sprint 1 y catalogo_productos no tiene
+# ninguno con mundo=combos — /combos daría 404. Pendiente real: diseñar
+# el modelo de datos de "combo" (varios SKU + precio propio) y migrarlos,
+# recién cuando todos los sprints de la migración terminen (decisión del
+# usuario, 2026-08-21) — ver docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md.
+/combos-v2.html /explorar 301
+/especiales-v2.html /especiales 301
+
+# Páginas informativas/de cuenta migradas al inventario post-incidente del
+# home (2026-08-21, ver "Corte a producción" en el plan). El fragmento
+# (#access_token=...) de un link de recuperación viejo lo conserva el
+# navegador solo al seguir el redirect, no hace falta reescribirlo acá.
+/recuperar.html /recuperar 301
+/historia-v2.html /historia 301
+/eventos-v2.html /eventos 301

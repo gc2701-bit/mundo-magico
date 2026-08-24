@@ -1,5 +1,32 @@
 # Mundo Mágico — instrucciones del proyecto
 
+## Stack actual (rediseño frontend cliente, Sprint 9, 2026-08-24)
+
+El frontend de cliente (catálogo, búsqueda, producto, carrito, cuenta) se
+reescribió de punta a punta en Next.js App Router + TypeScript + Tailwind
+CSS v4, sobre `feat/nextjs-migration` (ver
+`docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md`
+para el detalle sprint por sprint) — **ya no es HTML/CSS/JS vanilla**.
+Componentes en `app/components/`, capa de datos en `lib/`, RPCs de
+Postgres en `supabase/*.sql`. ISR on-demand (`revalidateTag('catalogo')`
+vía `app/api/revalidate/route.ts`), nunca por tiempo.
+
+**Todo lo de abajo en este archivo (`.claude/gen-*.js`, `assets/*.js`,
+tarjetas `-v2.html` a mano, `node .claude/static-server.js`) describe el
+flujo de trabajo del sitio Eleventy/HTML viejo, previo a esta
+migración** — sigue siendo el flujo real del **panel de administración**
+(un proyecto aparte, todavía no migrado, ver `MundoMagicoWeb/CLAUDE.md` a
+nivel proyecto). No se tocó ni se verificó como parte del rediseño de
+frontend cliente — antes de confiar en instrucciones de abajo, confirmar
+contra el código del panel admin actual, no asumir que siguen vigentes
+tal cual están escritas.
+
+Legacy CSS (`public/assets/v2.css`/`carrito.css`/`cuenta.css`) sigue
+cargado en paralelo a Tailwind — retirarlo del todo quedó pendiente
+(`AjustesModal.tsx`, `FavoritosPanel.tsx`, `CarritoNavButton.tsx`,
+`CuentaNavButton.tsx` y un barrido de `.wrap`/`.btn` en ~30 archivos),
+ver la sección "Hallazgos reales" del Sprint 9 en el plan.
+
 ## El catálogo se edita desde la propia web (precio, stock, subcategorías, productos)
 
 Precio, stock, subcategorías y productos nuevos **ya no se editan en el
@@ -215,3 +242,13 @@ node .claude/static-server.js
 `http://localhost:8000/index.html` solo). Verificar ahí — no en el archivo
 abierto directo — sobre todo para cualquier cosa que dependa del buscador,
 Explorar, o de que varias páginas se lean entre sí.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

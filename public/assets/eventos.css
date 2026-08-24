@@ -1,0 +1,123 @@
+/* Página /eventos — portada de eventos-v2.html (sitio Eleventy viejo).
+ * No estaba migrada, encontrada en el inventario de páginas del sitio
+ * viejo tras el incidente de producción del home (2026-08-21, ver "Corte
+ * a producción" en el plan). Mismo CSS, sin recortes.
+ */
+:root{ --accent:#b03a54; --accent-deep:#7d2140 }
+
+/* ===== PORTADA · hero oscuro y elegante (ocasiones a lo grande) ===== */
+.evt-hero{
+  position:relative; overflow:hidden; min-height:94svh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  padding:calc(var(--nav-h) + var(--s6)) var(--s3) var(--s8); color:#fff;
+  background:
+    radial-gradient(70% 55% at 50% 14%, color-mix(in srgb, var(--accent) 62%, transparent) 0%, transparent 66%),
+    linear-gradient(158deg, #2e0f19 0%, #521a2e 42%, color-mix(in srgb, var(--accent-deep) 78%, #150910) 100%);
+}
+.evt-hero::after{content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(120% 82% at 50% 122%, rgba(0,0,0,.5), transparent 60%);}
+.evt-hero > *{position:relative; z-index:1}
+.evt-hero .hero-ic{
+  width:96px; height:96px; border-radius:28px; display:grid; place-items:center; margin-bottom:var(--s4);
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 22px 50px -18px rgba(0,0,0,.65);
+}
+.evt-hero .hero-ic svg{width:50px; height:50px; fill:#f3d27a; stroke:none}
+.evt-hero .eyebrow{color:#f3d27a; justify-content:center}
+.evt-hero .eyebrow::before{background:#f3d27a}
+.evt-hero h1{font-size:clamp(45px, 6.4vw, 84px); line-height:1.02; letter-spacing:-.015em; max-width:16ch; margin:0 0 var(--s3); color:#fff}
+.evt-hero h1 em{font-style:italic; font-weight:500; color:#f3d27a}
+.evt-hero .lead{color:rgba(255,255,255,.82); font-size:clamp(var(--fs1), 1.6vw, var(--fs2)); line-height:1.55; max-width:48ch; margin:0 auto}
+.season-pill{
+  display:inline-flex; align-items:center; gap:8px; margin-top:var(--s4);
+  padding:10px 20px; border-radius:999px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22);
+  color:#fff; font-size:13px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+}
+.season-pill svg{width:16px; height:16px; stroke:#f3d27a; fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+.evt-hero .cue{
+  position:absolute; bottom:var(--s3); left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none; z-index:1;
+  color:rgba(255,255,255,.7); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  transition:color .2s var(--ease);
+}
+.evt-hero .cue:hover{color:#fff}
+.evt-hero .cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
+
+/* ===== Secciones de servicio ===== */
+.svc{padding:var(--s9) 0; background:var(--bg)}
+.svc-head{max-width:640px; margin:0 auto var(--s6); text-align:center}
+.kicker{display:inline-flex; align-items:center; gap:9px; margin-bottom:var(--s2);
+  padding:7px 16px; border-radius:999px; background:color-mix(in srgb, var(--accent) 12%, #fff); color:var(--accent-deep);
+  font-size:12px; font-weight:800; letter-spacing:.09em; text-transform:uppercase}
+.kicker::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent)}
+.svc-head h2{margin:0 0 var(--s2); font-size:clamp(32px,4vw,46px)}
+.svc-head p{margin:0 auto; color:var(--muted); font-size:var(--fs1); line-height:1.55; max-width:56ch}
+
+/* Servicios · tarjetas */
+.evt-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s3)}
+@media(max-width:720px){ .evt-grid{grid-template-columns:1fr} }
+.evt-card{position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:8px;
+  padding:var(--s3); background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow-sm); text-decoration:none; color:inherit; overflow:hidden;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.evt-card::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+  background:var(--accent); opacity:0; transition:opacity .25s var(--ease)}
+.evt-card:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg); border-color:transparent}
+.evt-card:hover::before{opacity:1}
+.evt-ic{width:46px; height:46px; flex:none; border-radius:14px; display:grid; place-items:center;
+  background:color-mix(in srgb, var(--accent) 12%, #fff)}
+.evt-ic svg{width:24px; height:24px; stroke:var(--accent-deep); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+.evt-card b{font-size:var(--fs1); line-height:1.2}
+.evt-card small{color:var(--muted); font-size:13.5px; line-height:1.4; flex:1}
+.evt-go{display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:800;
+  color:var(--accent-deep); margin-top:2px}
+.evt-go svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s var(--ease)}
+.evt-card:hover .evt-go svg{transform:translateX(4px)}
+
+/* Cómo trabajamos · 3 pasos numerados */
+.process{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s3); margin-top:var(--s6)}
+@media(max-width:720px){ .process{grid-template-columns:1fr} }
+.step{position:relative; text-align:center; padding:var(--s4) var(--s3) var(--s3);
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm)}
+.step-num{position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+  width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+  background:var(--accent-deep); color:#fff; font-family:var(--font-display); font-weight:600; font-size:18px;
+  box-shadow:0 10px 20px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+.step-ic{width:44px; height:44px; border-radius:50%; display:grid; place-items:center; margin:6px auto 8px; background:color-mix(in srgb, var(--accent) 12%, #fff)}
+.step-ic svg{width:22px; height:22px; stroke:var(--accent-deep); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+.step b{font-size:var(--fs0); line-height:1.2}
+.step small{display:block; margin-top:4px; font-size:13.5px; color:var(--muted); line-height:1.4}
+
+/* Mayorista · panel oscuro premium */
+#mayorista{background:var(--bg)}
+.mayor-panel{position:relative; overflow:hidden; color:#fff;
+  border-radius:calc(var(--radius) + 10px); padding:clamp(28px,5vw,60px);
+  background:
+    radial-gradient(85% 130% at 100% 0%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 58%),
+    linear-gradient(150deg, #3a1420 0%, color-mix(in srgb, var(--accent-deep) 82%, #170a10) 100%);
+  box-shadow:0 30px 60px -24px rgba(58,20,32,.6)}
+.mayor-panel .svc-head{margin:0 0 var(--s5); text-align:left; max-width:640px}
+.mayor-panel .kicker{background:rgba(255,255,255,.12); color:#fff}
+.mayor-panel .kicker::before{background:#f3d27a}
+.mayor-panel .svc-head h2{color:#fff}
+.mayor-panel .svc-head p{margin:0; color:rgba(255,255,255,.82)}
+.vals{display:grid; grid-template-columns:repeat(2,1fr); gap:var(--s2)}
+@media(max-width:560px){ .vals{grid-template-columns:1fr} }
+.val{display:flex; align-items:flex-start; gap:var(--s2); padding:var(--s3);
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:var(--radius)}
+.val .vic{width:46px; height:46px; flex:none; border-radius:14px; display:grid; place-items:center; background:rgba(243,210,122,.16)}
+.val .vic svg{width:24px; height:24px; stroke:#f3d27a; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.val b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.25; color:#fff}
+.val small{display:block; font-size:14px; color:rgba(255,255,255,.72); line-height:1.4; margin-top:3px}
+.mayor-cta{margin-top:var(--s5); display:flex; gap:var(--s2); flex-wrap:wrap}
+.mayor-panel .btn-primary{background:#f3d27a; color:#5a3f0a; box-shadow:0 14px 30px -12px rgba(243,210,122,.5)}
+.mayor-panel .btn-primary:hover{background:#f7dd93; color:#5a3f0a; transform:translateY(-2px)}
+.mayor-panel .btn-ghost{color:#fff; border-color:rgba(255,255,255,.5)}
+.mayor-panel .btn-ghost:hover{background:#fff; color:var(--accent-deep); transform:translateY(-2px)}
+/* Fondo con el color de la página (reemplaza el beige) */
+.otros{
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--bg)) 0%, color-mix(in srgb, var(--accent) 20%, var(--bg)) 100%);
+  border-top-color:color-mix(in srgb, var(--accent) 26%, var(--bg));
+}
+.otros-card{ border-color:color-mix(in srgb, var(--accent) 24%, var(--bg)); }

@@ -1,0 +1,330 @@
+/* Home (app/page.tsx) — portado de index.html (sitio Eleventy viejo), que
+ * había quedado como placeholder de Sprint 0 sin reemplazar nunca (bug
+ * encontrado en producción real, 2026-08-21 — ver
+ * docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md,
+ * sección "Corte a producción"). Mismo CSS que index.html, sin recortes —
+ * el hero animado (video + campo de estrellas, HeroAnimado.tsx) se había
+ * simplificado a un logo estático en el primer pase y se restauró tal
+ * cual estaba, a pedido explícito del usuario (2026-08-21).
+ */
+
+/* ===================== HERO ===================== */
+/* El video del logo ES el fondo: sus bordes son los de la pantalla,
+   y su blanco se funde con el blanco de la página. */
+.hero{
+  position:relative; min-height:100svh; overflow:hidden;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  text-align:left; padding:calc(var(--nav-h) + var(--s4)) clamp(var(--s3), 6vw, var(--s10)) var(--s8);
+  background:#fff;
+}
+.hero > *{position:relative; z-index:2}
+/* velo inferior: transición suave del blanco del video al crema de la página */
+.hero::after{
+  content:''; position:absolute; inset:auto 0 0 0; height:120px; z-index:1; pointer-events:none;
+  background:linear-gradient(to bottom, rgba(253,251,245,0), var(--bg));
+}
+
+/* Campo de estrellas de la marca · 3 capas de profundidad con drift + twinkle */
+.starfield{position:absolute; inset:0; z-index:1; pointer-events:none}
+.star{position:absolute; opacity:0; will-change:transform;
+  animation:starIn .9s var(--ease) both, twinkle 5s var(--ease) 1s infinite}
+.star svg{display:block; filter:drop-shadow(0 4px 8px rgba(28,26,22,.10)); animation:drift 9s ease-in-out infinite}
+.star:nth-child(2n){animation-delay:.15s, 1.4s; animation-duration:.9s, 6.2s}
+.star:nth-child(2n) svg{animation-duration:11s; animation-delay:.8s}
+.star:nth-child(3n){animation-delay:.3s, 2.6s; animation-duration:.9s, 7.4s}
+.star:nth-child(3n) svg{animation-duration:13s; animation-delay:1.6s}
+.star:nth-child(5n){animation-delay:.45s, .7s}
+@keyframes starIn{from{opacity:0; transform:scale(0) rotate(-90deg)}to{opacity:.9; transform:scale(1) rotate(0)}}
+@keyframes twinkle{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){ .star{animation:none; opacity:.6} .star svg{animation:none} }
+
+/* Video del logo animado · ocupa la mitad derecha, contenido (sin recortes):
+   el blanco del video se funde con el blanco del hero, sin bordes visibles. */
+.hero-anim{position:absolute; top:0; bottom:0; left:34%; right:0; z-index:0; animation:animIn 1.4s var(--ease) both}
+.hero-anim video{
+  width:100%; height:100%; object-fit:contain; object-position:60% 50%;
+  display:block; border:0;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 24%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+@keyframes animIn{from{opacity:0}to{opacity:1}}
+/* Fallback estático si el usuario prefiere menos movimiento */
+.hero-logo-static{display:none; width:152px; height:152px; border-radius:36px; background:#fff;
+  box-shadow:0 24px 48px -16px rgba(28,26,22,.22), 0 4px 12px rgba(28,26,22,.08);
+  place-items:center; margin-bottom:var(--s4)}
+.hero-logo-static img{width:128px; height:128px; object-fit:cover; border-radius:28px; display:block}
+@media(prefers-reduced-motion:reduce){
+  .hero-anim{display:none}
+  .hero-logo-static{display:grid}
+}
+
+.hero .eyebrow{margin-bottom:var(--s3); animation:riseIn .7s var(--ease) .25s both}
+.hero h1{
+  font-size:clamp(39px, 4.4vw, 61px); line-height:1.04; letter-spacing:-.015em;
+  max-width:13ch; margin:0 0 var(--s3);
+}
+.hero h1 em{font-style:italic; font-weight:500; color:var(--green-ink)}
+.hero h1 .w{display:inline-block; animation:wordUp .7s var(--ease) both}
+.hero h1 .w:nth-child(1){animation-delay:.12s}
+.hero h1 .w:nth-child(2){animation-delay:.18s}
+.hero h1 .w:nth-child(3){animation-delay:.24s}
+.hero h1 .w:nth-child(4){animation-delay:.30s}
+.hero h1 .w:nth-child(5){animation-delay:.36s}
+.hero h1 .w:nth-child(6){animation-delay:.42s}
+.hero h1 .w:nth-child(7){animation-delay:.48s}
+.hero h1 .w:nth-child(8){animation-delay:.54s}
+@keyframes wordUp{from{transform:translateY(.45em) rotate(1.5deg)}to{transform:translateY(0) rotate(0)}}
+@keyframes riseIn{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+.hero-lead{color:var(--ink); opacity:.75; font-size:clamp(var(--fs0), 1.3vw, var(--fs1)); line-height:1.5; max-width:34ch; margin:0 0 var(--s5);
+  animation:riseIn .7s var(--ease) .5s both}
+.hero-cta{display:flex; flex-wrap:wrap; gap:var(--s2); justify-content:flex-start; animation:riseIn .7s var(--ease) .65s both}
+@media(prefers-reduced-motion:reduce){
+  .hero .eyebrow, .hero h1 .w, .hero-lead, .hero-cta{animation:none}
+}
+.hero-cue{
+  position:absolute; bottom:var(--s3); left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none;
+  color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  transition:color .2s var(--ease);
+}
+.hero-cue:hover{color:var(--green-ink)}
+.hero-cue svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
+
+@media(max-width:760px){
+  /* En vertical el video vuelve al flujo (arriba, sin recortes raros) */
+  .hero{align-items:center; text-align:center; padding-bottom:var(--s9)}
+  .hero-anim{position:relative; inset:auto; width:100vw; margin:0 0 var(--s2)}
+  .hero-anim video{aspect-ratio:4/3; object-fit:cover; object-position:50% 50%; transform:none}
+  /* fundido arriba y abajo para que el video se disuelva en el blanco */
+  .hero-anim::before, .hero-anim::after{content:''; position:absolute; left:0; right:0; height:56px; z-index:1; pointer-events:none}
+  .hero-anim::before{top:0; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0))}
+  .hero-anim::after{bottom:0; background:linear-gradient(to top, #fff, rgba(255,255,255,0))}
+  .hero h1{font-size:clamp(31px, 9.5vw, 39px); max-width:16ch}
+  .hero-lead{font-size:var(--fs1); margin-bottom:var(--s4); max-width:44ch}
+  .hero-cta{width:100%; flex-direction:column; align-items:stretch; max-width:360px; justify-content:center}
+}
+
+/* ===================== BANDA DE CONFIANZA ===================== */
+.trust{background:var(--green-ink); color:#fff}
+.trust .wrap{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
+  padding-top:var(--s5); padding-bottom:var(--s5);
+}
+.trust-item{display:flex; align-items:center; gap:var(--s2)}
+.trust-item .tic{
+  width:48px; height:48px; flex:none; border-radius:16px; display:grid; place-items:center;
+  background:rgba(255,255,255,.12);
+}
+.trust-item .tic .ic{width:26px; height:26px}
+.trust-item b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.2}
+.trust-item small{display:block; font-size:var(--fs-1); opacity:.85; line-height:1.35}
+@media(max-width:900px){ .trust .wrap{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:480px){ .trust .wrap{grid-template-columns:1fr; gap:var(--s2)} }
+
+/* ===================== HISTORIA ===================== */
+.historia{padding:calc(var(--s10) * 0.8) 0; background:var(--bg)}
+.hist-head{text-align:center; max-width:720px; margin:0 auto calc(var(--s7) * 0.8)}
+.hist-head h2{font-size:clamp(35px,3.6vw,44px)}
+.hist-head p{font-size:var(--fs1); line-height:1.6; color:var(--muted); margin:0}
+.mantra{
+  font-family:var(--font-hand); font-weight:700; color:var(--green-ink);
+  font-size:clamp(var(--fs3), 4.4vw, var(--fs5)); line-height:1.15; margin:var(--s3) 0 0;
+}
+
+.hist-track{display:grid; grid-template-columns:repeat(4,1fr); gap:calc(var(--s3) * 0.8); align-items:start}
+@media(max-width:900px){ .hist-track{grid-template-columns:repeat(2,1fr)} }
+.hist-frame{
+  margin:0; background:#fff; padding:var(--s1); padding-bottom:0;
+  border-radius:6px; box-shadow:0 16px 32px -14px rgba(28,26,22,.22), 0 2px 8px rgba(28,26,22,.06);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.hist-frame:nth-child(1){transform:rotate(-1.6deg)}
+.hist-frame:nth-child(2){transform:rotate(1.1deg) translateY(12px)}
+.hist-frame:nth-child(3){transform:rotate(-.8deg)}
+.hist-frame:nth-child(4){transform:rotate(1.8deg) translateY(10px)}
+.hist-frame:hover{transform:rotate(0) translateY(-6px); box-shadow:var(--shadow-lg)}
+.hist-frame img{width:100%; height:173px; object-fit:cover; object-position:top; display:block; border-radius:3px; background:#efece4}
+.hist-frame figcaption{
+  font-family:var(--font-hand); font-weight:600; font-size:var(--fs1); color:var(--ink);
+  padding:var(--s1) 4px 12px; line-height:1.2; text-align:center;
+}
+.hist-frame .hyr{
+  display:inline-block; font-family:var(--font-body); font-size:11px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--green-ink);
+  background:var(--green-soft); padding:3px 10px; border-radius:999px; margin-right:6px;
+}
+@media(prefers-reduced-motion:reduce){ .hist-frame, .hist-frame:hover{transform:none} }
+
+.hist-foot{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:var(--s2) var(--s4); margin-top:calc(var(--s7) * 0.8)}
+.hist-chips{display:flex; gap:var(--s2); flex-wrap:wrap; justify-content:center}
+.hchip{background:#fff; border:1px solid var(--line); border-radius:999px; padding:10px 20px;
+  box-shadow:var(--shadow-sm); display:flex; align-items:baseline; gap:8px}
+.hchip b{font-family:var(--font-display); font-weight:600; font-size:var(--fs1); color:var(--green-ink); line-height:1}
+.hchip span{font-size:var(--fs-1); font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--muted)}
+
+/* ===================== MUNDOS ===================== */
+.mundos{padding:calc(var(--s10) * 0.7) 0; background:#f6f2e8; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.mundos .head{text-align:center; margin-bottom:calc(var(--s7) * 0.7)}
+.mundos .head h2{font-size:clamp(35px,3.6vw,44px)}
+.mundos .head .sub{margin:0 auto; font-size:18px}
+.mundo-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:calc(var(--s4) * 0.7); max-width:calc(var(--wrap) * 0.7); margin:0 auto}
+@media(max-width:560px){ .mundo-grid{grid-template-columns:repeat(2,minmax(0,1fr)); gap:calc(var(--s3) * 0.7)} }
+
+.mundo{
+  position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  border-radius:calc(var(--radius) * 0.7); overflow:hidden; background:#fff;
+  border:1px solid rgba(28,26,22,.06);
+  box-shadow:0 10px 20px -14px rgba(28,26,22,.18), 0 3px 8px -6px rgba(28,26,22,.08);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  will-change:transform;
+  aspect-ratio:4/5;
+}
+.mundo:hover{transform:translateY(-5px); box-shadow:0 20px 36px -18px rgba(28,26,22,.28), 0 8px 16px -12px rgba(28,26,22,.14)}
+
+.mundo .tile{flex:7 1 0; min-height:0; overflow:hidden; display:grid; place-items:center}
+.mundo .tile-img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s var(--ease)}
+.mundo:hover .tile-img{transform:scale(1.06)}
+
+.mundo .body{flex:3 1 0; min-height:0; padding:10px 11px; display:flex; flex-direction:column; justify-content:center; gap:4px}
+.mundo h3{font-size:14px; margin:0}
+.mundo .desc{font-size:12px; line-height:1.35; margin:0; opacity:.72; font-weight:500}
+.mundo .go{font-size:12px; font-weight:800; display:inline-flex; align-items:center; gap:4px; margin-top:2px; transition:gap .2s var(--ease)}
+.mundo:hover .go{gap:8px}
+@media(max-width:560px){
+  .mundo .tile{flex:5.5 1 0}
+  .mundo .body{flex:4.5 1 0; padding:8px 10px; gap:2px}
+  .mundo h3{font-size:13px; line-height:1.2}
+  .mundo .desc{font-size:11px; line-height:1.25}
+  .mundo .go{font-size:11px}
+}
+
+.mundo .body{border-top:5px solid var(--accent-line, #2f63cf)}
+.m-globos    .tile{background:#e9effc} .m-globos    .body{--accent-line:#2f63cf} .m-globos h3, .m-globos .go{color:#24509e}
+.m-cumple    .tile{background:#fdeae8} .m-cumple    .body{--accent-line:#e23b30} .m-cumple h3, .m-cumple .go{color:#b3271d}
+.m-disfraces .tile{background:#232f58} .m-disfraces .body{--accent-line:#a23e8c} .m-disfraces h3, .m-disfraces .go{color:#a23e8c}
+.m-reposteria .tile{background:#fdf3d5} .m-reposteria .body{--accent-line:#ec6a9c} .m-reposteria h3, .m-reposteria .go{color:#bb3b6e}
+.m-deco      .tile{background:var(--green-soft)} .m-deco      .body{--accent-line:#6f9e5b} .m-deco h3, .m-deco .go{color:var(--green-ink)}
+.m-combos    .tile{background:#fdeeda} .m-combos    .body{--accent-line:#f0913a} .m-combos h3, .m-combos .go{color:#9a5303}
+
+@media(prefers-reduced-motion:reduce){
+  .mundo:hover{transform:translateY(-3px)}
+  .mundo .tile-img, .mundo:hover .tile-img{transition:none; transform:none}
+}
+
+/* ===================== VISITANOS ===================== */
+.visitanos{padding:90px 0; background:#f6f2e8; border-top:1px solid var(--line)}
+.visitanos .head{text-align:center; max-width:640px; margin:0 auto var(--s6)}
+.visitanos .head h2{font-size:clamp(35px,3.6vw,44px)}
+.visitanos .head .sub{margin:0 auto; font-size:18px}
+.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s4); align-items:stretch}
+.vis-panel{grid-column:1; min-width:0; display:flex; flex-direction:column; gap:var(--s2)}
+.vis-photo{grid-column:2; align-self:stretch; position:relative; overflow:hidden; aspect-ratio:1536/1024;
+  border-radius:var(--radius); border:1px solid var(--line);
+  background:#f3ecdf; box-shadow:var(--shadow-lg)}
+.vis-photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+@media(max-width:900px){
+  .vis-split{grid-template-columns:1fr}
+  .vis-photo{grid-column:1}
+}
+.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); flex:1 1 auto; grid-auto-rows:1fr}
+@media(max-width:900px){ .suc-grid{flex:0 1 auto; grid-auto-rows:auto} }
+@media(max-width:480px){ .suc-grid{grid-template-columns:1fr} }
+.suc-card{display:flex; flex-direction:column; gap:2px; padding:var(--s3); background:#fff;
+  border:1px solid var(--line); border-radius:20px; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow); border-color:transparent}
+.suc-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
+.suc-card small{color:var(--muted); font-size:14px}
+.suc-card .go{margin-top:var(--s1); font-size:13px; font-weight:700; color:var(--green-ink);
+  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
+.suc-card:hover .go{gap:9px}
+.hours-pill{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
+  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:14px;
+  padding:12px 22px; border-radius:999px}
+.hours-pill .ic{width:18px; height:18px}
+@media(prefers-reduced-motion:reduce){ .suc-card:hover{transform:none} }
+
+/* ===================== RESEÑAS DE GOOGLE ===================== */
+.resenas{padding:38px 0; background:var(--bg); border-top:1px solid var(--line)}
+.resenas .head{text-align:center; max-width:672px; margin:0 auto 19px}
+.resenas .head h2{font-size:clamp(35px,3.6vw,44px)}
+.resenas .head .sub{margin:0 auto; font-size:18px}
+
+.gsum{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px 19px;
+  margin:0 auto 19px; padding:7px 19px; max-width:672px;
+  background:#fff; border:1px solid var(--line); border-radius:999px; box-shadow:var(--shadow-sm)}
+.gsum-logo{display:flex; align-items:center; gap:7px}
+.gsum-logo svg{width:19px; height:19px; flex:none}
+.gsum-logo b{font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--ink)}
+.gsum-score{display:flex; align-items:baseline; gap:7px}
+.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:18px; line-height:1; color:var(--ink)}
+.gsum-score small{font-size:13px; color:var(--muted)}
+.stars{display:inline-flex; gap:1px}
+.stars svg{width:13px; height:13px; fill:#fbbc05}
+.gsum .btn{white-space:nowrap; padding:7px 17px; font-size:14px}
+
+.res-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+@media(max-width:900px){ .res-grid{grid-template-columns:1fr 1fr} }
+@media(max-width:600px){ .res-grid{grid-template-columns:1fr} }
+.res-card{display:flex; flex-direction:column; gap:7px; padding:14px 17px;
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm);
+  position:relative; transition:transform .25s var(--ease), box-shadow .25s var(--ease)}
+.res-card:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+.res-card .stars svg{width:13px; height:13px}
+.res-card .quote{font-size:14px; line-height:1.4; color:var(--ink); margin:0; flex:1;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.res-card .gmark{position:absolute; top:14px; right:17px; width:16px; height:16px; opacity:.9}
+.res-author{display:flex; align-items:center; gap:7px; margin-top:auto}
+.res-av{width:26px; height:26px; flex:none; border-radius:50%; display:grid; place-items:center;
+  color:#fff; font-weight:800; font-size:13px; font-family:var(--font-body)}
+.res-author b{display:block; font-weight:800; font-size:13px; line-height:1.2}
+.res-author small{display:block; font-size:12px; color:var(--muted)}
+@media(prefers-reduced-motion:reduce){ .res-card:hover{transform:none} }
+
+/* ===================== BANDA · SERVICIOS ESPECIALES =====================
+ * Sección completa que faltaba en el primer pase (se portó el HTML pero
+ * no este bloque de CSS) — encontrado por el usuario en producción: sin
+ * esto, el ícono de anillos (dos <circle> del SVG) renderiza al tamaño
+ * por default del navegador, con fill sólido en vez de sólo el trazo. */
+.banda-especial{padding:var(--s4) 0; background:linear-gradient(100deg,#c39b3f 0%,#e6cf8f 26%,#faf5e6 50%,#e6cf8f 74%,#c39b3f 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.banda-inner{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.banda-ic{width:56px; height:56px; flex:none; border-radius:18px; background:#fff; display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.banda-ic svg{width:30px; height:30px; stroke:#9a7524; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.banda-txt{flex:1 1 320px; min-width:0}
+.banda-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:#5f4a12}
+.banda-txt small{display:block; font-size:15px; color:#7a621f; margin-top:2px}
+.banda-btn{background:#5f4a12; color:#fff; box-shadow:0 12px 24px -10px rgba(95,74,18,.5)}
+.banda-btn:hover{background:#9a7524; color:#fff; transform:translateY(-2px)}
+@media(max-width:640px){ .banda-inner{flex-direction:column; align-items:flex-start} .banda-txt{flex:0 1 auto} }
+
+/* ===================== CONTACTO ===================== */
+.contacto{padding:58px 0; background:var(--bg); border-top:1px solid var(--line)}
+.contacto .head{text-align:center; max-width:640px; margin:0 auto 22px}
+.contacto .head h2{margin-bottom:6px; font-size:clamp(35px,3.6vw,44px)}
+.contacto .head .sub{margin:0 auto; font-size:14px}
+.con-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+@media(max-width:900px){ .con-grid{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:560px){ .con-grid{grid-template-columns:1fr} }
+.con-card{display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px;
+  padding:14px 16px; background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.con-card:hover{transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent}
+.con-ic{width:34px; height:34px; border-radius:12px; display:grid; place-items:center; color:#fff}
+.con-ic svg{width:19px; height:19px; fill:currentColor}
+.con-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
+.con-card small{color:var(--muted); font-size:14px}
+.con-card .go{margin-top:2px; font-size:13px; font-weight:700; color:var(--green-ink);
+  display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
+.con-card:hover .go{gap:9px}
+.con-wa{background:#25d366}
+.con-ig{background:linear-gradient(45deg,#f9ce34 0%,#ee2a7b 55%,#6228d7 100%)}
+.con-fb{background:#1877f2}
+@media(prefers-reduced-motion:reduce){ .con-card:hover{transform:none} }
