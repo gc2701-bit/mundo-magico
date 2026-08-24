@@ -19,15 +19,32 @@ import type { ProductoPublico } from '@/lib/catalogo-familia';
  * Reusa el mismo mecanismo de precio que ProductoCard.tsx: data-codigo +
  * .pricetag, hidratado por CatalogoPrecios.tsx (ya montado en esta
  * página) — sin duplicar lógica de precio/oferta.
+ *
+ * Transición con fundido (sumada a pedido del usuario, 2026-08-24 — el
+ * cambio de destacado se sentía "tosco/repentino"): al cambiar de índice
+ * (autoplay, flechas o puntos) el contenido baja a opacity-0 un
+ * instante y vuelve a 1 ya con el destacado nuevo, en vez de reemplazar
+ * de golpe. `motion-reduce:` lo saca del todo para quien prefiere menos
+ * movimiento (mismo criterio que HeroAnimado.tsx).
  */
 export default function HeroCarrusel({ productos }: { productos: ProductoPublico[] }) {
   const [i, setI] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  function irA(nuevo: number) {
+    setVisible(false);
+    setTimeout(() => {
+      setI(nuevo);
+      setVisible(true);
+    }, 220);
+  }
 
   useEffect(() => {
     if (productos.length < 2) return;
-    const t = setInterval(() => setI((v) => (v + 1) % productos.length), 6000);
+    const t = setInterval(() => irA((i + 1) % productos.length), 6000);
     return () => clearInterval(t);
-  }, [productos.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productos.length, i]);
 
   if (!productos.length) return null;
   const p = productos[Math.min(i, productos.length - 1)];
@@ -36,8 +53,8 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
   if (p.codigo) dataAttrs['data-codigo'] = p.codigo;
   if (p.precioOferta != null) dataAttrs['data-precio-oferta'] = String(p.precioOferta);
 
-  const anterior = () => setI((v) => (v - 1 + productos.length) % productos.length);
-  const siguiente = () => setI((v) => (v + 1) % productos.length);
+  const anterior = () => irA((i - 1 + productos.length) % productos.length);
+  const siguiente = () => irA((i + 1) % productos.length);
 
   return (
     <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-surface">
@@ -64,7 +81,10 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
 
       <Link
         href={p.mundo ? '/' + p.mundo : '/explorar'}
-        className="mx-auto flex max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left"
+        className={
+          'mx-auto flex max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
+          (visible ? 'opacity-100' : 'opacity-0')
+        }
         {...dataAttrs}
       >
         {foto ? (
@@ -108,7 +128,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
               role="tab"
               aria-selected={idx === i}
               aria-label={`Ver destacado ${idx + 1} de ${productos.length}`}
-              onClick={() => setI(idx)}
+              onClick={() => irA(idx)}
               className="flex h-6 w-6 items-center justify-center"
             >
               <span className={'block h-2 w-2 rounded-full ' + (idx === i ? 'bg-green' : 'bg-line')} />
