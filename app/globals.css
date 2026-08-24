@@ -1,13 +1,238 @@
-/* Placeholder de Sprint 0 — el porteo real de assets/v2.css (y el resto de
- * las hojas de estilo del sitio viejo) pasa a public/ recién cuando las
- * páginas de catálogo se construyan (Sprint 2, ver
- * docs/superpowers/plans/2026-08-20-nextjs-migracion-familias-plan.md).
- * Esto solo confirma que el pipeline de CSS global de Next funciona. */
-:root {
-  color-scheme: light;
+/* Tailwind CSS v4. Las páginas viejas (assets/v2.css, carrito.css,
+ * cuenta.css, servidas via <link> desde app/layout.tsx) siguen activas
+ * mientras se migran de a una por sprint — el preflight de Tailwind
+ * normaliza estilos base (headings, listas, botones) que v2.css también
+ * asume normalizados a su manera, así que hay riesgo de choque hasta que
+ * cada página termine de migrar. Verificado contra la suite e2e existente
+ * al cerrar este sprint (ver commit) — si algo del sitio viejo se ve
+ * afectado, ese es el primer lugar para mirar. */
+@import 'tailwindcss';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Tokens de diseño — migrados 1:1 desde assets/v2.css (paleta, escala de
+ * espaciado 8px, tipografía, radios, sombras) del sitio viejo. Ver
+ * docs/superpowers/specs/2026-08-24-frontend-cliente-rediseno-design.md,
+ * sección "Sistema de diseño": se reusa esta base, no se inventa una
+ * nueva.
+ *
+ * Único cambio respecto a v2.css: no hay token de familia tipográfica para
+ * Caveat. El "detalle" (fichas técnicas de producto) usa Fraunces en
+ * itálica en vez de un cursivo a mano — combinar las clases
+ * `font-display italic`, no una familia separada. */
+@theme {
+  /* Lienzo */
+  --color-background: #fdfbf5;
+  --color-surface: #ffffff;
+  --color-ink: #1c1a16;
+  --color-muted: #615c53; /* 6.3:1 sobre --color-background */
+  --color-line: #e9e4d8;
+
+  /* Paleta del logo */
+  --color-green: #1e8834;
+  --color-green-ink: #14672a; /* texto/botones sobre claro (5.9:1 en blanco) */
+  --color-green-soft: #e7f3ea;
+  --color-blue: #2f63cf;
+  --color-red: #e23b30;
+  /* v2.css nunca definió un equivalente a --green-ink para el rojo — el
+     rojo de marca solo (#e23b30) da 4.28:1 sobre blanco/como fondo con
+     texto blanco, por debajo del 4.5:1 de WCAG AA (hallado por el test de
+     axe-core de Sprint 0). Mismo criterio que --green-ink: una variante
+     más oscura para texto/botones, el --color-red de arriba queda para
+     usos grandes/decorativos donde alcanza el umbral de 3:1. */
+  --color-red-ink: #cc3226; /* ~5.2:1 sobre blanco y con texto blanco encima */
+  --color-orange: #f59a1f;
+  --color-yellow: #ffd23e;
+
+  --color-accent: var(--color-green);
+  --color-accent-deep: var(--color-green-ink);
+  --color-accent-contrast: #ffffff;
+
+  /* Tipografía · escala 1.25 (16 base) */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Nunito Sans', system-ui, -apple-system, sans-serif;
+
+  --text-fs-1: 13px;
+  --text-fs-1--line-height: 1.4;
+  --text-fs0: 16px;
+  --text-fs0--line-height: 1.5;
+  --text-fs1: 20px;
+  --text-fs1--line-height: 1.4;
+  --text-fs2: 25px;
+  --text-fs2--line-height: 1.3;
+  --text-fs3: 31px;
+  --text-fs3--line-height: 1.25;
+  --text-fs4: 39px;
+  --text-fs4--line-height: 1.2;
+  --text-fs5: 49px;
+  --text-fs5--line-height: 1.15;
+  --text-fs6: 61px;
+  --text-fs6--line-height: 1.1;
+  --text-fs7: 76px;
+  --text-fs7--line-height: 1.05;
+  --text-fs8: 95px;
+  --text-fs8--line-height: 1;
+
+  /* Espaciado · grilla de 8px */
+  --spacing-s1: 8px;
+  --spacing-s2: 16px;
+  --spacing-s3: 24px;
+  --spacing-s4: 32px;
+  --spacing-s5: 40px;
+  --spacing-s6: 48px;
+  --spacing-s7: 64px;
+  --spacing-s8: 80px;
+  --spacing-s9: 96px;
+  --spacing-s10: 128px;
+
+  /* Movimiento · un solo easing */
+  --ease-brand: cubic-bezier(0.22, 0.61, 0.2, 1);
+
+  /* Medidas */
+  --radius-brand: 24px;
+
+  /* Sombras — reemplazan la escala default de Tailwind por la de marca */
+  --shadow-sm: 0 1px 2px rgba(28, 26, 22, 0.05), 0 2px 8px rgba(28, 26, 22, 0.06);
+  --shadow-md: 0 8px 24px -8px rgba(28, 26, 22, 0.12), 0 2px 8px rgba(28, 26, 22, 0.06);
+  --shadow-lg: 0 24px 48px -16px rgba(28, 26, 22, 0.18), 0 8px 16px -8px rgba(28, 26, 22, 0.08);
 }
+
+/* shadcn/ui usa estas variables semánticas (--background, --primary, etc.)
+ * para todos sus componentes — el `init` las genera en gris/oklch
+ * genéricas por defecto. Acá quedan remapeadas 1:1 a la paleta de marca de
+ * arriba, para que Button/Card/Sheet/Dialog salgan con los mismos colores
+ * y radio (24px) que el resto del sitio, no con el tema gris de fábrica. */
+:root {
+  --radius: 1.5rem; /* 24px, = --radius-brand */
+  color-scheme: light;
+  --background: #fdfbf5;
+  --foreground: #1c1a16;
+  --card: #ffffff;
+  --card-foreground: #1c1a16;
+  --popover: #ffffff;
+  --popover-foreground: #1c1a16;
+  --primary: #1e8834;
+  --primary-foreground: #ffffff;
+  --secondary: #e7f3ea;
+  --secondary-foreground: #14672a;
+  --muted: #e9e4d8;
+  --muted-foreground: #615c53;
+  --accent: #e7f3ea;
+  --accent-foreground: #14672a;
+  --destructive: #cc3226; /* = --color-red-ink, no el --color-red plano (ver arriba) */
+  --border: #e9e4d8;
+  --input: #e9e4d8;
+  --ring: #1e8834;
+  --chart-1: #1e8834;
+  --chart-2: #2f63cf;
+  --chart-3: #f59a1f;
+  --chart-4: #e23b30;
+  --chart-5: #ffd23e;
+  --sidebar: #fdfbf5;
+  --sidebar-foreground: #1c1a16;
+  --sidebar-primary: #1e8834;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7f3ea;
+  --sidebar-accent-foreground: #14672a;
+  --sidebar-border: #e9e4d8;
+  --sidebar-ring: #1e8834;
+}
+
+/* Dark mode: nada en el sitio activa la clase .dark todavía (el diseño
+ * actual es solo claro) — se deja el default de shadcn sin tocar, fuera
+ * de alcance de este sprint. */
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+}
+
+@theme inline {
+  --font-heading: var(--font-display);
+  --font-sans: var(--font-body);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

@@ -7,6 +7,14 @@ import { CuentaProvider } from "./components/cuenta/CuentaProvider";
 import CuentaOverlays from "./components/cuenta/CuentaOverlays";
 import { CarritoProvider } from "./components/carrito/CarritoProvider";
 import "./globals.css";
+import { nunitoSans } from "./fonts";
+import { cn } from "@/lib/utils";
+
+// shadcn init agrega Geist (Google Fonts) acá por default — lo
+// reemplazamos por Nunito Sans autoalojada (app/fonts.ts), la misma
+// familia que ya usa v2.css, para no sumar una fuente ajena a la marca ni
+// una dependencia de Google Fonts que este proyecto evita a propósito
+// (mismo criterio que supabase-js vendorizado local, ver CLAUDE.md).
 
 export const metadata: Metadata = {
   title: "Mundo Mágico",
@@ -24,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     .sort((a, b) => a.orden - b.orden);
 
   return (
-    <html lang="es">
+    <html lang="es" className={cn("font-sans", nunitoSans.variable)}>
       <head>
         {/* Preload de las fuentes autoalojadas (Fraunces/Nunito Sans) — cada
             página del sitio viejo lo tenía en el <head>. v2.css las carga
