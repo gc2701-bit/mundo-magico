@@ -80,7 +80,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
       )}
 
       <Link
-        href={p.mundo ? '/' + p.mundo : '/explorar'}
+        href={p.mundo ? `/${p.mundo}/${p.slug}` : '/explorar'}
         className={
           'mx-auto flex max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
           (visible ? 'opacity-100' : 'opacity-0')

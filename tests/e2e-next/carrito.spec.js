@@ -14,10 +14,18 @@
  * dos veces en el DOM (fila de escritorio + barra inferior de mobile,
  * mostradas/ocultadas por CSS) — sin `.first()`, Playwright tira "strict
  * mode violation" por encontrar dos coincidencias.
+ *
+ * Sprint 7: el panel se abre solo al agregar (antes había que tocar el
+ * ícono del carrito a mano después) — los tests ya no clickean
+ * `.cart-nav` para abrirlo. `CarritoPanel.tsx` se reescribió con
+ * Tailwind (dejó de tener clases `cart-*`): estos tests usan role/texto
+ * en vez de esas clases viejas. `CarritoNavButton`/`.cart-nav` en sí NO
+ * se tocó este sprint (sigue con su estilo legacy) — ver ese componente
+ * si hace falta actualizar esos locators en otro momento.
  */
 const { test, expect } = require('@playwright/test');
 
-test('agregar un producto simple lo suma al contador del header y al panel', async ({ page }) => {
+test('agregar un producto simple lo suma al contador del header y abre el panel solo', async ({ page }) => {
   await page.goto('/globos-fiesta');
   const tarjeta = page.locator('a.pcard[data-codigo]').first();
   const titulo = await tarjeta.locator('h3').textContent();
@@ -26,23 +34,22 @@ test('agregar un producto simple lo suma al contador del header y al panel', asy
 
   await expect(page.locator('.cart-nav .cart-n').first()).toHaveText('1');
 
-  await page.locator('.cart-nav').first().click();
-  await expect(page.locator('.cart-panel')).toHaveClass(/is-on/);
-  await expect(page.locator('.cart-panel .cart-item-t').first()).toHaveText(titulo || '');
+  const panel = page.getByRole('dialog', { name: 'Mi pedido' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByText(titulo || '')).toBeVisible();
 });
 
 test('el − N + del panel ajusta la cantidad y "Quitar" saca el renglón', async ({ page }) => {
   await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
-  await page.locator('.cart-nav').first().click();
 
-  const paso = page.locator('.cart-panel .cart-item .cart-step').first();
-  await paso.locator('.cart-step-b', { hasText: '+' }).click();
-  await expect(paso.locator('.cart-step-n')).toHaveText('2');
+  const panel = page.getByRole('dialog', { name: 'Mi pedido' });
+  await panel.getByRole('button', { name: /^Agregar uno de/ }).click();
+  await expect(panel.getByText('2', { exact: true })).toBeVisible();
   await expect(page.locator('.cart-nav .cart-n').first()).toHaveText('2');
 
-  await page.locator('.cart-panel .cart-del').first().click();
-  await expect(page.locator('.cart-panel .cart-empty')).toBeVisible();
+  await panel.getByRole('button', { name: 'Quitar', exact: true }).click();
+  await expect(panel.getByText('Todavía no agregaste nada')).toBeVisible();
   await expect(page.locator('.cart-nav .cart-n').first()).toHaveText('0');
 });
 
@@ -61,21 +68,19 @@ test('el corazón de favoritos se prende y el producto aparece en "Mis favoritos
 test('elegir método de entrega antes de mandar: sin elegir nada, no se puede seguir', async ({ page }) => {
   await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
-  await page.locator('.cart-nav').first().click();
 
   let mensaje = '';
   page.once('dialog', (dialog) => {
     mensaje = dialog.message();
     dialog.dismiss();
   });
-  await page.locator('.cart-panel .cart-send').click();
+  await page.getByRole('dialog', { name: 'Mi pedido' }).getByRole('button', { name: /Enviar pedido/ }).click();
   await expect.poll(() => mensaje).toMatch(/Elegí si retirás/i);
 });
 
 test('elegir "Envío a domicilio" muestra los campos de dirección y zona', async ({ page }) => {
   await page.goto('/globos-fiesta');
   await page.locator('a.pcard[data-codigo]').first().locator('.pcard-add').click();
-  await page.locator('.cart-nav').first().click();
 
   await page.getByRole('button', { name: 'Envío a domicilio' }).click();
   await expect(page.getByPlaceholder('Calle, número, referencia')).toBeVisible();

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
 import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
 
@@ -26,10 +27,10 @@ import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
  * identificador estable para tests e2e que verifican paginación sin
  * duplicar/saltear productos.
  *
- * Nota sobre el link: sigue siendo `href="#"` (no navega a ningún lado),
- * igual que antes de este rediseño — hoy no existe página de producto
- * propia, todo pasa en la tarjeta (agregar/favoritos). Cuando el Sprint 7
- * construya esa página, ahí se cambia a un href real.
+ * Link (Sprint 7): `/{mundo}/{slug}` — la ficha de producto real. El
+ * slug NO es único en todo el catálogo, sólo por mundo (21 productos lo
+ * comparten con otro de otro mundo, confirmado contra la base) — nunca
+ * armar esta URL sin el segmento de mundo.
  */
 type Props = {
   producto: ProductoPublico;
@@ -54,8 +55,8 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
   }
 
   return (
-    <a
-      href="#"
+    <Link
+      href={`/${producto.mundo}/${producto.slug}`}
       className={'group pcard' + (esGaleria ? ' has-gallery' : '') + ' flex h-full flex-col overflow-hidden rounded-brand border border-line bg-surface shadow-sm transition-shadow hover:shadow-md'}
       {...dataAttrs}
     >
@@ -155,6 +156,6 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
           <AgregarControl producto={producto} />
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
