@@ -9,6 +9,14 @@ import type { Mundo } from "@/lib/catalogo-server";
  * columnas simplificadas, fila legal con Términos/Privacidad y el QR de
  * ARCA.
  *
+ * Color de fondo (sumado 2026-08-24, elegido con el usuario vía companion
+ * visual): verde de marca (`--color-green-ink`) en vez del mismo crema de
+ * toda la web — pedido explícito de que se note claramente dónde termina
+ * el contenido y empieza el footer. El botón de WhatsApp se invierte
+ * (fondo blanco, texto verde) para no perderse contra el verde. Todos los
+ * textos/bordes se recalcularon para AA sobre ese fondo oscuro (ver los
+ * comentarios puntuales abajo).
+ *
  * Pendientes de CONTENIDO, no de este sprint (ver la spec): el texto de
  * Términos y Privacidad todavía no está escrito (los links quedan
  * apuntando a rutas que se completan más adelante) y el QR de ARCA es un
@@ -37,12 +45,18 @@ const LA_CASA = [
   { href: "/#visitanos", label: "Sucursales y horarios" },
 ];
 
+// Verde pálido para links sobre el fondo verde oscuro del footer — ~5.4:1
+// de contraste (verificado a mano), mejor jerarquía que blanco puro para
+// texto secundario. Un solo uso, no vale la pena sumarlo como token
+// global de la paleta.
+const LINK_CLS = "font-body text-fs-1 text-[#cde9d0]! hover:text-white!";
+
 function ColMundos({ mundos }: { mundos: Mundo[] }) {
   return (
     <nav className="flex flex-col gap-1" aria-label="Mundos">
-      <b className="font-display text-fs0 text-ink">Mundos</b>
+      <b className="font-display text-fs0 text-white">Mundos</b>
       {mundos.map((mundo) => (
-        <Link key={mundo.slug} href={"/" + mundo.slug} className="font-body text-fs-1 text-muted! hover:text-ink!">
+        <Link key={mundo.slug} href={"/" + mundo.slug} className={LINK_CLS}>
           {mundo.nombre}
         </Link>
       ))}
@@ -53,9 +67,9 @@ function ColMundos({ mundos }: { mundos: Mundo[] }) {
 function ColLaCasa() {
   return (
     <nav className="flex flex-col gap-1" aria-label="La casa">
-      <b className="font-display text-fs0 text-ink">La casa</b>
+      <b className="font-display text-fs0 text-white">La casa</b>
       {LA_CASA.map((l) => (
-        <a key={l.href} href={l.href} className="font-body text-fs-1 text-muted! hover:text-ink!">
+        <a key={l.href} href={l.href} className={LINK_CLS}>
           {l.label}
         </a>
       ))}
@@ -66,9 +80,9 @@ function ColLaCasa() {
 function ColSucursalesRedes() {
   return (
     <nav className="flex flex-col gap-1" aria-label="Sucursales y redes">
-      <b className="font-display text-fs0 text-ink">Sucursales y redes</b>
+      <b className="font-display text-fs0 text-white">Sucursales y redes</b>
       {REDES.map((r) => (
-        <a key={r.href} href={r.href} target="_blank" rel="noopener" className="font-body text-fs-1 text-muted! hover:text-ink!">
+        <a key={r.href} href={r.href} target="_blank" rel="noopener" className={LINK_CLS}>
           {r.label}
         </a>
       ))}
@@ -78,13 +92,13 @@ function ColSucursalesRedes() {
 
 export default function Footer({ mundos }: { mundos: Mundo[] }) {
   return (
-    <footer className="border-t border-line bg-background">
-      <div className="flex justify-center border-b border-line py-s3">
+    <footer className="bg-green-ink">
+      <div className="flex justify-center border-b border-white/15 py-s3">
         <a
           href="https://wa.me/5493813006343"
           target="_blank"
           rel="noopener"
-          className="rounded-brand bg-green px-s4 py-s2 font-body text-fs0 font-semibold text-white! hover:bg-green-ink"
+          className="rounded-brand bg-white px-s4 py-s2 font-body text-fs0 font-semibold text-green-ink! hover:bg-[#cde9d0]!"
         >
           💬 ¿Necesitás ayuda? Escribinos por WhatsApp
         </a>
@@ -92,31 +106,31 @@ export default function Footer({ mundos }: { mundos: Mundo[] }) {
 
       {/* Mobile — acordeón nativo, colapsado por defecto */}
       <div className="flex flex-col gap-s2 px-s3 py-s3 md:hidden">
-        <details className="border-b border-line pb-s2">
-          <summary className="cursor-pointer font-display text-fs0 text-ink">Mundos</summary>
+        <details className="border-b border-white/15 pb-s2">
+          <summary className="cursor-pointer font-display text-fs0 text-white">Mundos</summary>
           <div className="mt-s2 flex flex-col gap-1">
             {mundos.map((mundo) => (
-              <Link key={mundo.slug} href={"/" + mundo.slug} className="font-body text-fs-1 text-muted!">
+              <Link key={mundo.slug} href={"/" + mundo.slug} className={LINK_CLS}>
                 {mundo.nombre}
               </Link>
             ))}
           </div>
         </details>
-        <details className="border-b border-line pb-s2">
-          <summary className="cursor-pointer font-display text-fs0 text-ink">La casa</summary>
+        <details className="border-b border-white/15 pb-s2">
+          <summary className="cursor-pointer font-display text-fs0 text-white">La casa</summary>
           <div className="mt-s2 flex flex-col gap-1">
             {LA_CASA.map((l) => (
-              <a key={l.href} href={l.href} className="font-body text-fs-1 text-muted!">
+              <a key={l.href} href={l.href} className={LINK_CLS}>
                 {l.label}
               </a>
             ))}
           </div>
         </details>
-        <details className="border-b border-line pb-s2">
-          <summary className="cursor-pointer font-display text-fs0 text-ink">Sucursales y redes</summary>
+        <details className="border-b border-white/15 pb-s2">
+          <summary className="cursor-pointer font-display text-fs0 text-white">Sucursales y redes</summary>
           <div className="mt-s2 flex flex-col gap-1">
             {REDES.map((r) => (
-              <a key={r.href} href={r.href} target="_blank" rel="noopener" className="font-body text-fs-1 text-muted!">
+              <a key={r.href} href={r.href} target="_blank" rel="noopener" className={LINK_CLS}>
                 {r.label}
               </a>
             ))}
@@ -131,18 +145,18 @@ export default function Footer({ mundos }: { mundos: Mundo[] }) {
         <ColSucursalesRedes />
       </div>
 
-      <div className="flex flex-col items-center gap-s2 border-t border-line px-s3 py-s3 font-body text-fs-1 text-muted md:flex-row md:justify-between">
+      <div className="flex flex-col items-center gap-s2 border-t border-white/15 px-s3 py-s3 font-body text-fs-1 text-[#cde9d0] md:flex-row md:justify-between">
         <div className="flex flex-wrap items-center justify-center gap-s2">
           <span>💳 Tarjetas, transferencia y efectivo</span>
           <span aria-hidden="true">·</span>
           <span>© 1994–2026 Mundo Mágico · San Miguel de Tucumán, Argentina</span>
           <span aria-hidden="true">·</span>
           {/* Rutas pendientes de contenido — ver el comentario de arriba */}
-          <a href="/terminos" className="underline">Términos y condiciones</a>
-          <a href="/privacidad" className="underline">Privacidad</a>
+          <a href="/terminos" className="text-[#cde9d0]! underline hover:text-white!">Términos y condiciones</a>
+          <a href="/privacidad" className="text-[#cde9d0]! underline hover:text-white!">Privacidad</a>
         </div>
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded border border-line text-center text-fs-1"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded border border-white/30 text-center text-fs-1 text-white"
           aria-label="Código QR de ARCA (pendiente de subir)"
         >
           QR ARCA

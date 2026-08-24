@@ -127,7 +127,10 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
         ))}
       </div>
 
-      {/* Desktop — fila principal */}
+      {/* Desktop — fila principal. Los 4 controles (Mundos/Buscar/Cuenta/
+          Carrito) van juntos a la derecha, a pedido explícito del
+          usuario (2026-08-24) — el primer intento los separaba (Mundos a
+          la izquierda, buscador centrado). */}
       <nav
         className="hidden items-center justify-between gap-s3 border-b border-line bg-background px-s3 py-s2 md:flex"
         id="nav-desktop"
@@ -137,38 +140,38 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={44} height={44} className="rounded-full" />
         </Link>
 
-        <div
-          ref={mundosWrapRef}
-          className="relative"
-          onMouseEnter={() => setMundosDesktopAbierto(true)}
-          onMouseLeave={() => setMundosDesktopAbierto(false)}
-        >
-          <button
-            type="button"
-            className="font-body text-fs0 text-ink"
-            aria-haspopup="true"
-            aria-expanded={mundosDesktopAbierto}
-            aria-controls="mundos-menu-desktop"
-            onFocus={() => setMundosDesktopAbierto(true)}
-            onClick={() => setMundosDesktopAbierto((v) => !v)}
+        <div className="flex items-center gap-s4">
+          <div
+            ref={mundosWrapRef}
+            className="relative"
+            onMouseEnter={() => setMundosDesktopAbierto(true)}
+            onMouseLeave={() => setMundosDesktopAbierto(false)}
           >
-            Mundos ▾
-          </button>
-          {mundosDesktopAbierto && (
-            <div
-              id="mundos-menu-desktop"
-              role="menu"
-              aria-label="Nuestros mundos"
-              className="absolute left-1/2 top-full z-20 w-72 -translate-x-1/2 rounded-brand border border-line bg-surface p-s3 shadow-lg"
+            <button
+              type="button"
+              className="flex items-center gap-1 font-body text-fs0 text-ink"
+              aria-haspopup="true"
+              aria-expanded={mundosDesktopAbierto}
+              aria-controls="mundos-menu-desktop"
+              onFocus={() => setMundosDesktopAbierto(true)}
+              onClick={() => setMundosDesktopAbierto((v) => !v)}
             >
-              <MenuMundos mundos={mundos} onNavegar={() => setMundosDesktopAbierto(false)} />
-            </div>
-          )}
-        </div>
+              <span aria-hidden="true">🎉</span> Mundos ▾
+            </button>
+            {mundosDesktopAbierto && (
+              <div
+                id="mundos-menu-desktop"
+                role="menu"
+                aria-label="Nuestros mundos"
+                className="absolute right-0 top-full z-20 w-72 rounded-brand border border-line bg-surface p-s3 shadow-lg"
+              >
+                <MenuMundos mundos={mundos} onNavegar={() => setMundosDesktopAbierto(false)} />
+              </div>
+            )}
+          </div>
 
-        <div className="flex flex-1 justify-center px-s3">
           {buscarDesktopAbierto ? (
-            <form action="/explorar" className="w-full max-w-sm">
+            <form action="/explorar" className="w-56">
               <input
                 type="search"
                 name="q"
@@ -188,9 +191,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
               🔍 Buscar
             </button>
           )}
-        </div>
 
-        <div className="flex items-center gap-s2">
           <CuentaNavButton />
           <CarritoNavButton />
         </div>
@@ -279,7 +280,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           aria-expanded={mundosMobileAbierto}
           onClick={() => setMundosMobileAbierto(true)}
         >
-          <span aria-hidden="true">🗂️</span>
+          <span aria-hidden="true">🎉</span>
           Mundos
         </button>
         <button

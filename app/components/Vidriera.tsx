@@ -15,22 +15,30 @@ export default function Vidriera({
   mundoSlug,
   productos,
   icono = '✨',
+  alterno = false,
 }: {
   titulo: string;
   mundoSlug: string;
   productos: ProductoPublico[];
   icono?: string;
+  /** Fondo levemente más oscuro (mismo crema) para separar vidrieras
+   * consecutivas — sólo el título las diferenciaba antes. Elegido con el
+   * usuario vía companion visual, 2026-08-24 ("Opción A — fondo alternado"). */
+  alterno?: boolean;
 }) {
   const items = productos.filter((p) => p.mundo === mundoSlug).slice(0, 8);
 
   return (
-    <section className="py-s6" aria-labelledby={`vidriera-${mundoSlug}`}>
+    <section className={'py-s6 ' + (alterno ? 'bg-background-alt' : 'bg-background')} aria-labelledby={`vidriera-${mundoSlug}`}>
       <div className="wrap">
-        <div className="flex items-center justify-between gap-s2">
-          <h2 id={`vidriera-${mundoSlug}`} className="font-display text-fs3 text-ink">
+        {/* En mobile, título y "Ver todo" en filas separadas — juntos en
+            una sola fila quedaban demasiado pegados (feedback del
+            usuario, 2026-08-24). En desktop siguen en la misma fila. */}
+        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-s2">
+          <h2 id={`vidriera-${mundoSlug}`} className="font-display text-fs2 text-ink md:text-fs3">
             {titulo}
           </h2>
-          <Link href={'/' + mundoSlug} className="shrink-0 font-body text-fs-1 font-semibold text-green-ink!">
+          <Link href={'/' + mundoSlug} className="self-start font-body text-fs-1 font-semibold text-green-ink! md:self-auto">
             Ver todo →
           </Link>
         </div>

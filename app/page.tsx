@@ -132,8 +132,15 @@ export default async function Home() {
       <HeroCarrusel productos={heroItems} />
 
       <main>
-        {VIDRIERAS.map((v) => (
-          <Vidriera key={v.mundoSlug} titulo={v.titulo} mundoSlug={v.mundoSlug} icono={v.icono} productos={catalogo.productos} />
+        {VIDRIERAS.map((v, i) => (
+          <Vidriera
+            key={v.mundoSlug}
+            titulo={v.titulo}
+            mundoSlug={v.mundoSlug}
+            icono={v.icono}
+            productos={catalogo.productos}
+            alterno={i % 2 === 1}
+          />
         ))}
 
         <section className="mundos" id="mundos">

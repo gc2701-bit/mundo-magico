@@ -25,6 +25,10 @@
 @theme {
   /* Lienzo */
   --color-background: #fdfbf5;
+  /* Un paso más oscuro que --color-background, mismo crema — separa
+     secciones consecutivas del home (vidrierias) sin sumar un elemento
+     nuevo. Elegido con el usuario vía companion visual, 2026-08-24. */
+  --color-background-alt: #f3efe4;
   --color-surface: #ffffff;
   --color-ink: #1c1a16;
   --color-muted: #615c53; /* 6.3:1 sobre --color-background */
@@ -44,6 +48,11 @@
      usos grandes/decorativos donde alcanza el umbral de 3:1. */
   --color-red-ink: #cc3226; /* ~5.2:1 sobre blanco y con texto blanco encima */
   --color-orange: #f59a1f;
+  /* Mismo criterio que --color-red-ink/--color-green-ink: el naranja
+     plano da 2.2:1 sobre blanco como texto (ej. "quedan pocas
+     unidades") — muy por debajo del 4.5:1 AA. Encontrado con Lighthouse
+     el 2026-08-24. */
+  --color-orange-ink: #a15c00; /* ~5.2:1 sobre blanco */
   --color-yellow: #ffd23e;
 
   --color-accent: var(--color-green);

@@ -51,7 +51,7 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
   return (
     <a
       href="#"
-      className={'group pcard' + (esGaleria ? ' has-gallery' : '') + ' block overflow-hidden rounded-brand border border-line bg-surface shadow-sm transition-shadow hover:shadow-md'}
+      className={'group pcard' + (esGaleria ? ' has-gallery' : '') + ' flex h-full flex-col overflow-hidden rounded-brand border border-line bg-surface shadow-sm transition-shadow hover:shadow-md'}
       {...dataAttrs}
     >
       <div className="pcard-ph relative aspect-square bg-surface">
@@ -103,11 +103,20 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
 
         <FavoritoBoton producto={producto} />
       </div>
-      <div className="pcard-body flex flex-col gap-1 p-s2">
+      {/* Sin la clase "pcard-body" a propósito: v2.css le agrega un
+          ::after de "quedan pocas unidades" a esa clase que siempre cae
+          DESPUÉS del botón (los pseudo-elementos no se pueden reordenar)
+          — acá ese mensaje ya es un elemento real más arriba, mantener
+          la clase mostraría los dos a la vez. */}
+      <div className="flex flex-1 flex-col gap-1 p-s2">
         {producto.familia && (
           <span className="font-body text-fs-1 uppercase tracking-wide text-muted">{producto.familia}</span>
         )}
-        <h3 className="font-body text-fs0 font-semibold text-ink">{producto.titulo}</h3>
+        {/* v2.css tiene `.pcard h3{font-weight:800; font-size:15px; ...}`
+            sin capa — se pisa con `!` (mismo motivo que en todos lados,
+            ver el comentario grande de arriba) para el peso/tamaño que
+            pide el diseño nuevo. */}
+        <h3 className="font-body! text-fs0! font-semibold! text-ink!">{producto.titulo}</h3>
         {/* .pricetag: v2.css lo pinta como pastilla amarilla flotando sobre
             la foto (diseño viejo) — se pisa a mano con `!` (mismo motivo
             que Nav/Footer, ver ese comentario) para el precio en negrita
@@ -121,7 +130,25 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
             ))}
           </ul>
         )}
-        <AgregarControl producto={producto} />
+
+        {/* Empuja lo de abajo al piso de la card, sin importar cuánto
+            contenido haya arriba (familia/specs varían) — pedido
+            explícito del usuario: el botón siempre en la misma posición
+            de pantalla entre cards. */}
+        <div className="mt-auto flex flex-col gap-1">
+          {/* "Quedan pocas unidades": antes era un ::after de v2.css que
+              siempre caía DESPUÉS del botón (los pseudo-elementos no se
+              pueden reordenar por CSS) — pedido explícito del usuario:
+              arriba del botón. Se resuelve con un elemento real,
+              hidratado por CatalogoPrecios.tsx igual que el precio. */}
+          <span
+            data-pocas-unidades-msg
+            className="hidden font-body text-fs-1 font-medium text-orange-ink"
+          >
+            Quedan pocas unidades
+          </span>
+          <AgregarControl producto={producto} />
+        </div>
       </div>
     </a>
   );

@@ -71,6 +71,12 @@ export default function CatalogoPrecios() {
           if (estado.pocasUnidades) el.setAttribute('data-pocas-unidades', '1');
           else el.removeAttribute('data-pocas-unidades');
 
+          // Mensaje real de "quedan pocas unidades" arriba del botón
+          // (ProductoCard.tsx) — reemplaza al ::after de v2.css, que
+          // siempre caía después del botón sin poder reordenarse.
+          const pocasMsg = el.querySelector<HTMLElement>('[data-pocas-unidades-msg]');
+          if (pocasMsg) pocasMsg.style.display = estado.pocasUnidades ? 'block' : 'none';
+
           // Badge — prioridad sin stock > oferta > nuevo (nuevo ya viene
           // server-rendered en ProductoCard.tsx si corresponde).
           const badge = el.querySelector<HTMLElement>('[data-badge]');

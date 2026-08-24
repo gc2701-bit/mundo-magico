@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Porteo EXACTO del hero animado de index.html (sitio viejo): video del
@@ -28,18 +28,27 @@ export default function HeroAnimado() {
   const fieldRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLElement | null>(null);
+  // El poster de <video> NO cuenta para LCP (limitación del navegador,
+  // sólo el frame real del video cuenta) — con eso solo, el LCP seguía
+  // en ~5.7s. Esta imagen es un elemento real superpuesto en el mismo
+  // lugar del video, así que SÍ es candidata a LCP: se pinta al toque y
+  // desaparece en cuanto el video arranca a reproducirse de verdad.
+  // Mismo video, misma animación — sólo cambia qué se ve mientras carga.
+  const [videoListo, setVideoListo] = useState(false);
 
   useEffect(() => {
-    // --- Video diferido: entra tras el load, se reproduce una sola vez y
-    // queda fijo en el último cuadro (sin loop, sin botón de play). ---
+    // --- Video: se reproduce una sola vez y queda fijo en el último
+    // cuadro (sin loop, sin botón de play). El `src` ya viene en el HTML
+    // (Sprint 4, rediseño de frontend) — antes se asignaba acá recién
+    // después de hidratar, y el navegador no podía ni empezar a
+    // descargarlo hasta ese momento (LCP real medido: 6s). Mismo video,
+    // misma animación — sólo cambia CUÁNDO arranca la descarga. ---
     const v = videoRef.current;
     if (v) {
       v.muted = true;
       v.defaultMuted = true;
       v.playsInline = true;
       v.setAttribute('muted', '');
-      const src = v.dataset.src;
-      if (src) v.src = src;
 
       const play = () => {
         const p = v.play();
@@ -111,7 +120,36 @@ export default function HeroAnimado() {
     <>
       <div className="starfield" id="starfield" ref={fieldRef} aria-hidden="true" />
       <div className="hero-anim" aria-hidden="true">
-        <video ref={videoRef} autoPlay muted playsInline preload="none" data-src="/Logo/Logo-Animacion-2.mp4" />
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          // @ts-expect-error -- fetchPriority es válido en HTML/React 19, los tipos todavía no lo reconocen en <video>
+          fetchPriority="high"
+          src="/Logo/Logo-Animacion-2.mp4"
+          poster="/Logo/Mundo-Magico%20Logo.jpg"
+          onPlaying={() => setVideoListo(true)}
+        />
+        {!videoListo && (
+          <img
+            src="/Logo/Mundo-Magico%20Logo.jpg"
+            alt=""
+            width={600}
+            height={600}
+            fetchPriority="high"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: '60% 50%',
+              background: '#fff',
+            }}
+          />
+        )}
       </div>
       <div className="hero-logo-static" aria-hidden="true">
         <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="" width={128} height={128} />

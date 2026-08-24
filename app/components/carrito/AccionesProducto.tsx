@@ -65,16 +65,20 @@ export function AgregarControl({ producto }: { producto: ProductoPublico }) {
     agregar({ ...simple, img: foto });
   }
 
+  // Botón uniforme "Agregar" en todos los casos (antes cambiaba de texto
+  // según estado — "Elegir entre N talles", "N unidades · editar" — pedido
+  // explícito del usuario, 2026-08-24: siempre el mismo texto, siempre en
+  // el mismo lugar de la card). El comportamiento no cambia: con talles
+  // abre el selector, sin talles agrega directo. aria-label mantiene el
+  // detalle para lectores de pantalla.
   const totalEsteProducto = cantidadTotalDe(producto.titulo);
-  const textoBoton = tieneTalles
-    ? (totalEsteProducto > 0
-      ? `${totalEsteProducto} ${totalEsteProducto === 1 ? 'unidad' : 'unidades'} · editar`
-      : `Elegir entre ${producto.talles!.length} talles`)
-    : 'Agregar unidad al pedido';
+  const ariaLabel = tieneTalles
+    ? (totalEsteProducto > 0 ? `Editar talles elegidos (${totalEsteProducto})` : `Elegir talle y agregar, ${producto.talles!.length} opciones`)
+    : 'Agregar al carrito';
 
   return (
     <div className="cart-add" onClick={(ev) => ev.stopPropagation()}>
-      <button type="button" className="pcard-add" onClick={alTocarAgregar}>{textoBoton}</button>
+      <button type="button" className="pcard-add" aria-label={ariaLabel} onClick={alTocarAgregar}>Agregar</button>
 
       {!tieneTalles ? (
         cantidadDe(simple) > 0 && (
