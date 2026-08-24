@@ -39,8 +39,11 @@ test('mundo inexistente da 404', async ({ page }) => {
 });
 
 test('la nav lista los mundos con nombre de display, con link al slug', async ({ page }) => {
+  // Nav rediseñado (Sprint 2) — el mega-menú de escritorio reemplaza al
+  // dropdown viejo (.nav-dropdown), ver tests/e2e-next/nav.spec.js.
   await page.goto('/');
-  const link = page.locator('.nav-dropdown a', { hasText: 'Cotillón' });
+  await page.getByRole('button', { name: 'Mundos ▾' }).hover();
+  const link = page.locator('#mundos-menu-desktop a', { hasText: 'Cotillón' });
   await expect(link).toHaveAttribute('href', '/globos-fiesta');
 });
 

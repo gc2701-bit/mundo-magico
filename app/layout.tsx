@@ -61,8 +61,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CuentaProvider>
           <CarritoProvider>
             <Nav mundos={mundos} />
-            {children}
-            <Footer mundos={mundos} />
+            {/* pb-16: deja lugar para la barra inferior fija de Nav.tsx en
+                mobile (Sprint 2) — si no, tapa el final del contenido y del
+                footer. Sin efecto en desktop (esa barra no existe ahí). */}
+            <div className="pb-16 md:pb-0">
+              {children}
+              <Footer mundos={mundos} />
+            </div>
             <CuentaOverlays />
           </CarritoProvider>
         </CuentaProvider>

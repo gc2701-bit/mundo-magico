@@ -1,37 +1,94 @@
-/* Regresión de un bug real en producción (2026-08-21, ver "Corte a
- * producción" en el plan): Nav.tsx usaba el atributo `hidden` para
- * mostrar/ocultar `.nav-links` en vez de la clase `.open` que espera
- * v2.css — `.nav-links{display:flex}` es la regla de escritorio (siempre
- * visible), sólo `@media(max-width:820px)` la esconde y usa `.open` para
- * mostrarla. El atributo `hidden` fuerza display:none en CUALQUIER ancho
- * de pantalla, con más especificidad que esas reglas — el menú entero
- * quedaba invisible en todo el sitio hasta hacer clic en el hamburguesa
- * (que en escritorio ni siquiera se ve, `.nav-toggle{display:none}` por
- * default). Cero cobertura de test detectó esto — se agrega acá.
+/* Nav rediseñado (Sprint 2, ver
+ * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md):
+ * desktop en dos niveles (franja de utilidad + fila principal con
+ * mega-menú de Mundos en grilla), mobile con barra inferior fija estilo
+ * app (Home/Mundos/Buscar/Cuenta/Carrito). Reemplaza la suite anterior,
+ * escrita contra el porteo 1:1 de nav.njk (`.nav-links`/`.nav-dropdown`),
+ * que ya no existe.
  */
 const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
 
-test('el menú de navegación se ve en escritorio sin hacer clic en nada', async ({ page }) => {
+test('contraste WCAG AA en el nav y footer nuevos (axe-core)', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#nav-links')).toBeVisible();
-  await expect(page.locator('#nav-links').getByRole('link', { name: 'Explorar' })).toBeVisible();
-  await expect(page.locator('#nav-links').getByText('Nuestros mundos')).toBeVisible();
+  const resultados = await new AxeBuilder({ page })
+    .include('#nav-desktop')
+    .include('footer')
+    .withTags(['wcag2aa'])
+    .analyze();
+  const contraste = resultados.violations.filter((v) => v.id === 'color-contrast');
+  expect(contraste, JSON.stringify(contraste, null, 2)).toEqual([]);
 });
 
-test('el dropdown "Nuestros mundos" lista los mundos reales al pasar el mouse', async ({ page }) => {
+test('desktop: la fila principal se ve sin hacer clic en nada', async ({ page }) => {
   await page.goto('/');
-  // .nav-dropdown sólo se muestra en :hover/:focus-within de .nav-item
-  // (v2.css línea 174) — no está siempre visible en escritorio.
-  await page.locator('.nav-item.has-dropdown').hover();
-  const dropdown = page.locator('.nav-dropdown[role="menu"]');
-  await expect(dropdown.getByRole('menuitem').first()).toBeVisible();
+  const nav = page.locator('#nav-desktop');
+  await expect(nav).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Mundos ▾' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: '🔍 Buscar' })).toBeVisible();
 });
 
-test('en mobile, el menú arranca cerrado y el botón hamburguesa lo abre', async ({ page }) => {
+test('desktop: la franja de utilidad lista Historia/Eventos/Visitanos/Contacto', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Historia' }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Eventos a medida' }).first()).toBeVisible();
+});
+
+test('desktop: el mega-menú de Mundos se abre al pasar el mouse y lista los mundos reales', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mundos ▾' }).hover();
+  const menu = page.locator('#mundos-menu-desktop');
+  await expect(menu.getByRole('menuitem').first()).toBeVisible();
+  await expect(menu.getByRole('menuitem', { name: /Ver todo el catálogo/ })).toBeVisible();
+});
+
+test('desktop: el mega-menú también abre con teclado (focus) y cierra con Escape', async ({ page }) => {
+  await page.goto('/');
+  const boton = page.getByRole('button', { name: 'Mundos ▾' });
+  await boton.focus();
+  await expect(page.locator('#mundos-menu-desktop')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#mundos-menu-desktop')).toBeHidden();
+});
+
+test('desktop: tocar "Buscar" abre un input que manda a /explorar', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '🔍 Buscar' }).click();
+  const input = page.getByPlaceholder('Buscar disfraces, globos, cotillón...');
+  await expect(input).toBeVisible();
+  await input.fill('globo');
+  await input.press('Enter');
+  await expect(page).toHaveURL(/\/explorar\?q=globo/);
+});
+
+test('mobile: la barra inferior fija tiene los 5 destinos', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  const navLinks = page.locator('#nav-links');
-  await expect(navLinks).not.toHaveClass(/open/);
-  await page.getByRole('button', { name: 'Abrir menú' }).click();
-  await expect(navLinks).toHaveClass(/open/);
+  const barra = page.locator('#nav-mobile-bottom');
+  await expect(barra).toBeVisible();
+  await expect(barra.getByRole('link', { name: /Home/ })).toBeVisible();
+  await expect(barra.getByRole('button', { name: /Mundos/ })).toBeVisible();
+  await expect(barra.getByRole('button', { name: /Buscar/ })).toBeVisible();
+  await expect(barra.locator('.cuenta-nav')).toBeVisible();
+  await expect(barra.locator('.cart-nav')).toBeVisible();
+});
+
+test('mobile: tocar "Mundos" abre la pantalla completa con la grilla de mundos', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.locator('#nav-mobile-bottom').getByRole('button', { name: /Mundos/ }).click();
+  const panel = page.getByRole('dialog', { name: 'Nuestros mundos' });
+  await expect(panel.getByRole('menuitem').first()).toBeVisible();
+  await panel.getByRole('menuitem').first().click();
+  await expect(panel).toBeHidden();
+});
+
+test('mobile: tocar "Buscar" abre la pantalla completa con el input, y "Cancelar" la cierra', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.locator('#nav-mobile-bottom').getByRole('button', { name: /Buscar/ }).click();
+  const panel = page.getByRole('dialog', { name: 'Buscar' });
+  await expect(panel).toBeVisible();
+  await panel.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(panel).toBeHidden();
 });

@@ -46,7 +46,10 @@ test('contraste WCAG AA en la página de tokens (axe-core)', async ({ page }) =>
   expect(contraste, JSON.stringify(contraste, null, 2)).toEqual([]);
 });
 
-test('el home viejo sigue sirviendo contenido real — Tailwind no rompió el sitio existente', async ({ page }) => {
+test('el home sigue sirviendo contenido real — Tailwind no rompió el sitio existente', async ({ page }) => {
+  // #nav-links era del nav viejo, reemplazado en Sprint 2 por #nav-desktop
+  // (ver tests/e2e-next/nav.spec.js) — acá sólo importa que el layout
+  // sigue respondiendo con contenido real, no específicamente el nav.
   await page.goto('/');
-  await expect(page.locator('#nav-links')).toBeVisible();
+  await expect(page.locator('#nav-desktop')).toBeVisible();
 });

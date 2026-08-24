@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { Mundo } from "@/lib/catalogo-server";
@@ -8,21 +8,39 @@ import CuentaNavButton from "./cuenta/CuentaNavButton";
 import CarritoNavButton from "./carrito/CarritoNavButton";
 
 /**
- * Porteo de _includes/nav.njk (Eleventy). Restaurado a fidelidad completa
- * con el original a pedido explícito del usuario (2026-08-21) — un primer
- * pase había simplificado el link "Inicio/Historia" (siempre "Inicio") y
- * el dropdown de mundos (lista plana, sin los puntos de color ni el label
- * "Mundos" que tenía nav.njk).
+ * Rediseño del nav (Sprint 2, ver
+ * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md) —
+ * reemplaza el porteo 1:1 de _includes/nav.njk por la estructura acordada
+ * con el usuario en la sesión de brainstorming del 2026-08-24: desktop en
+ * dos niveles (franja de utilidad + fila principal con mega-menú de
+ * Mundos en grilla), mobile con barra inferior fija estilo app.
  *
- * "Inicio" vs "Historia": el original lo decidía por `navVariant` en el
- * front matter de cada página Nunjucks — acá se resuelve con el pathname
- * actual, mismo criterio (en el home no tiene sentido un link a "Inicio").
+ * CarritoNavButton/CuentaNavButton NO se tocan (siguen con su estilo
+ * v2.css, `.cart-nav`/`.cuenta-nav` — su rediseño visual es de otro
+ * sprint) — acá sólo cambia el chrome que los rodea.
  *
- * Colores del dropdown: nav.njk los tenía hardcodeados para los 6 mundos
- * de siempre. Desde Sprint 5.5 los mundos son extensibles desde el panel
- * admin — se guarda el mismo color por slug para los 6 originales, y un
- * gris neutro de respaldo para cualquier mundo nuevo que se cree después
- * (no había un color "correcto" que inventarle, y no se pidió crear uno).
+ * Los links secundarios que nav.njk tenía en la fila única (Historia,
+ * Eventos a medida, Visitanos, Contacto) se mudan a la franja de utilidad
+ * en desktop, y a un bloque debajo de la grilla de mundos en el panel de
+ * mobile — no entraban en la fila principal de 5 slots sin romper la
+ * jerarquía ya aprobada. El link "Inicio" se retira: el logo ya cumple
+ * esa función (convención estándar), no hace falta un link de texto
+ * aparte como tenía nav.njk.
+ *
+ * La búsqueda predictiva de verdad es Sprint 6 — acá el botón "Buscar"
+ * sólo abre/cierra un input simple que manda a /explorar?q=... al
+ * confirmar, como pide el plan.
+ *
+ * IMPORTANTE - por que hay "!" en algunas utilidades de color sobre <a>:
+ * v2.css define a{color:inherit} sin capa (@layer) - Tailwind v4 mete
+ * TODAS sus utilidades dentro de @layer utilities, y una regla sin capa
+ * le gana a cualquier regla con capa sin importar la especificidad. Sin
+ * el modificador "!" (important), cualquier text-* puesto directo sobre
+ * un <a>/<Link> se ve pisado en silencio por ese color:inherit.
+ * Confirmado con el CSS compilado y el test de contraste de
+ * tests/e2e-next/nav.spec.js. Se resuelve solo cuando v2.css se retire
+ * (Sprint 9) - hasta entonces, todo <a> con color propio en componentes
+ * nuevos necesita "!".
  */
 const COLOR_MUNDO: Record<string, string> = {
   "globos-fiesta": "#2f63cf",
@@ -31,62 +49,254 @@ const COLOR_MUNDO: Record<string, string> = {
   reposteria: "#ec6a9c",
   decoracion: "#6f9e5b",
   combos: "#f0913a",
+  halloween: "#b6531f",
+  navidad: "#166534",
 };
 const COLOR_MUNDO_DEFAULT = "#9a938a";
 
+const LINKS_UTILIDAD = [
+  { href: "/historia", label: "Historia" },
+  { href: "/eventos", label: "Eventos a medida" },
+  { href: "/#visitanos", label: "Visitanos" },
+  { href: "/#contacto", label: "Contacto" },
+];
+
+function MenuMundos({ mundos, onNavegar }: { mundos: Mundo[]; onNavegar: () => void }) {
+  return (
+    <>
+      <div className="grid grid-cols-3 gap-s2">
+        {mundos.map((mundo) => (
+          <Link
+            key={mundo.slug}
+            href={"/" + mundo.slug}
+            role="menuitem"
+            onClick={onNavegar}
+            className="flex flex-col items-center gap-1 rounded-brand p-s2 text-center hover:bg-green-soft"
+          >
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ background: COLOR_MUNDO[mundo.slug] || COLOR_MUNDO_DEFAULT }}
+              aria-hidden="true"
+            />
+            <span className="font-body text-fs-1 text-ink">{mundo.nombre}</span>
+          </Link>
+        ))}
+      </div>
+      <Link
+        href="/explorar"
+        role="menuitem"
+        onClick={onNavegar}
+        className="mt-s2 block text-center font-body text-fs-1 text-green-ink!"
+      >
+        Ver todo el catálogo →
+      </Link>
+    </>
+  );
+}
+
 export default function Nav({ mundos }: { mundos: Mundo[] }) {
-  const [abierto, setAbierto] = useState(false);
+  const [mundosDesktopAbierto, setMundosDesktopAbierto] = useState(false);
+  const [mundosMobileAbierto, setMundosMobileAbierto] = useState(false);
+  const [buscarDesktopAbierto, setBuscarDesktopAbierto] = useState(false);
+  const [buscarMobileAbierto, setBuscarMobileAbierto] = useState(false);
   const pathname = usePathname();
-  const enHome = pathname === "/";
-  const enHistoria = pathname === "/historia";
+  const mundosWrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!mundosDesktopAbierto) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMundosDesktopAbierto(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mundosDesktopAbierto]);
 
   return (
-    <nav className="nav" id="nav">
-      <Link className="corner-logo" href="/" aria-label="Inicio · Mundo Mágico">
-        <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={44} height={44} />
-      </Link>
-      <button
-        className="nav-toggle"
-        type="button"
-        aria-label="Abrir menú"
-        aria-expanded={abierto}
-        aria-controls="nav-links"
-        onClick={() => setAbierto((v) => !v)}
+    <>
+      {/* Desktop — franja de utilidad */}
+      <div className="hidden justify-center gap-s4 border-b border-line bg-background py-1 font-body text-fs-1 text-muted md:flex">
+        {LINKS_UTILIDAD.map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            aria-current={pathname === l.href ? "page" : undefined}
+            className="hover:text-ink!"
+          >
+            {l.label}
+          </a>
+        ))}
+      </div>
+
+      {/* Desktop — fila principal */}
+      <nav
+        className="hidden items-center justify-between gap-s3 border-b border-line bg-background px-s3 py-s2 md:flex"
+        id="nav-desktop"
+        aria-label="Navegación principal"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
-          <path d="M3 6h18M3 12h18M3 18h18" />
-        </svg>
-      </button>
-      <div className={"nav-links" + (abierto ? " open" : "")} id="nav-links">
-        {enHome ? (
-          <a href="#historia">Historia</a>
-        ) : enHistoria ? (
-          <>
-            <Link href="/">Inicio</Link>
-            <Link href="/historia" aria-current="page">Historia</Link>
-          </>
-        ) : (
-          <Link href="/">Inicio</Link>
-        )}
-        <div className="nav-item has-dropdown">
-          <span aria-haspopup="true">Nuestros mundos</span>
-          <div className="nav-dropdown" role="menu">
-            <span className="nd-label">Mundos</span>
-            {mundos.map((mundo) => (
-              <Link key={mundo.slug} href={'/' + mundo.slug} role="menuitem">
-                <span className="nd-dot" style={{ background: COLOR_MUNDO[mundo.slug] || COLOR_MUNDO_DEFAULT }} />
-                {mundo.nombre}
-              </Link>
+        <Link href="/" aria-label="Inicio · Mundo Mágico" className="shrink-0">
+          <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={44} height={44} className="rounded-full" />
+        </Link>
+
+        <div
+          ref={mundosWrapRef}
+          className="relative"
+          onMouseEnter={() => setMundosDesktopAbierto(true)}
+          onMouseLeave={() => setMundosDesktopAbierto(false)}
+        >
+          <button
+            type="button"
+            className="font-body text-fs0 text-ink"
+            aria-haspopup="true"
+            aria-expanded={mundosDesktopAbierto}
+            aria-controls="mundos-menu-desktop"
+            onFocus={() => setMundosDesktopAbierto(true)}
+            onClick={() => setMundosDesktopAbierto((v) => !v)}
+          >
+            Mundos ▾
+          </button>
+          {mundosDesktopAbierto && (
+            <div
+              id="mundos-menu-desktop"
+              role="menu"
+              aria-label="Nuestros mundos"
+              className="absolute left-1/2 top-full z-20 w-72 -translate-x-1/2 rounded-brand border border-line bg-surface p-s3 shadow-lg"
+            >
+              <MenuMundos mundos={mundos} onNavegar={() => setMundosDesktopAbierto(false)} />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-1 justify-center px-s3">
+          {buscarDesktopAbierto ? (
+            <form action="/explorar" className="w-full max-w-sm">
+              <input
+                type="search"
+                name="q"
+                autoFocus
+                placeholder="Buscar disfraces, globos, cotillón..."
+                aria-label="Buscar"
+                className="w-full rounded-brand border border-line px-s2 py-1 font-body text-fs0"
+                onBlur={() => setBuscarDesktopAbierto(false)}
+              />
+            </form>
+          ) : (
+            <button
+              type="button"
+              className="font-body text-fs0 text-muted"
+              onClick={() => setBuscarDesktopAbierto(true)}
+            >
+              🔍 Buscar
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-s2">
+          <CuentaNavButton />
+          <CarritoNavButton />
+        </div>
+      </nav>
+
+      {/* Mobile — sólo el logo arriba, todo lo demás en la barra inferior */}
+      <div className="flex items-center justify-center border-b border-line bg-background py-2 md:hidden">
+        <Link href="/" aria-label="Inicio · Mundo Mágico">
+          <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={36} height={36} className="rounded-full" />
+        </Link>
+      </div>
+
+      {mundosMobileAbierto && (
+        <div
+          className="fixed inset-0 z-30 flex flex-col overflow-y-auto bg-background p-s3 md:hidden"
+          role="dialog"
+          aria-label="Nuestros mundos"
+        >
+          <button
+            type="button"
+            className="self-end font-body text-fs0 text-ink"
+            aria-label="Cerrar"
+            onClick={() => setMundosMobileAbierto(false)}
+          >
+            ✕
+          </button>
+          <div className="mt-s2">
+            <MenuMundos mundos={mundos} onNavegar={() => setMundosMobileAbierto(false)} />
+          </div>
+          <div className="mt-s4 flex flex-col gap-s2 border-t border-line pt-s3">
+            {LINKS_UTILIDAD.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMundosMobileAbierto(false)}
+                className="font-body text-fs-1 text-muted!"
+              >
+                {l.label}
+              </a>
             ))}
           </div>
         </div>
-        <Link href="/explorar">Explorar</Link>
-        <Link href="/eventos">Eventos a medida</Link>
-        <a href="/#visitanos">Visitanos</a>
-        <a href="/#contacto">Contacto</a>
-      </div>
-      <CarritoNavButton />
-      <CuentaNavButton />
-    </nav>
+      )}
+
+      {buscarMobileAbierto && (
+        <div className="fixed inset-0 z-30 flex flex-col bg-background p-s3 md:hidden" role="dialog" aria-label="Buscar">
+          <form action="/explorar" className="flex items-center gap-s2">
+            <input
+              type="search"
+              name="q"
+              autoFocus
+              placeholder="Buscar disfraces, globos, cotillón..."
+              aria-label="Buscar"
+              className="flex-1 rounded-brand border border-line px-s2 py-2 font-body text-fs0"
+            />
+            <button
+              type="button"
+              onClick={() => setBuscarMobileAbierto(false)}
+              className="font-body text-fs-1 text-muted"
+            >
+              Cancelar
+            </button>
+          </form>
+        </div>
+      )}
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-background py-1 md:hidden"
+        aria-label="Navegación principal"
+        id="nav-mobile-bottom"
+      >
+        <Link
+          href="/"
+          className={
+            "flex flex-col items-center gap-0.5 py-1 font-body text-fs-1 " +
+            (pathname === "/" ? "text-green-ink!" : "text-muted!")
+          }
+        >
+          <span aria-hidden="true">🏠</span>
+          Home
+        </Link>
+        <button
+          type="button"
+          className="flex flex-col items-center gap-0.5 py-1 font-body text-fs-1 text-muted"
+          aria-haspopup="true"
+          aria-expanded={mundosMobileAbierto}
+          onClick={() => setMundosMobileAbierto(true)}
+        >
+          <span aria-hidden="true">🗂️</span>
+          Mundos
+        </button>
+        <button
+          type="button"
+          className="flex flex-col items-center gap-0.5 py-1 font-body text-fs-1 text-muted"
+          onClick={() => setBuscarMobileAbierto(true)}
+        >
+          <span aria-hidden="true">🔍</span>
+          Buscar
+        </button>
+        <div className="flex flex-col items-center justify-center">
+          <CuentaNavButton />
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          <CarritoNavButton />
+        </div>
+      </nav>
+    </>
   );
 }
