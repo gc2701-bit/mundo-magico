@@ -133,7 +133,59 @@ describe('PublicadoTab — tabla', () => {
 
   it('sin resultados muestra el mensaje, no una tabla vacía', async () => {
     render(<PublicadoTab />);
-    expect(await screen.findByText('No hay artículos que coincidan.')).toBeInTheDocument();
+    const tabla = await screen.findByRole('table');
+    expect(within(tabla).getByText('No hay artículos que coincidan.')).toBeInTheDocument();
+  });
+});
+
+describe('PublicadoTab — responsive: tabla en desktop, tarjetas en mobile', () => {
+  beforeEach(() => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001', familia: 'RUIDO', mundo: 'cotillon' })
+    ];
+    estado.catalogo_precios = [{ codigo: '001', precio: 5000, sin_stock: false, stock: 12 }];
+  });
+
+  it('la tabla desktop queda oculta bajo el breakpoint lg, la lista de tarjetas visible sólo bajo lg', async () => {
+    render(<PublicadoTab />);
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+
+    // Table (components/ui/table.tsx) ya envuelve el <table> en su propio
+    // div "relative w-full overflow-x-auto" — el wrapper "hidden lg:block"
+    // de este componente es el abuelo, no el padre directo.
+    const contenedorTabla = screen.getByRole('table').parentElement?.parentElement;
+    expect(contenedorTabla).toHaveClass('hidden', 'lg:block');
+
+    const lista = screen.getByRole('list');
+    expect(lista).toHaveClass('lg:hidden');
+  });
+
+  it('la tarjeta mobile muestra los mismos datos que la fila de la tabla', async () => {
+    render(<PublicadoTab />);
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+
+    const lista = screen.getByRole('list');
+    const tarjeta = within(lista).getByText('Anteojo estrella').closest('li')!;
+    expect(within(tarjeta).getByText('001')).toBeInTheDocument();
+    expect(within(tarjeta).getByText('RUIDO')).toBeInTheDocument();
+    expect(within(tarjeta).getByText('Cotillón')).toBeInTheDocument();
+    expect(within(tarjeta).getByText('12')).toBeInTheDocument();
+    expect(within(tarjeta).getByText(/5\.000/)).toBeInTheDocument();
+    expect(within(tarjeta).getByText('Visible')).toBeInTheDocument();
+    expect(within(tarjeta).getByRole('button', { name: 'Editar' })).toBeInTheDocument();
+  });
+
+  it('el checkbox de una tarjeta mobile selecciona la misma fila que el de la tabla (mismo estado)', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+
+    const lista = screen.getByRole('list');
+    await user.click(within(lista).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+
+    expect(screen.getByText('1 seleccionado')).toBeInTheDocument();
+    const tabla = screen.getByRole('table');
+    expect(within(tabla).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' })).toBeChecked();
   });
 });
 
@@ -148,23 +200,25 @@ describe('PublicadoTab — búsqueda', () => {
   it('filtra por título sin importar mayúsculas', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+    const tabla = screen.getByRole('table');
 
     await user.type(screen.getByPlaceholderText('Buscar por título o código'), 'ANTEOJO');
 
-    expect(screen.getByText('Anteojo estrella')).toBeInTheDocument();
-    expect(screen.queryByText('Sombrero cowboy')).not.toBeInTheDocument();
+    expect(within(tabla).getByText('Anteojo estrella')).toBeInTheDocument();
+    expect(within(tabla).queryByText('Sombrero cowboy')).not.toBeInTheDocument();
   });
 
   it('filtra por código', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+    const tabla = screen.getByRole('table');
 
     await user.type(screen.getByPlaceholderText('Buscar por título o código'), '61147');
 
-    expect(screen.getByText('Sombrero cowboy')).toBeInTheDocument();
-    expect(screen.queryByText('Anteojo estrella')).not.toBeInTheDocument();
+    expect(within(tabla).getByText('Sombrero cowboy')).toBeInTheDocument();
+    expect(within(tabla).queryByText('Anteojo estrella')).not.toBeInTheDocument();
   });
 });
 
@@ -179,13 +233,14 @@ describe('PublicadoTab — filtro de familia', () => {
   it('"— sin familia —" deja sólo los productos sin familia asignada', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Con ruido');
+    await screen.findByRole('row', { name: /Con ruido/ });
+    const tabla = screen.getByRole('table');
 
     await user.click(screen.getByRole('combobox', { name: 'Filtrar por familia' }));
     await user.click(await screen.findByRole('option', { name: /sin familia/ }));
 
-    expect(screen.getByText('Sin familia')).toBeInTheDocument();
-    expect(screen.queryByText('Con ruido')).not.toBeInTheDocument();
+    expect(within(tabla).getByText('Sin familia')).toBeInTheDocument();
+    expect(within(tabla).queryByText('Con ruido')).not.toBeInTheDocument();
   });
 });
 
@@ -200,13 +255,14 @@ describe('PublicadoTab — filtro de mundo', () => {
   it('elegir un mundo deja sólo esos productos', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('De cotillón');
+    await screen.findByRole('row', { name: /De cotillón/ });
+    const tabla = screen.getByRole('table');
 
     await user.click(screen.getByRole('combobox', { name: 'Filtrar por mundo' }));
     await user.click(await screen.findByRole('option', { name: 'Disfraces' }));
 
-    expect(screen.getByText('De disfraces')).toBeInTheDocument();
-    expect(screen.queryByText('De cotillón')).not.toBeInTheDocument();
+    expect(within(tabla).getByText('De disfraces')).toBeInTheDocument();
+    expect(within(tabla).queryByText('De cotillón')).not.toBeInTheDocument();
   });
 });
 
@@ -226,7 +282,7 @@ describe('PublicadoTab — orden por columna', () => {
   it('clickear "Código" ordena asc, volver a clickear invierte a desc', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Zapallo');
+    await screen.findByRole('row', { name: /Zapallo/ });
 
     await user.click(screen.getByRole('columnheader', { name: /Código/ }));
     expect(tituloDeLaPrimeraFila()).toBe('Antifaz'); // código 001 < 002
@@ -237,7 +293,7 @@ describe('PublicadoTab — orden por columna', () => {
 
   it('por default ordena por Nombre asc (mismo orden que .order("titulo") de la query)', async () => {
     render(<PublicadoTab />);
-    await screen.findByText('Zapallo');
+    await screen.findByRole('row', { name: /Zapallo/ });
     expect(tituloDeLaPrimeraFila()).toBe('Antifaz');
   });
 });
@@ -257,9 +313,10 @@ describe('PublicadoTab — selección múltiple', () => {
   it('seleccionar una fila muestra la barra de acciones con el conteo', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+    const tabla = screen.getByRole('table');
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(tabla).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
 
     expect(screen.getByText('1 seleccionado')).toBeInTheDocument();
   });
@@ -267,7 +324,7 @@ describe('PublicadoTab — selección múltiple', () => {
   it('el checkbox del encabezado selecciona todas las filas filtradas, y vuelve a desmarcarlas', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
     const encabezado = screen.getByRole('checkbox', { name: 'Seleccionar todos' });
     await user.click(encabezado);
@@ -280,9 +337,10 @@ describe('PublicadoTab — selección múltiple', () => {
   it('cambiar la búsqueda limpia la selección (una fila seleccionada puede quedar oculta por el filtro)', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+    const tabla = screen.getByRole('table');
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(tabla).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     expect(screen.getByText('1 seleccionado')).toBeInTheDocument();
 
     await user.type(screen.getByPlaceholderText('Buscar por título o código'), 'sombrero');
@@ -292,9 +350,10 @@ describe('PublicadoTab — selección múltiple', () => {
   it('"Limpiar selección" vacía la selección sin tocar la base', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
+    const tabla = screen.getByRole('table');
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(tabla).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: 'Limpiar selección' }));
 
     expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument();
@@ -311,9 +370,9 @@ describe('PublicadoTab — lote: ajustar precio', () => {
   it('sube el precio del código según el porcentaje, redondeado', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(screen.getByRole('table')).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: /Ajustar precio/ }));
     await user.type(screen.getByPlaceholderText('Ej: 10'), '10');
     await user.click(screen.getByRole('button', { name: 'Aplicar' }));
@@ -329,9 +388,9 @@ describe('PublicadoTab — lote: ajustar precio', () => {
   it('un porcentaje negativo baja el precio, nunca a 0 o menos', async () => {
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(screen.getByRole('table')).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: /Ajustar precio/ }));
     await user.type(screen.getByPlaceholderText('Ej: 10'), '-200');
     await user.click(screen.getByRole('button', { name: 'Aplicar' }));
@@ -351,7 +410,7 @@ describe('PublicadoTab — lote: sacar de uso', () => {
     ];
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
     await user.click(screen.getByRole('checkbox', { name: 'Seleccionar todos' }));
     await user.click(screen.getByRole('button', { name: /Sacar de uso/ }));
@@ -369,9 +428,9 @@ describe('PublicadoTab — lote: eliminar', () => {
     estado.catalogo_productos = [producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001' })];
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(screen.getByRole('table')).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
 
     expect(screen.getByText(/no se puede deshacer/)).toBeInTheDocument();
@@ -384,9 +443,9 @@ describe('PublicadoTab — lote: eliminar', () => {
     ];
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(screen.getByRole('table')).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }));
 
@@ -406,10 +465,10 @@ describe('PublicadoTab — lote: eliminar', () => {
     ];
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
     // Sólo se selecciona p1 — p2 sigue usando el código '11963'.
-    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(within(screen.getByRole('table')).getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
     await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }));
 
@@ -427,7 +486,7 @@ describe('PublicadoTab — lote: eliminar', () => {
     ];
     const user = userEvent.setup();
     render(<PublicadoTab />);
-    await screen.findByText('Anteojo estrella');
+    await screen.findByRole('row', { name: /Anteojo estrella/ });
 
     await user.click(screen.getByRole('checkbox', { name: 'Seleccionar todos' }));
     await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));

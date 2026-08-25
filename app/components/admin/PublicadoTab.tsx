@@ -29,14 +29,22 @@ import ProductoEditModal, { type ProductoAdmin } from './ProductoEditModal';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
-const COLUMNAS: { col: ColumnaOrdenCatalogo; label: string; alinear?: 'right' }[] = [
-  { col: 'codigo', label: 'Código' },
-  { col: 'titulo', label: 'Nombre' },
-  { col: 'familia', label: 'Familia' },
-  { col: 'mundo', label: 'Mundo' },
-  { col: 'stock', label: 'Stock', alinear: 'right' },
-  { col: 'precio', label: 'Precio', alinear: 'right' },
-  { col: 'estado', label: 'Estado' }
+// Anchos en % (no px): en table-fixed la suma nunca puede superar el 100%
+// del contenedor, así que la tabla no puede desbordar sin importar el
+// ancho de pantalla — a diferencia de whitespace-nowrap + overflow-x-auto
+// (lo que había antes), que dejaba el scroll horizontal pegado al fondo
+// de una lista larga y sin paginar, inalcanzable sin bajar hasta el final
+// (reportado por el usuario: no podía ni ver los datos completos ni
+// llegar a "Editar" sin ese doble scroll). checkbox 4% + editar 9% +
+// las 7 de abajo (87%) = 100%.
+const COLUMNAS: { col: ColumnaOrdenCatalogo; label: string; alinear?: 'right'; widthPct: number }[] = [
+  { col: 'codigo', label: 'Código', widthPct: 11 },
+  { col: 'titulo', label: 'Nombre', widthPct: 26 },
+  { col: 'familia', label: 'Familia', widthPct: 12 },
+  { col: 'mundo', label: 'Mundo', widthPct: 12 },
+  { col: 'stock', label: 'Stock', alinear: 'right', widthPct: 7 },
+  { col: 'precio', label: 'Precio', alinear: 'right', widthPct: 10 },
+  { col: 'estado', label: 'Estado', widthPct: 9 }
 ];
 
 export default function PublicadoTab() {
@@ -268,6 +276,11 @@ export default function PublicadoTab() {
     setSeleccionado((prev) => (prev && prev.id === id ? null : prev));
   }
 
+  function abrirEdicion(id: string) {
+    const p = productos.find((prod) => prod.id === id);
+    if (p) setSeleccionado(p);
+  }
+
   if (cargando) return <p className="adm-detalle-solo-lectura">Cargando…</p>;
 
   return (
@@ -386,71 +399,125 @@ export default function PublicadoTab() {
       )}
       {loteError && <p className="adm-msg adm-msg-error">{loteError}</p>}
 
-      <Table className="adm-lista-tabla">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">
-              <Checkbox
-                checked={estadoEncabezado === 'todos'}
-                indeterminate={estadoEncabezado === 'algunos'}
-                onCheckedChange={alternarSeleccionTodos}
-                aria-label="Seleccionar todos"
-              />
-            </TableHead>
-            {COLUMNAS.map(({ col, label, alinear }) => (
-              <TableHead
-                key={col}
-                className={'cursor-pointer select-none whitespace-nowrap hover:text-foreground' + (alinear === 'right' ? ' text-right' : '')}
-                onClick={() => alOrdenar(col)}
-              >
-                {label}
-                <SortIcon col={col} />
-              </TableHead>
-            ))}
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filas.length === 0 ? (
+      {/* Desktop (≥1024px, breakpoint lg): tabla real. Debajo de 1024px,
+       * con 9 columnas efectivas, ni siquiera con wrap queda cómodo — pasa
+       * a la lista de tarjetas de abajo. Mismo patrón de dos bloques de
+       * markup que ya usa Footer.tsx en este repo (CSS puro, sin JS de
+       * media queries — evita el flash de hidratación de un hook). */}
+      <div className="hidden lg:block">
+        <Table className="adm-lista-tabla table-fixed">
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={COLUMNAS.length + 2} className="adm-detalle-solo-lectura text-center">
-                No hay artículos que coincidan.
-              </TableCell>
+              <TableHead style={{ width: '4%' }}>
+                <Checkbox
+                  checked={estadoEncabezado === 'todos'}
+                  indeterminate={estadoEncabezado === 'algunos'}
+                  onCheckedChange={alternarSeleccionTodos}
+                  aria-label="Seleccionar todos"
+                />
+              </TableHead>
+              {COLUMNAS.map(({ col, label, alinear, widthPct }) => (
+                <TableHead
+                  key={col}
+                  style={{ width: `${widthPct}%` }}
+                  className={'cursor-pointer select-none whitespace-nowrap hover:text-foreground' + (alinear === 'right' ? ' text-right' : '')}
+                  onClick={() => alOrdenar(col)}
+                >
+                  {label}
+                  <SortIcon col={col} />
+                </TableHead>
+              ))}
+              <TableHead style={{ width: '9%' }} />
             </TableRow>
-          ) : (
-            filas.map((f) => (
-              <TableRow key={f.id} className={seleccionados.has(f.id) ? 'bg-muted/30' : undefined}>
-                <TableCell>
+          </TableHeader>
+          <TableBody>
+            {filas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={COLUMNAS.length + 2} className="adm-detalle-solo-lectura text-center">
+                  No hay artículos que coincidan.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filas.map((f) => (
+                <TableRow key={f.id} className={seleccionados.has(f.id) ? 'bg-muted/30' : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={seleccionados.has(f.id)}
+                      onCheckedChange={() => alternarSeleccionUna(f.id)}
+                      aria-label={`Seleccionar ${f.titulo}`}
+                    />
+                  </TableCell>
+                  <TableCell className="whitespace-normal break-words font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
+                  <TableCell className="whitespace-normal break-words font-medium">{f.titulo}</TableCell>
+                  <TableCell>{f.familia || <span className="adm-badge-sin-stock">sin familia</span>}</TableCell>
+                  <TableCell>{f.mundoNombre}</TableCell>
+                  <TableCell className="text-right">{f.stock == null ? '—' : f.stock}</TableCell>
+                  <TableCell className="text-right">{f.precio == null ? '—' : fmt.format(f.precio)}</TableCell>
+                  <TableCell>{f.publicado ? 'Visible' : 'Oculto'}</TableCell>
+                  <TableCell>
+                    <button type="button" className="btn btn-ghost" onClick={() => abrirEdicion(f.id)}>
+                      Editar
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile (<1024px): una tarjeta por artículo en vez de tabla — sin
+       * columnas no hay scroll horizontal posible, y se ve toda la
+       * información de una, sin tener que elegir qué mostrar. */}
+      <ul role="list" className="grid gap-3 lg:hidden">
+        {filas.length === 0 ? (
+          <li className="adm-detalle-solo-lectura list-none text-center">No hay artículos que coincidan.</li>
+        ) : (
+          filas.map((f) => (
+            <li
+              key={f.id}
+              className={'list-none rounded-lg border p-3' + (seleccionados.has(f.id) ? ' bg-muted/30' : '')}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
                   <Checkbox
                     checked={seleccionados.has(f.id)}
                     onCheckedChange={() => alternarSeleccionUna(f.id)}
                     aria-label={`Seleccionar ${f.titulo}`}
+                    className="mt-1"
                   />
-                </TableCell>
-                <TableCell className="font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
-                <TableCell className="font-medium">{f.titulo}</TableCell>
-                <TableCell>{f.familia || <span className="adm-badge-sin-stock">sin familia</span>}</TableCell>
-                <TableCell>{f.mundoNombre}</TableCell>
-                <TableCell className="text-right">{f.stock == null ? '—' : f.stock}</TableCell>
-                <TableCell className="text-right">{f.precio == null ? '—' : fmt.format(f.precio)}</TableCell>
-                <TableCell>{f.publicado ? 'Visible' : 'Oculto'}</TableCell>
-                <TableCell>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => {
-                      const p = productos.find((prod) => prod.id === f.id);
-                      if (p) setSeleccionado(p);
-                    }}
-                  >
-                    Editar
-                  </button>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                  <div>
+                    <p className="font-medium break-words">{f.titulo}</p>
+                    <p className="break-words font-mono text-xs text-muted-foreground">{f.codigo}</p>
+                  </div>
+                </div>
+                <button type="button" className="btn btn-ghost shrink-0" onClick={() => abrirEdicion(f.id)}>
+                  Editar
+                </button>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">Familia</dt>
+                  <dd>{f.familia || 'sin familia'}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Mundo</dt>
+                  <dd>{f.mundoNombre}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Stock</dt>
+                  <dd>{f.stock == null ? '—' : f.stock}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Precio</dt>
+                  <dd>{f.precio == null ? '—' : fmt.format(f.precio)}</dd>
+                </div>
+              </dl>
+              <p className="mt-2 text-xs text-muted-foreground">{f.publicado ? 'Visible' : 'Oculto'}</p>
+            </li>
+          ))
+        )}
+      </ul>
     </div>
   );
 }
