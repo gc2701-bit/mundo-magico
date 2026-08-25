@@ -13,7 +13,10 @@ import {
   precioStockDe,
   ordenarCatalogo,
   filtrarCatalogo,
-  SIN_FAMILIA
+  SIN_FAMILIA,
+  estadoSeleccionEncabezado,
+  redondearPrecio,
+  codigosBorrablesLote
 } from '../../lib/admin-catalogo.ts';
 
 function producto(overrides) {
@@ -223,5 +226,80 @@ describe('admin-catalogo — filtrarCatalogo', () => {
       fila({ id: 'b', titulo: 'Anteojo redondo', familia: 'LUMINOSOS', mundoSlug: 'cotillon' })
     ];
     expect(filtrarCatalogo(filas, { busqueda: 'anteojo', familia: 'RUIDO', mundoSlug: 'cotillon' }).map((f) => f.id)).toEqual(['a']);
+  });
+});
+
+describe('admin-catalogo — estadoSeleccionEncabezado', () => {
+  it('sin filas, ninguno', () => {
+    expect(estadoSeleccionEncabezado([], new Set())).toBe('ninguno');
+  });
+
+  it('ninguna fila seleccionada', () => {
+    const filas = [fila({ id: 'a' }), fila({ id: 'b' })];
+    expect(estadoSeleccionEncabezado(filas, new Set())).toBe('ninguno');
+  });
+
+  it('todas las filas visibles seleccionadas', () => {
+    const filas = [fila({ id: 'a' }), fila({ id: 'b' })];
+    expect(estadoSeleccionEncabezado(filas, new Set(['a', 'b']))).toBe('todos');
+  });
+
+  it('algunas seleccionadas', () => {
+    const filas = [fila({ id: 'a' }), fila({ id: 'b' })];
+    expect(estadoSeleccionEncabezado(filas, new Set(['a']))).toBe('algunos');
+  });
+
+  it('ids seleccionados que no están en las filas visibles (filtradas) no cuentan', () => {
+    const filas = [fila({ id: 'a' })];
+    expect(estadoSeleccionEncabezado(filas, new Set(['a', 'z']))).toBe('todos');
+  });
+});
+
+describe('admin-catalogo — redondearPrecio', () => {
+  it('sube un porcentaje positivo', () => {
+    expect(redondearPrecio(1000, 10)).toBe(1100);
+  });
+
+  it('baja un porcentaje negativo', () => {
+    expect(redondearPrecio(1000, -10)).toBe(900);
+  });
+
+  it('redondea al entero más cercano', () => {
+    expect(redondearPrecio(999, 10)).toBe(1099); // 1098.9 -> 1099
+  });
+
+  it('nunca deja el precio en 0 o negativo, aunque el porcentaje sea muy negativo', () => {
+    expect(redondearPrecio(1000, -100)).toBe(1);
+    expect(redondearPrecio(1000, -500)).toBe(1);
+  });
+
+  it('0% no cambia el precio', () => {
+    expect(redondearPrecio(1000, 0)).toBe(1000);
+  });
+});
+
+describe('admin-catalogo — codigosBorrablesLote', () => {
+  it('código exclusivo del lote es borrable', () => {
+    const a = producto({ id: 'a', codigo: 'UNICO' });
+    const b = producto({ id: 'b', codigo: 'OTRO' });
+    expect(codigosBorrablesLote([a], [a, b])).toEqual(['UNICO']);
+  });
+
+  it('código compartido con algo FUERA del lote no es borrable', () => {
+    const a = producto({ id: 'a', codigo: 'COMPARTIDO' });
+    const b = producto({ id: 'b', codigo: 'COMPARTIDO' });
+    expect(codigosBorrablesLote([a], [a, b])).toEqual([]);
+  });
+
+  it('código compartido SÓLO entre dos productos del mismo lote sí es borrable (el bug que esto evita)', () => {
+    const a = producto({ id: 'a', codigo: 'COMPARTIDO' });
+    const b = producto({ id: 'b', codigo: 'COMPARTIDO' });
+    expect(codigosBorrablesLote([a, b], [a, b])).toEqual(['COMPARTIDO']);
+  });
+
+  it('variantes: cada código del lote se chequea por separado', () => {
+    const a = producto({ id: 'a', variantes: [{ talle: 'Chico', codigo: 'X', activo: true }, { talle: 'Grande', codigo: 'Y', activo: true }] });
+    const b = producto({ id: 'b', codigo: 'Y' });
+    expect(codigosBorrablesLote([a], [a, b])).toEqual(['X']);
   });
 });

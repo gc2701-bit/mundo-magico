@@ -185,3 +185,45 @@ export function filtrarCatalogo(
     return f.titulo.toLowerCase().includes(q) || f.codigo.toLowerCase().includes(q);
   });
 }
+
+// ── Selección múltiple + acciones en lote (Sprint 2 del plan) ──
+
+// Estado del checkbox del encabezado: tri-state entre "ninguno de los
+// filtrados está seleccionado", "todos" y "algunos". Sólo mira las filas
+// que pasan el filtro actual — seleccionar "todos" nunca incluye algo que
+// el filtro está ocultando.
+export function estadoSeleccionEncabezado(
+  filas: FilaCatalogoAdmin[],
+  seleccionados: Set<string>
+): 'ninguno' | 'algunos' | 'todos' {
+  if (!filas.length) return 'ninguno';
+  const enFilas = filas.filter((f) => seleccionados.has(f.id)).length;
+  if (enFilas === 0) return 'ninguno';
+  if (enFilas === filas.length) return 'todos';
+  return 'algunos';
+}
+
+// Ajuste de precio en lote: redondea al entero más cercano, nunca deja el
+// precio en 0 o negativo (violaría el check `precio > 0` de
+// catalogo_precios) aunque el porcentaje sea muy negativo.
+export function redondearPrecio(precioActual: number, porcentaje: number): number {
+  return Math.max(1, Math.round(precioActual * (1 + porcentaje / 100)));
+}
+
+// Códigos borrables de un LOTE completo: a diferencia de codigosBorrables
+// (un producto contra el resto), acá un código es borrable si ningún
+// producto FUERA del lote lo usa — si dos seleccionados comparten un
+// código, no alcanza con mirarlos de a uno (ver el bug que esto evita:
+// borrar de a uno con la misma lista `todos` sin actualizar deja
+// catalogo_precios con filas huérfanas cuando el otro producto del lote
+// ya se borró antes).
+export function codigosBorrablesLote(
+  seleccionados: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>[],
+  todos: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>[]
+): string[] {
+  const idsSeleccionados = new Set(seleccionados.map((p) => p.id));
+  const otros = todos.filter((p) => !idsSeleccionados.has(p.id));
+  const propios = new Set(seleccionados.flatMap((p) => codigosDe(p)));
+  const usadosPorOtros = new Set(otros.flatMap((p) => codigosDe(p)));
+  return Array.from(propios).filter((c) => !usadosPorOtros.has(c));
+}

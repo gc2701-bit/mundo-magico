@@ -12,23 +12,40 @@
  * de un e2e real.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PublicadoTab from '../../app/components/admin/PublicadoTab';
+import { STORAGE_PREFIX } from '../../lib/admin-catalogo';
 
-const { estado, sb } = vi.hoisted(() => {
+const { estado, sb, escrituras, storageRemovidas } = vi.hoisted(() => {
   const estado: any = { catalogo_productos: [], catalogo_mundos: [], catalogo_precios: [] };
+  const escrituras: any[] = [];
+  const storageRemovidas: string[] = [];
 
   function resultado(data: any) {
     const p: any = Promise.resolve({ data, error: null });
     p.select = () => p;
     p.order = () => p;
     p.eq = () => p;
+    p.in = () => p;
     return p;
   }
 
+  function armarEscritura(tabla: string, tipo: 'update' | 'delete', campos?: any) {
+    const registro: any = { tabla, tipo, campos, eqs: [], ins: [] };
+    escrituras.push(registro);
+    const chain: any = resultado({});
+    chain.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return chain; };
+    chain.in = (k: string, v: any) => { registro.ins.push([k, v]); return chain; };
+    return chain;
+  }
+
   const sb = {
-    from: (tabla: string) => ({ select: () => resultado(estado[tabla] || []) }),
+    from: (tabla: string) => ({
+      select: () => resultado(estado[tabla] || []),
+      update: (campos: any) => armarEscritura(tabla, 'update', campos),
+      delete: () => armarEscritura(tabla, 'delete')
+    }),
     rpc: (nombre: string, args: any) => {
       if (nombre !== 'catalogo_precios_admin') return Promise.resolve({ data: null, error: null });
       const pedidos: string[] = (args && args.p_codigos) || [];
@@ -36,10 +53,18 @@ const { estado, sb } = vi.hoisted(() => {
         data: estado.catalogo_precios.filter((p: any) => pedidos.indexOf(p.codigo) !== -1),
         error: null
       });
+    },
+    storage: {
+      from: () => ({
+        remove: (rutas: string[]) => {
+          storageRemovidas.push(...rutas);
+          return Promise.resolve({ data: null, error: null });
+        }
+      })
     }
   };
 
-  return { estado, sb };
+  return { estado, sb, escrituras, storageRemovidas };
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
@@ -62,6 +87,8 @@ beforeEach(() => {
   estado.catalogo_productos = [];
   estado.catalogo_mundos = MUNDOS;
   estado.catalogo_precios = [];
+  escrituras.length = 0;
+  storageRemovidas.length = 0;
 });
 
 describe('PublicadoTab — tabla', () => {
@@ -73,13 +100,14 @@ describe('PublicadoTab — tabla', () => {
 
     const fila = await screen.findByRole('row', { name: /Anteojo estrella/ });
     const celdas = within(fila).getAllByRole('cell');
-    expect(celdas[0]).toHaveTextContent('001');
-    expect(celdas[1]).toHaveTextContent('Anteojo estrella');
-    expect(celdas[2]).toHaveTextContent('RUIDO');
-    expect(celdas[3]).toHaveTextContent('Cotillón');
-    expect(celdas[4]).toHaveTextContent('12');
-    expect(celdas[5]).toHaveTextContent('5.000'); // Intl.NumberFormat es-AR usa espacio irrompible antes del número
-    expect(celdas[6]).toHaveTextContent('Visible');
+    expect(celdas[0]).toHaveTextContent(''); // checkbox de selección
+    expect(celdas[1]).toHaveTextContent('001');
+    expect(celdas[2]).toHaveTextContent('Anteojo estrella');
+    expect(celdas[3]).toHaveTextContent('RUIDO');
+    expect(celdas[4]).toHaveTextContent('Cotillón');
+    expect(celdas[5]).toHaveTextContent('12');
+    expect(celdas[6]).toHaveTextContent('5.000'); // Intl.NumberFormat es-AR usa espacio irrompible antes del número
+    expect(celdas[7]).toHaveTextContent('Visible');
   });
 
   it('sin dato de precio/stock para el código, muestra "—" en vez de inventar un valor', async () => {
@@ -90,8 +118,8 @@ describe('PublicadoTab — tabla', () => {
 
     const fila = await screen.findByRole('row', { name: /Producto/ });
     const celdas = within(fila).getAllByRole('cell');
-    expect(celdas[4]).toHaveTextContent('—');
     expect(celdas[5]).toHaveTextContent('—');
+    expect(celdas[6]).toHaveTextContent('—');
   });
 
   it('un producto oculto (publicado:false) se muestra igual, con estado "Oculto"', async () => {
@@ -100,7 +128,7 @@ describe('PublicadoTab — tabla', () => {
     render(<PublicadoTab />);
 
     const fila = await screen.findByRole('row', { name: /Zapallo/ });
-    expect(within(fila).getAllByRole('cell')[6]).toHaveTextContent('Oculto');
+    expect(within(fila).getAllByRole('cell')[7]).toHaveTextContent('Oculto');
   });
 
   it('sin resultados muestra el mensaje, no una tabla vacía', async () => {
@@ -192,7 +220,7 @@ describe('PublicadoTab — orden por columna', () => {
 
   function tituloDeLaPrimeraFila() {
     const filas = screen.getAllByRole('row').slice(1); // sin el header
-    return within(filas[0]).getAllByRole('cell')[1].textContent;
+    return within(filas[0]).getAllByRole('cell')[2].textContent; // [0]=checkbox, [1]=código, [2]=nombre
   }
 
   it('clickear "Código" ordena asc, volver a clickear invierte a desc', async () => {
@@ -211,5 +239,203 @@ describe('PublicadoTab — orden por columna', () => {
     render(<PublicadoTab />);
     await screen.findByText('Zapallo');
     expect(tituloDeLaPrimeraFila()).toBe('Antifaz');
+  });
+});
+
+describe('PublicadoTab — selección múltiple', () => {
+  beforeEach(() => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001' }),
+      producto({ id: 'p2', titulo: 'Sombrero cowboy', codigo: '61147' })
+    ];
+    estado.catalogo_precios = [
+      { codigo: '001', precio: 1000, sin_stock: false, stock: 5 },
+      { codigo: '61147', precio: 2000, sin_stock: false, stock: 3 }
+    ];
+  });
+
+  it('seleccionar una fila muestra la barra de acciones con el conteo', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+
+    expect(screen.getByText('1 seleccionado')).toBeInTheDocument();
+  });
+
+  it('el checkbox del encabezado selecciona todas las filas filtradas, y vuelve a desmarcarlas', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    const encabezado = screen.getByRole('checkbox', { name: 'Seleccionar todos' });
+    await user.click(encabezado);
+    expect(screen.getByText(/2 seleccionados/)).toBeInTheDocument();
+
+    await user.click(encabezado);
+    expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument();
+  });
+
+  it('cambiar la búsqueda limpia la selección (una fila seleccionada puede quedar oculta por el filtro)', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    expect(screen.getByText('1 seleccionado')).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText('Buscar por título o código'), 'sombrero');
+    expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument();
+  });
+
+  it('"Limpiar selección" vacía la selección sin tocar la base', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: 'Limpiar selección' }));
+
+    expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument();
+    expect(escrituras).toHaveLength(0);
+  });
+});
+
+describe('PublicadoTab — lote: ajustar precio', () => {
+  beforeEach(() => {
+    estado.catalogo_productos = [producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001' })];
+    estado.catalogo_precios = [{ codigo: '001', precio: 1000, sin_stock: false, stock: 5 }];
+  });
+
+  it('sube el precio del código según el porcentaje, redondeado', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: /Ajustar precio/ }));
+    await user.type(screen.getByPlaceholderText('Ej: 10'), '10');
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    const update = escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'update');
+    expect(update).toBeTruthy();
+    expect(update.campos).toEqual({ precio: 1100 });
+    expect(update.eqs).toEqual([['codigo', '001']]);
+  });
+
+  it('un porcentaje negativo baja el precio, nunca a 0 o menos', async () => {
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: /Ajustar precio/ }));
+    await user.type(screen.getByPlaceholderText('Ej: 10'), '-200');
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    const update = escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'update');
+    expect(update.campos).toEqual({ precio: 1 });
+  });
+});
+
+describe('PublicadoTab — lote: sacar de uso', () => {
+  it('manda publicado:false a los ids seleccionados en un solo update', async () => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001' }),
+      producto({ id: 'p2', titulo: 'Sombrero cowboy', codigo: '61147' })
+    ];
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar todos' }));
+    await user.click(screen.getByRole('button', { name: /Sacar de uso/ }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    const update = escrituras.find((e: any) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos).toEqual({ publicado: false });
+    expect(update.ins).toEqual([['id', ['p1', 'p2']]]);
+  });
+});
+
+describe('PublicadoTab — lote: eliminar', () => {
+  it('pide confirmación antes de borrar', async () => {
+    estado.catalogo_productos = [producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001' })];
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
+
+    expect(screen.getByText(/no se puede deshacer/)).toBeInTheDocument();
+    expect(escrituras).toHaveLength(0);
+  });
+
+  it('confirmar borra las fotos de Storage, el código exclusivo de catalogo_precios y el producto', async () => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '001', fotos: [{ src: STORAGE_PREFIX + 'anteojo.webp', cap: '' }] })
+    ];
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    expect(storageRemovidas).toEqual(['anteojo.webp']);
+    const delPrecios = escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'delete');
+    expect(delPrecios.ins).toEqual([['codigo', ['001']]]);
+    const delProductos = escrituras.find((e: any) => e.tabla === 'catalogo_productos' && e.tipo === 'delete');
+    expect(delProductos.ins).toEqual([['id', ['p1']]]);
+  });
+
+  it('un código compartido con un producto FUERA del lote no se borra de catalogo_precios', async () => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '11963' }),
+      producto({ id: 'p2', titulo: 'Anteojo redondo', codigo: '11963' })
+    ];
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    // Sólo se selecciona p1 — p2 sigue usando el código '11963'.
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar Anteojo estrella' }));
+    await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    expect(escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'delete')).toBeUndefined();
+    const delProductos = escrituras.find((e: any) => e.tabla === 'catalogo_productos' && e.tipo === 'delete');
+    expect(delProductos.ins).toEqual([['id', ['p1']]]);
+  });
+
+  it('un código compartido SÓLO entre dos productos del mismo lote sí se borra (el bug que evita codigosBorrablesLote)', async () => {
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Anteojo estrella', codigo: '11963' }),
+      producto({ id: 'p2', titulo: 'Anteojo redondo', codigo: '11963' })
+    ];
+    const user = userEvent.setup();
+    render(<PublicadoTab />);
+    await screen.findByText('Anteojo estrella');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Seleccionar todos' }));
+    await user.click(screen.getByRole('button', { name: /^Eliminar$/ }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar eliminación' }));
+
+    await waitFor(() => expect(screen.queryByText(/seleccionado/)).not.toBeInTheDocument());
+
+    const delPrecios = escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'delete');
+    expect(delPrecios.ins).toEqual([['codigo', ['11963']]]);
   });
 });

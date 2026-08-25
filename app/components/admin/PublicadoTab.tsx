@@ -9,12 +9,15 @@ import {
   codigoNormalizado,
   codigosDe,
   codigosBorrables,
+  codigosBorrablesLote,
   familiasVistas,
   contarSinFamilia,
   rutasDeStorage,
   precioStockDe,
   ordenarCatalogo,
   filtrarCatalogo,
+  estadoSeleccionEncabezado,
+  redondearPrecio,
   SIN_FAMILIA,
   type MapaPreciosAdmin,
   type FilaCatalogoAdmin,
@@ -24,7 +27,9 @@ import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { ArrowUp, ArrowDown, ArrowUpDown, Percent, Trash2, EyeOff, Loader2 } from 'lucide-react';
 
 type ProductoAdmin = ProductoPublico & { publicado: boolean };
 
@@ -40,6 +45,29 @@ const COLUMNAS: { col: ColumnaOrdenCatalogo; label: string; alinear?: 'right' }[
   { col: 'estado', label: 'Estado' }
 ];
 
+// Compartido entre el borrado individual (DetalleProducto) y el borrado en
+// lote (barra de selección múltiple) — misma secuencia: fotos de Storage,
+// filas de catalogo_precios que ya no usa nadie más, y la fila del
+// producto. `borrables` lo calcula cada caller (codigosBorrables para uno,
+// codigosBorrablesLote para varios) porque el criterio de "quién más lo
+// usa" cambia según si se borra de a uno o en lote (ver el comentario de
+// codigosBorrablesLote en lib/admin-catalogo.ts).
+async function borrarProductoYPrecios(
+  sb: ReturnType<typeof supabaseBrowser>,
+  producto: Pick<ProductoAdmin, 'id' | 'fotos'>,
+  borrables: string[]
+) {
+  const rutasStorage = rutasDeStorage(producto.fotos || []);
+  if (rutasStorage.length) {
+    await sb.storage.from('catalogo').remove(rutasStorage);
+  }
+  if (borrables.length) {
+    await sb.from('catalogo_precios').delete().in('codigo', borrables);
+  }
+  const { error } = await sb.from('catalogo_productos').delete().eq('id', producto.id);
+  if (error) throw error;
+}
+
 export default function PublicadoTab() {
   const [productos, setProductos] = useState<ProductoAdmin[]>([]);
   const [mapaPrecios, setMapaPrecios] = useState<MapaPreciosAdmin>({});
@@ -51,6 +79,12 @@ export default function PublicadoTab() {
   const [columna, setColumna] = useState<ColumnaOrdenCatalogo>('titulo');
   const [direccion, setDireccion] = useState<'asc' | 'desc'>('asc');
   const [seleccionado, setSeleccionado] = useState<ProductoAdmin | null>(null);
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const [pasoPrecio, setPasoPrecio] = useState(false);
+  const [porcentaje, setPorcentaje] = useState('');
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [loteCargando, setLoteCargando] = useState(false);
+  const [loteError, setLoteError] = useState('');
 
   useEffect(() => {
     cargar();
@@ -117,6 +151,123 @@ export default function PublicadoTab() {
       ),
     [filasBase, busqueda, familiaFiltro, mundoFiltro, columna, direccion]
   );
+
+  // Un filtro nuevo puede esconder filas que estaban seleccionadas —
+  // limpiar la selección evita actuar "en lote" sobre algo que ya no se ve
+  // ni se recuerda haber elegido. Ordenar (columna/dirección) no cambia
+  // QUÉ está seleccionado, sólo el orden, así que no limpia acá.
+  useEffect(() => {
+    setSeleccionados(new Set());
+    setPasoPrecio(false);
+    setConfirmarEliminar(false);
+    setPorcentaje('');
+    setLoteError('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda, familiaFiltro, mundoFiltro]);
+
+  const estadoEncabezado = estadoSeleccionEncabezado(filas, seleccionados);
+
+  function alternarSeleccionTodos() {
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (estadoEncabezado === 'todos') {
+        filas.forEach((f) => next.delete(f.id));
+      } else {
+        filas.forEach((f) => next.add(f.id));
+      }
+      return next;
+    });
+  }
+
+  function alternarSeleccionUna(id: string) {
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function limpiarSeleccion() {
+    setSeleccionados(new Set());
+    setPasoPrecio(false);
+    setConfirmarEliminar(false);
+    setPorcentaje('');
+    setLoteError('');
+  }
+
+  function productosSeleccionados(): ProductoAdmin[] {
+    return productos.filter((p) => seleccionados.has(p.id));
+  }
+
+  async function ejecutarAjustePrecio() {
+    const pct = Number(porcentaje);
+    if (!porcentaje || Number.isNaN(pct)) return;
+    setLoteCargando(true);
+    setLoteError('');
+    try {
+      const sb = supabaseBrowser();
+      const codigos = Array.from(new Set(productosSeleccionados().flatMap((p) => codigosDe(p))));
+      const actualizaciones = codigos
+        .map((c) => ({ codigo: c, actual: mapaPrecios[c]?.precio }))
+        .filter((x): x is { codigo: string; actual: number } => x.actual != null);
+      await Promise.all(
+        actualizaciones.map(({ codigo, actual }) =>
+          sb.from('catalogo_precios').update({ precio: redondearPrecio(actual, pct) }).eq('codigo', codigo)
+        )
+      );
+      limpiarSeleccion();
+      await cargar();
+    } catch (err) {
+      setLoteError((err as Error).message);
+    } finally {
+      setLoteCargando(false);
+    }
+  }
+
+  async function ejecutarSacarDeUso() {
+    setLoteCargando(true);
+    setLoteError('');
+    try {
+      const sb = supabaseBrowser();
+      const { error: err } = await sb
+        .from('catalogo_productos')
+        .update({ publicado: false })
+        .in('id', Array.from(seleccionados));
+      if (err) throw err;
+      limpiarSeleccion();
+      await cargar();
+    } catch (err) {
+      setLoteError((err as Error).message);
+    } finally {
+      setLoteCargando(false);
+    }
+  }
+
+  async function ejecutarEliminarLote() {
+    setLoteCargando(true);
+    setLoteError('');
+    try {
+      const sb = supabaseBrowser();
+      const seleccion = productosSeleccionados();
+      const borrables = codigosBorrablesLote(seleccion, productos);
+      const rutasStorage = Array.from(new Set(seleccion.flatMap((p) => rutasDeStorage(p.fotos || []))));
+      if (rutasStorage.length) {
+        await sb.storage.from('catalogo').remove(rutasStorage);
+      }
+      if (borrables.length) {
+        await sb.from('catalogo_precios').delete().in('codigo', borrables);
+      }
+      const { error: err } = await sb.from('catalogo_productos').delete().in('id', Array.from(seleccionados));
+      if (err) throw err;
+      limpiarSeleccion();
+      await cargar();
+    } catch (err) {
+      setLoteError((err as Error).message);
+    } finally {
+      setLoteCargando(false);
+    }
+  }
 
   function alOrdenar(col: ColumnaOrdenCatalogo) {
     if (columna === col) {
@@ -201,9 +352,84 @@ export default function PublicadoTab() {
           </SelectContent>
         </Select>
       </div>
+
+      {seleccionados.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2.5">
+          <span className="shrink-0 text-sm font-medium">
+            {seleccionados.size} seleccionado{seleccionados.size !== 1 ? 's' : ''}
+            {estadoEncabezado === 'todos' && filas.length > 1 ? ` (los ${filas.length} filtrados)` : ''}
+          </span>
+
+          {!pasoPrecio && !confirmarEliminar && (
+            <>
+              <Button type="button" variant="outline" size="sm" disabled={loteCargando} onClick={() => setPasoPrecio(true)}>
+                <Percent className="mr-1.5 h-3.5 w-3.5" />
+                Ajustar precio
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={loteCargando} onClick={ejecutarSacarDeUso}>
+                <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                Sacar de uso
+              </Button>
+              <Button type="button" variant="destructive" size="sm" disabled={loteCargando} onClick={() => setConfirmarEliminar(true)}>
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Eliminar
+              </Button>
+            </>
+          )}
+
+          {pasoPrecio && (
+            <>
+              <span className="text-sm text-muted-foreground">Ajuste %</span>
+              <Input
+                type="number"
+                className="w-24"
+                placeholder="Ej: 10"
+                value={porcentaje}
+                onChange={(e) => setPorcentaje(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && porcentaje && ejecutarAjustePrecio()}
+              />
+              <span className="text-xs text-muted-foreground">(negativo para bajar)</span>
+              <Button type="button" size="sm" disabled={loteCargando || !porcentaje} onClick={ejecutarAjustePrecio}>
+                {loteCargando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Aplicar'}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setPasoPrecio(false); setPorcentaje(''); }}>
+                Cancelar
+              </Button>
+            </>
+          )}
+
+          {confirmarEliminar && (
+            <>
+              <span className="text-sm font-medium text-destructive">
+                ¿Eliminar {seleccionados.size} producto{seleccionados.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.
+              </span>
+              <Button type="button" variant="destructive" size="sm" disabled={loteCargando} onClick={ejecutarEliminarLote}>
+                {loteCargando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Confirmar eliminación'}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmarEliminar(false)}>
+                Cancelar
+              </Button>
+            </>
+          )}
+
+          <Button type="button" variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={limpiarSeleccion}>
+            Limpiar selección
+          </Button>
+        </div>
+      )}
+      {loteError && <p className="adm-msg adm-msg-error">{loteError}</p>}
+
       <Table className="adm-lista-tabla">
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10">
+              <Checkbox
+                checked={estadoEncabezado === 'todos'}
+                indeterminate={estadoEncabezado === 'algunos'}
+                onCheckedChange={alternarSeleccionTodos}
+                aria-label="Seleccionar todos"
+              />
+            </TableHead>
             {COLUMNAS.map(({ col, label, alinear }) => (
               <TableHead
                 key={col}
@@ -220,13 +446,20 @@ export default function PublicadoTab() {
         <TableBody>
           {filas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={COLUMNAS.length + 1} className="adm-detalle-solo-lectura text-center">
+              <TableCell colSpan={COLUMNAS.length + 2} className="adm-detalle-solo-lectura text-center">
                 No hay artículos que coincidan.
               </TableCell>
             </TableRow>
           ) : (
             filas.map((f) => (
-              <TableRow key={f.id}>
+              <TableRow key={f.id} className={seleccionados.has(f.id) ? 'bg-muted/30' : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={seleccionados.has(f.id)}
+                    onCheckedChange={() => alternarSeleccionUna(f.id)}
+                    aria-label={`Seleccionar ${f.titulo}`}
+                  />
+                </TableCell>
                 <TableCell className="font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
                 <TableCell className="font-medium">{f.titulo}</TableCell>
                 <TableCell>{f.familia || <span className="adm-badge-sin-stock">sin familia</span>}</TableCell>
@@ -356,20 +589,7 @@ function DetalleProducto({
     setError('');
     try {
       const sb = supabaseBrowser();
-
-      const rutasStorage = rutasDeStorage(fotos);
-      if (rutasStorage.length) {
-        await sb.storage.from('catalogo').remove(rutasStorage);
-      }
-
-      const borrables = codigosBorrables(producto, todos);
-      if (borrables.length) {
-        await sb.from('catalogo_precios').delete().in('codigo', borrables);
-      }
-
-      const { error: err } = await sb.from('catalogo_productos').delete().eq('id', producto.id);
-      if (err) throw err;
-
+      await borrarProductoYPrecios(sb, { id: producto.id, fotos }, codigosBorrables(producto, todos));
       onEliminado(producto.id);
     } catch (err) {
       setError((err as Error).message);
