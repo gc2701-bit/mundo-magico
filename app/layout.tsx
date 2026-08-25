@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import { obtenerCatalogoPublico } from "@/lib/catalogo-server";
@@ -56,6 +57,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             la Task 5.2 de este mismo sprint. */}
         <link rel="stylesheet" href="/assets/carrito.css" />
         <link rel="stylesheet" href="/assets/cuenta.css" />
+        {/* Cloudflare Turnstile (captcha) — Supabase Auth lo exige en
+            signUp/signInWithPassword/resetPasswordForEmail para este
+            proyecto ("Enable CAPTCHA protection" prendido), y CuentaModal
+            (useTurnstile, más abajo vía CuentaOverlays) se monta acá,
+            site-wide — no sólo bajo /admin/*. Va acá y no en
+            app/admin/layout.tsx (bug real, 2026-08-25: estaba SÓLO ahí,
+            así que window.turnstile nunca existía en ninguna página fuera
+            de /admin/*, y el login/alta/recuperar del ícono "Mi cuenta"
+            del Nav — visible en todo el sitio — quedaba trabado para
+            siempre en "Esperá un instante (verificación anti-robots)"
+            sin mostrar nunca el widget). Las páginas /admin/* heredan
+            este mismo script del layout raíz, no necesitan su propia
+            copia. */}
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       </head>
       <body>
         <CuentaProvider>
