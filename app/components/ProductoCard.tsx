@@ -40,13 +40,17 @@ type Props = {
 
 export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
   const fotos = producto.fotos || [];
-  const esTalles = !!(producto.variantes && producto.variantes.length);
+  // Sólo variantes activas ("a la venta") cuentan — una sacada de uso
+  // desde el panel admin no debe seguir marcando el producto como "de
+  // variantes" en la card ni entrar en el precio/stock que se hidrata acá.
+  const variantesActivas = (producto.variantes || []).filter((v) => v.activo);
+  const esTalles = variantesActivas.length > 0;
   const esGaleria = !esTalles && fotos.length > 1;
   const sinFoto = fotos.length === 0;
 
   const dataAttrs: Record<string, string> = { 'data-id': producto.id };
-  if (esTalles && producto.variantes) {
-    dataAttrs['data-talles-codigos'] = producto.variantes.map((v) => v.codigo).join(',');
+  if (esTalles) {
+    dataAttrs['data-talles-codigos'] = variantesActivas.map((v) => v.codigo).join(',');
   } else if (producto.codigo) {
     dataAttrs['data-codigo'] = producto.codigo;
   }

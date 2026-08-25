@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { supabaseBrowser } from '@/lib/supabase';
+import { obtenerPreciosPublicos } from '@/lib/catalogo-precios-publico';
 import { resolverEstadoProducto, resolverOferta } from '@/lib/precios-familia';
 
 /**
  * Hidrata precio/stock client-side después de que la página (ISR) ya se
- * sirvió estática — un solo fetch a catalogo_publico() (mismo RPC del
- * sitio viejo), aplicado a todas las tarjetas con data-codigo o
- * data-talles-codigos. Se monta una sola vez por página (ver
- * app/[familia]/page.tsx) — nunca por tarjeta, para no repetir el fetch.
+ * sirvió estática — un solo fetch a catalogo_publico() (compartido vía
+ * lib/catalogo-precios-publico.ts con quien más lo necesite en la misma
+ * página, ej. AgregarControl en la ficha de producto — Sprint 5),
+ * aplicado a todas las tarjetas con data-codigo o data-talles-codigos.
+ * Se monta una sola vez por página (ver app/[familia]/page.tsx) — nunca
+ * por tarjeta, para no repetir el fetch.
  *
  * Un cambio de precio se ve instantáneo para quien ya tiene la página
  * abierta; no espera ninguna revalidación de ISR (eso es solo para el
@@ -19,20 +21,9 @@ export default function CatalogoPrecios() {
   useEffect(() => {
     let cancelado = false;
 
-    supabaseBrowser()
-      .rpc('catalogo_publico')
-      .then(({ data, error }: { data: any; error: any }) => {
-        if (cancelado || error || !data) return;
-
-        const precios: Record<string, number> = data.precios || {};
-        const sinStock: Record<string, boolean> = {};
-        (data.sinStock || []).forEach((c: string) => {
-          sinStock[c] = true;
-        });
-        const pocasUnidades: Record<string, boolean> = {};
-        (data.pocasUnidades || []).forEach((c: string) => {
-          pocasUnidades[c] = true;
-        });
+    obtenerPreciosPublicos()
+      .then(({ precios, sinStock, pocasUnidades }) => {
+        if (cancelado) return;
 
         document.querySelectorAll<HTMLElement>('[data-codigo], [data-talles-codigos]').forEach((el) => {
           const codigo = el.getAttribute('data-codigo');
@@ -94,6 +85,12 @@ export default function CatalogoPrecios() {
             }
           }
         });
+      })
+      .catch(() => {
+        // Silencioso a propósito, mismo comportamiento que antes de
+        // compartir el fetch: sin precios hidratados la página sigue
+        // siendo usable (fotos/título ya vinieron de ISR), no hay nada
+        // que mostrarle al visitante sobre un fetch de precios fallido.
       });
 
     return () => {

@@ -58,6 +58,32 @@ describe('precios-familia — resolverEstadoProducto', () => {
     const r2 = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 3500 }, { A: true, B: true }, {});
     expect(r2.sinStock).toBe(true);
   });
+
+  it('una variante activo:false nunca entra en el mínimo de precio (Sprint 5)', () => {
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: false }];
+    // B es más barata pero está inactiva -> el "Desde" tiene que ser el precio de A, no el de B.
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 500 }, {}, {});
+    expect(r.texto).toBe(money(2000));
+  });
+
+  it('con una sola variante activa (aunque haya más de una en total) no antepone "Desde"', () => {
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: false }];
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000 }, {}, {});
+    expect(r.texto).toBe(money(2000)); // sin "Desde": sólo queda una opción comprable
+  });
+
+  it('una variante inactiva sin stock no cuenta para "todas sin stock" — sólo importan las activas', () => {
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: false }];
+    // B (inactiva) está sin stock, A (la única comprable) tiene stock.
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 500 }, { B: true }, {});
+    expect(r.sinStock).toBe(false);
+  });
+
+  it('todas las variantes inactivas: como si no hubiera variantes con precio conocido (sin código simple, texto null)', () => {
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: false }, { talle: 'Grande', codigo: 'B', activo: false }];
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 3500 }, {}, {});
+    expect(r.texto).toBeNull();
+  });
 });
 
 describe('precios-familia — resolverOferta', () => {

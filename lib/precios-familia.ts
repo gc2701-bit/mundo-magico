@@ -25,20 +25,20 @@ function formatear(n: number): string {
   return fmt.format(n);
 }
 
-// Un producto simple (codigo) resuelve directo. Uno de talles resuelve el
-// MÍNIMO de sus opciones con precio conocido — "Desde $X", igual criterio
-// que ya usa el sitio para combos/talles con precios distintos por opción.
+// Un producto simple (codigo) resuelve directo. Uno de variantes resuelve
+// el MÍNIMO entre las ACTIVAS ("a la venta") con precio conocido —
+// "Desde $X", igual criterio que ya usa el sitio para combos/variantes
+// con precios distintos por opción. Una variante `activo:false` (sacada
+// de la venta desde el panel admin) nunca entra en este cálculo — ni en
+// el precio, ni en si el producto cuenta como "con stock".
 export function resolverEstadoProducto(
   producto: Pick<ProductoPublico, 'codigo' | 'variantes'>,
   precios: PreciosMapa,
   sinStock: Record<string, boolean>,
   pocasUnidades: Record<string, boolean>
 ): EstadoPrecio {
-  const codigos = producto.variantes && producto.variantes.length
-    ? producto.variantes.map((v) => v.codigo)
-    : producto.codigo
-      ? [producto.codigo]
-      : [];
+  const activas = (producto.variantes || []).filter((v) => v.activo);
+  const codigos = activas.length ? activas.map((v) => v.codigo) : producto.codigo ? [producto.codigo] : [];
 
   if (!codigos.length) return { texto: null, sinStock: false, pocasUnidades: false };
 
@@ -46,7 +46,7 @@ export function resolverEstadoProducto(
   if (!conocidos.length) return { texto: null, sinStock: false, pocasUnidades: false };
 
   const min = Math.min(...conocidos.map((c) => precios[c]));
-  const esRango = producto.variantes != null && producto.variantes.length > 1;
+  const esRango = activas.length > 1;
   const texto = esRango ? 'Desde ' + formatear(min) : formatear(min);
 
   // Sin stock: sólo si TODOS los códigos que se conocen están sin stock

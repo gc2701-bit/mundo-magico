@@ -13,13 +13,16 @@ import type { ProductoPublico } from '@/lib/catalogo-familia';
  */
 export default function ProductoCTASticky({ producto }: { producto: ProductoPublico }) {
   const { agregar, abrirPanel } = useCarrito();
-  const tieneTalles = !!(producto.variantes && producto.variantes.length > 1);
+  // Sólo variantes activas ("a la venta") — una sacada de uso no debe
+  // seguir empujando al visitante al selector ni resolver precio.
+  const variantesActivas = (producto.variantes || []).filter((v) => v.activo);
+  const tieneTalles = variantesActivas.length > 1;
   const foto = '/' + (producto.fotos[0]?.src || '');
-  const simple = { title: producto.titulo, code: producto.codigo || producto.variantes?.[0]?.codigo || '', variant: producto.variantes?.[0]?.talle || '' };
+  const simple = { title: producto.titulo, code: producto.codigo || variantesActivas[0]?.codigo || '', variant: variantesActivas[0]?.talle || '' };
 
   const dataAttrs: Record<string, string> = {};
-  if (tieneTalles && producto.variantes) {
-    dataAttrs['data-talles-codigos'] = producto.variantes.map((v) => v.codigo).join(',');
+  if (tieneTalles) {
+    dataAttrs['data-talles-codigos'] = variantesActivas.map((v) => v.codigo).join(',');
   } else if (producto.codigo) {
     dataAttrs['data-codigo'] = producto.codigo;
   }

@@ -10,9 +10,27 @@ import type { Foto } from '@/lib/catalogo-familia';
  * ningún patrón de galería interactivo para reusar: `.gtrack` en
  * ProductoCard.tsx es sólo una tira de fotos sin flechas/miniaturas (no
  * hacía falta más que eso en el tamaño de una card).
+ *
+ * `fotoDestacada` (Sprint 5 del plan de catálogo admin): cuando el
+ * selector de variantes de AccionesProducto.tsx resuelve una combinación
+ * con imagen propia, la pasa acá y reemplaza toda la galería por esa
+ * única foto mientras esa combinación siga elegida (sin tira de
+ * miniaturas — no hay más fotos de esa variante puntual para elegir
+ * entre ellas). Al volver a null (combinación incompleta o sin imagen
+ * propia) la galería general vuelve tal cual estaba.
  */
-export default function ProductoGaleria({ fotos, titulo }: { fotos: Foto[]; titulo: string }) {
+export default function ProductoGaleria({ fotos, titulo, fotoDestacada }: { fotos: Foto[]; titulo: string; fotoDestacada?: string | null }) {
   const [activa, setActiva] = useState(0);
+
+  if (fotoDestacada) {
+    return (
+      <div className="flex flex-col gap-s2">
+        <div className="aspect-square overflow-hidden rounded-brand border border-line bg-surface">
+          <img src={fotoDestacada} alt={titulo} width={800} height={800} className="h-full w-full object-contain" />
+        </div>
+      </div>
+    );
+  }
 
   if (!fotos.length) {
     return (
