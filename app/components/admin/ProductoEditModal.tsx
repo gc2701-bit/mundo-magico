@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import type { ProductoPublico, Variante } from '@/lib/catalogo-familia';
 import { slugifyMundo } from '@/lib/catalogo-mundo';
@@ -8,6 +8,7 @@ import {
   validarCodigo,
   codigoNormalizado,
   codigosBorrables,
+  codigosDe,
   rutasDeStorage,
   nuevaVarianteVacia,
   primerErrorDeVariantes,
@@ -15,6 +16,7 @@ import {
   type MapaPreciosAdmin
 } from '@/lib/admin-catalogo';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
+import { obtenerComposicionCombo, type ItemComboComposicion } from '@/lib/combo-composicion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 
@@ -63,7 +65,12 @@ export async function borrarProductoYPrecios(
  * arriba y la lista de variantes son mutuamente excluyentes: tener 1+
  * variante deshabilita el código simple (pasa a null al guardar).
  *
- * La composición de combo (de sólo lectura) queda para el Sprint 6.
+ * Composición de combo (Sprint 6, sección de sólo lectura): se busca por
+ * combo_composicion() (lib/combo-composicion.ts) — el worker de Búho ya
+ * sincroniza catalogo_buho_espejo_combo_items, confirmado 2026-08-25. La
+ * sección sólo aparece cuando hay filas (combo real, ya activado desde
+ * "Sin activar") — nunca un "sin datos todavía" para no confundir un
+ * producto que simplemente no es un combo con uno pendiente de sync.
  */
 export default function ProductoEditModal({
   producto,
@@ -140,6 +147,40 @@ function FormularioProducto({
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  const [composicion, setComposicion] = useState<ItemComboComposicion[]>([]);
+
+  // Composición de combo (Sprint 6) — se busca por el/los código(s) YA
+  // guardados del producto (no por lo que se esté editando sin guardar
+  // todavía). Un combo nunca tiene variantes en la práctica, pero se
+  // recorren todos los códigos propios igual por si acaso — el primero
+  // que resuelva algo gana. combo_composicion() ya filtra sola por
+  // "combo publicado"; si el producto no es un combo, o el worker
+  // todavía no sincronizó ese código, simplemente no devuelve filas y la
+  // sección no se muestra (ver el render más abajo).
+  useEffect(() => {
+    let cancelado = false;
+    const codigos = codigosDe(producto);
+    if (!codigos.length) {
+      setComposicion([]);
+      return;
+    }
+    const sb = supabaseBrowser();
+    (async () => {
+      for (const c of codigos) {
+        const filas = await obtenerComposicionCombo(sb, c);
+        if (cancelado) return;
+        if (filas.length) {
+          setComposicion(filas);
+          return;
+        }
+      }
+      if (!cancelado) setComposicion([]);
+    })();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [producto.id]);
 
   // Reactivo, no una foto fija del producto original: agregar la primera
   // variante o quitar la última cambia si el código simple de arriba se
@@ -413,6 +454,17 @@ function FormularioProducto({
           <Switch id="destacado-home" checked={destacadoHome} onCheckedChange={setDestacadoHome} />
           <label htmlFor="destacado-home">Mostrar en el carrusel del home</label>
         </div>
+
+        {composicion.length > 0 && (
+          <div className="adm-detalle-campo">
+            <p className="font-medium">Composición (la sincroniza el worker de Búho, no se edita acá)</p>
+            <ul className="m-0 list-none p-0">
+              {composicion.map((it, i) => (
+                <li key={i}>{it.cantidad}× {it.nombre}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="adm-detalle-fotos">

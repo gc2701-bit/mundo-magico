@@ -15,9 +15,10 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProductoEditModal from '../../app/components/admin/ProductoEditModal';
 
-const { sb, escrituras, storageRemovidas } = vi.hoisted(() => {
+const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(() => {
   const escrituras: any[] = [];
   const storageRemovidas: string[] = [];
+  const composicionPorCodigo: Record<string, any[]> = {};
 
   function resultado(data: any) {
     const p: any = Promise.resolve({ data, error: null });
@@ -51,10 +52,14 @@ const { sb, escrituras, storageRemovidas } = vi.hoisted(() => {
           return Promise.resolve({ data: null, error: null });
         }
       })
+    },
+    rpc: (nombre: string, args: any) => {
+      if (nombre !== 'combo_composicion') return Promise.resolve({ data: null, error: null });
+      return Promise.resolve({ data: composicionPorCodigo[args?.p_codigo] || [], error: null });
     }
   };
 
-  return { sb, escrituras, storageRemovidas };
+  return { sb, escrituras, storageRemovidas, composicionPorCodigo };
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
@@ -331,5 +336,42 @@ describe('ProductoEditModal — editor de variantes', () => {
     const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
     expect(update.campos.variantes[0].imagen).toBe('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/variante.webp');
     expect(actualizado).toHaveBeenCalled();
+  });
+});
+
+describe('ProductoEditModal — composición de combo (Sprint 6)', () => {
+  beforeEach(() => {
+    for (const k of Object.keys(composicionPorCodigo)) delete composicionPorCodigo[k];
+  });
+
+  it('sin composición para el código del producto, no muestra la sección', async () => {
+    montar({ codigo: 'SOLO' });
+    await screen.findByText('Anteojo estrella'); // esperar a que el useEffect corra
+    expect(screen.queryByText(/Composición/)).not.toBeInTheDocument();
+  });
+
+  it('con composición, lista "cantidad× nombre" para el código propio del producto', async () => {
+    composicionPorCodigo['COMBO1'] = [
+      { nombre: 'SOMBRERO', cantidad: 2 },
+      { nombre: 'ANTIFAZ', cantidad: 1 }
+    ];
+    montar({ codigo: 'COMBO1' });
+
+    expect(await screen.findByText(/Composición/)).toBeInTheDocument();
+    expect(screen.getByText('2× SOMBRERO')).toBeInTheDocument();
+    expect(screen.getByText('1× ANTIFAZ')).toBeInTheDocument();
+  });
+
+  it('con variantes en vez de código simple, consulta la composición por cada código propio', async () => {
+    composicionPorCodigo['V002'] = [{ nombre: 'ANTIFAZ', cantidad: 3 }];
+    montar({
+      codigo: null,
+      variantes: [
+        { talle: 'Chico', codigo: 'V001', activo: true },
+        { talle: 'Grande', codigo: 'V002', activo: true }
+      ]
+    });
+
+    expect(await screen.findByText('3× ANTIFAZ')).toBeInTheDocument();
   });
 });

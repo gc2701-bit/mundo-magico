@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
 import ProductoGaleria from './ProductoGaleria';
+import ComboComposicion from './ComboComposicion';
 import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
 
 /**
@@ -65,6 +66,8 @@ export default function ProductoFicha({ producto }: { producto: ProductoPublico 
             ))}
           </ul>
         )}
+
+        <ComboComposicion codigo={producto.codigo || producto.variantes?.[0]?.codigo || null} />
 
         <div id="elegir-talle" className="mt-s2">
           <AgregarControl producto={producto} variante="pagina" onCambiarImagen={setImagenSeleccionada} />
