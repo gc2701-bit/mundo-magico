@@ -70,8 +70,8 @@ function codigoEfectivo(dataPos, overlay) {
 function filaProducto(tarjeta, overlay, familiaPorCodigo) {
   var esTalles = !!(tarjeta.talles && tarjeta.talles.length);
   var codigo = esTalles ? null : codigoEfectivo(tarjeta.dataPos, overlay);
-  var talles = esTalles
-    ? tarjeta.talles.map(function (t) { return { nombre: t.label, codigo: t.code }; })
+  var variantes = esTalles
+    ? tarjeta.talles.map(function (t) { return { talle: t.label, codigo: t.code, activo: true }; })
     : null;
   var oculta = !!(overlay && overlay.oculta);
 
@@ -84,7 +84,7 @@ function filaProducto(tarjeta, overlay, familiaPorCodigo) {
     specs: tarjeta.specs.length ? tarjeta.specs : null,
     descripcion: tarjeta.descripcion || null,
     tags: tarjeta.tags.length ? tarjeta.tags : null,
-    talles: talles,
+    variantes: variantes,
     fotos: tarjeta.fotos,
     publicado: !oculta,
     // resolverFamilia espera el shape original {label, code} (no el ya

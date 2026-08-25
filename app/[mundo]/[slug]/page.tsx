@@ -41,10 +41,10 @@ export default async function ProductoPage({ params }: { params: Promise<{ mundo
   const producto = catalogo.productos.find((p) => p.mundo === mundoSlug && p.slug === slug);
   if (!mundo || !producto) notFound();
 
-  const esTalles = !!(producto.talles && producto.talles.length > 1);
+  const esTalles = !!(producto.variantes && producto.variantes.length > 1);
   const dataAttrs: Record<string, string> = {};
-  if (esTalles && producto.talles) {
-    dataAttrs['data-talles-codigos'] = producto.talles.map((t) => t.codigo).join(',');
+  if (esTalles && producto.variantes) {
+    dataAttrs['data-talles-codigos'] = producto.variantes.map((v) => v.codigo).join(',');
   } else if (producto.codigo) {
     dataAttrs['data-codigo'] = producto.codigo;
   }

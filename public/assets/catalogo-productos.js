@@ -70,12 +70,13 @@
 
   // producto.fotos es [{src, cap}] — cap vacío para un producto simple, uno
   // por color para una galería (mismo dato que ya guarda data-cap en las
-  // tarjetas del HTML). producto.talles es [{nombre, codigo}] — se traduce
-  // 1 a 1 al mismo data-talles="Nombre:codigo;…" que ya sabe leer
-  // assets/producto.js, así que ni precios.js ni carrito.js necesitan saber
-  // que este talle vino de acá y no de una tarjeta escrita a mano.
+  // tarjetas del HTML). producto.variantes es [{talle, tipo, codigo,
+  // imagen, activo}] — se traduce 1 a 1 al mismo data-talles="Nombre:codigo;…"
+  // que ya sabe leer assets/producto.js, así que ni precios.js ni
+  // carrito.js necesitan saber que este talle vino de acá y no de una
+  // tarjeta escrita a mano.
   function tarjetaDe(producto) {
-    var esTalles = producto.talles && producto.talles.length > 1;
+    var esTalles = producto.variantes && producto.variantes.length > 1;
     var fotos = producto.fotos || [];
     var esGaleria = !esTalles && fotos.length > 1;
 
@@ -84,8 +85,8 @@
     a.href = '#';
     a.setAttribute('data-mm-producto-id', producto.id);
     if (esTalles) {
-      a.setAttribute('data-talles', producto.talles.map(function (t) {
-        return t.nombre + ':' + t.codigo;
+      a.setAttribute('data-talles', producto.variantes.map(function (v) {
+        return v.talle + ':' + v.codigo;
       }).join(';'));
     } else if (producto.codigo) {
       a.setAttribute('data-pos', producto.codigo);

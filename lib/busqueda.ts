@@ -35,7 +35,7 @@
  * pasó de generar los 9 mundos a marcar la ruta entera como dinámica.
  */
 
-import type { Foto, Talle } from './catalogo-familia';
+import type { Foto, Variante } from './catalogo-familia';
 import { CATALOGO_TAG } from './catalogo-server';
 
 const SUPABASE_URL = 'https://kyuilrlewynqrzebouww.supabase.co';
@@ -56,7 +56,7 @@ export type ProductoBase = {
   specs: string[] | null;
   descripcion: string | null;
   tags: string[] | null;
-  talles: Talle[] | null;
+  variantes: Variante[] | null;
   fotos: Foto[];
   orden: number;
   familia: string | null;

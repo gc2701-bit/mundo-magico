@@ -15,47 +15,47 @@ function money(n) {
 
 describe('precios-familia — resolverEstadoProducto', () => {
   it('producto simple con precio conocido', () => {
-    const r = resolverEstadoProducto({ codigo: '04375', talles: null }, { '04375': 1000 }, {}, {});
+    const r = resolverEstadoProducto({ codigo: '04375', variantes: null }, { '04375': 1000 }, {}, {});
     expect(r).toEqual({ texto: money(1000), sinStock: false, pocasUnidades: false });
   });
 
   it('producto simple sin precio en la respuesta -> texto null (no inventa nada)', () => {
-    const r = resolverEstadoProducto({ codigo: '99999', talles: null }, { '04375': 1000 }, {}, {});
+    const r = resolverEstadoProducto({ codigo: '99999', variantes: null }, { '04375': 1000 }, {}, {});
     expect(r.texto).toBeNull();
   });
 
   it('sin código y sin talles -> texto null', () => {
-    const r = resolverEstadoProducto({ codigo: null, talles: null }, {}, {}, {});
+    const r = resolverEstadoProducto({ codigo: null, variantes: null }, {}, {}, {});
     expect(r.texto).toBeNull();
   });
 
   it('producto simple sin stock', () => {
-    const r = resolverEstadoProducto({ codigo: '04375', talles: null }, { '04375': 1000 }, { '04375': true }, {});
+    const r = resolverEstadoProducto({ codigo: '04375', variantes: null }, { '04375': 1000 }, { '04375': true }, {});
     expect(r.sinStock).toBe(true);
   });
 
   it('producto simple con pocas unidades', () => {
-    const r = resolverEstadoProducto({ codigo: '04375', talles: null }, { '04375': 1000 }, {}, { '04375': true });
+    const r = resolverEstadoProducto({ codigo: '04375', variantes: null }, { '04375': 1000 }, {}, { '04375': true });
     expect(r.pocasUnidades).toBe(true);
   });
 
   it('talles: usa el mínimo precio y antepone "Desde"', () => {
-    const talles = [{ nombre: 'Chico', codigo: 'A' }, { nombre: 'Grande', codigo: 'B' }];
-    const r = resolverEstadoProducto({ codigo: null, talles }, { A: 2000, B: 3500 }, {}, {});
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: true }];
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 3500 }, {}, {});
     expect(r.texto).toBe('Desde ' + money(2000));
   });
 
   it('talles: un solo talle con precio conocido igual usa "Desde"', () => {
-    const talles = [{ nombre: 'Chico', codigo: 'A' }, { nombre: 'Grande', codigo: 'B' }];
-    const r = resolverEstadoProducto({ codigo: null, talles }, { A: 2000 }, {}, {});
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: true }];
+    const r = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000 }, {}, {});
     expect(r.texto).toBe('Desde ' + money(2000));
   });
 
   it('talles: sin stock sólo si TODAS las opciones están sin stock', () => {
-    const talles = [{ nombre: 'Chico', codigo: 'A' }, { nombre: 'Grande', codigo: 'B' }];
-    const r1 = resolverEstadoProducto({ codigo: null, talles }, { A: 2000, B: 3500 }, { A: true }, {});
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: true }];
+    const r1 = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 3500 }, { A: true }, {});
     expect(r1.sinStock).toBe(false);
-    const r2 = resolverEstadoProducto({ codigo: null, talles }, { A: 2000, B: 3500 }, { A: true, B: true }, {});
+    const r2 = resolverEstadoProducto({ codigo: null, variantes }, { A: 2000, B: 3500 }, { A: true, B: true }, {});
     expect(r2.sinStock).toBe(true);
   });
 });

@@ -41,7 +41,7 @@ export default function PublicadoTab() {
     const sb = supabaseBrowser();
     const { data, error } = await sb
       .from('catalogo_productos')
-      .select('id, titulo, slug, codigo, specs, descripcion, tags, talles, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden')
+      .select('id, titulo, slug, codigo, specs, descripcion, tags, variantes, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden')
       .order('titulo');
     if (!error && data) setProductos(data as ProductoAdmin[]);
     setCargando(false);
@@ -171,7 +171,7 @@ function DetalleProducto({
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
 
-  const esTalles = !!(producto.talles && producto.talles.length);
+  const esTalles = !!(producto.variantes && producto.variantes.length);
 
   function onCambiarCodigo(v: string) {
     setCodigo(v);

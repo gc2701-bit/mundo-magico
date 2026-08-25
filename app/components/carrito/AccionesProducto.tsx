@@ -13,7 +13,7 @@ import type { ProductoPublico } from '@/lib/catalogo-familia';
  * viejo, ver ProductoCard.tsx).
  *
  * Simplificación consciente frente al sitio viejo: acá "opciones" es sólo
- * `producto.talles` (el único caso de variantes que sobrevivió a la
+ * `producto.variantes` (el único caso de variantes que sobrevivió a la
  * migración de datos, ver spec sección 3/4 — una galería de fotos ya NO es
  * una elección de color con código propio, es sólo fotos del mismo
  * producto). Con talles se elige cantidad por talle en un desplegable
@@ -85,10 +85,10 @@ export function AgregarControl({ producto, variante = 'card' }: { producto: Prod
   const { agregar, cantidadDe, cantidadTotalDe, setCantidad, abrirPanel } = useCarrito();
   const [eligiendo, setEligiendo] = useState(false);
 
-  const tieneTalles = !!(producto.talles && producto.talles.length > 1);
+  const tieneTalles = !!(producto.variantes && producto.variantes.length > 1);
   const mostrarTalles = tieneTalles && (variante === 'pagina' || eligiendo);
   const foto = '/' + (producto.fotos[0]?.src || '');
-  const simple = { title: producto.titulo, code: producto.codigo || producto.talles?.[0]?.codigo || '', variant: producto.talles?.[0]?.nombre || '' };
+  const simple = { title: producto.titulo, code: producto.codigo || producto.variantes?.[0]?.codigo || '', variant: producto.variantes?.[0]?.talle || '' };
 
   function alTocarAgregar(ev: React.MouseEvent) {
     ev.preventDefault();
@@ -104,8 +104,8 @@ export function AgregarControl({ producto, variante = 'card' }: { producto: Prod
     if (sumando) abrirPanel();
   }
 
-  function cambiarTalle(t: { nombre: string; codigo: string }, n: number) {
-    const prod = { title: producto.titulo, code: t.codigo, variant: t.nombre };
+  function cambiarTalle(t: { talle?: string; codigo: string }, n: number) {
+    const prod = { title: producto.titulo, code: t.codigo, variant: t.talle || '' };
     const sumando = n > cantidadDe(prod);
     setCantidad({ ...prod, img: foto }, n);
     if (sumando) abrirPanel();
@@ -119,7 +119,7 @@ export function AgregarControl({ producto, variante = 'card' }: { producto: Prod
   // detalle para lectores de pantalla.
   const totalEsteProducto = cantidadTotalDe(producto.titulo);
   const ariaLabel = tieneTalles
-    ? (totalEsteProducto > 0 ? `Editar talles elegidos (${totalEsteProducto})` : `Elegir talle y agregar, ${producto.talles!.length} opciones`)
+    ? (totalEsteProducto > 0 ? `Editar talles elegidos (${totalEsteProducto})` : `Elegir talle y agregar, ${producto.variantes!.length} opciones`)
     : 'Agregar al carrito';
 
   if (variante === 'pagina') {
@@ -129,10 +129,10 @@ export function AgregarControl({ producto, variante = 'card' }: { producto: Prod
           <>
             <p className="font-body text-fs0 font-semibold text-ink">Elegí un talle:</p>
             <div className="flex flex-col gap-s2">
-              {producto.talles!.map((t) => (
+              {producto.variantes!.map((t) => (
                 <div key={t.codigo} className="flex items-center justify-between gap-s3 rounded-brand border border-line px-s3 py-s2">
-                  <span className="font-body text-fs0 text-ink">{t.nombre}</span>
-                  <PasoDeCantidad n={cantidadDe({ title: producto.titulo, code: t.codigo, variant: t.nombre })} onCambiar={(n) => cambiarTalle(t, n)} variante="pagina" />
+                  <span className="font-body text-fs0 text-ink">{t.talle}</span>
+                  <PasoDeCantidad n={cantidadDe({ title: producto.titulo, code: t.codigo, variant: t.talle || '' })} onCambiar={(n) => cambiarTalle(t, n)} variante="pagina" />
                 </div>
               ))}
             </div>
@@ -161,10 +161,10 @@ export function AgregarControl({ producto, variante = 'card' }: { producto: Prod
         cantidadDe(simple) > 0 && <PasoDeCantidad n={cantidadDe(simple)} onCambiar={cambiarSimple} />
       ) : mostrarTalles && (
         <div className="cart-pick-grid no-fotos">
-          {producto.talles!.map((t) => (
+          {producto.variantes!.map((t) => (
             <div className="cart-opt" key={t.codigo}>
-              <span className="cart-opt-n">{t.nombre}</span>
-              <PasoDeCantidad n={cantidadDe({ title: producto.titulo, code: t.codigo, variant: t.nombre })} onCambiar={(n) => cambiarTalle(t, n)} />
+              <span className="cart-opt-n">{t.talle}</span>
+              <PasoDeCantidad n={cantidadDe({ title: producto.titulo, code: t.codigo, variant: t.talle || '' })} onCambiar={(n) => cambiarTalle(t, n)} />
             </div>
           ))}
         </div>

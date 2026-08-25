@@ -29,7 +29,7 @@ const base = {
   specs: null,
   descripcion: null,
   tags: null,
-  talles: null,
+  variantes: null,
   fotos: [{ src: 'productos/anteojo.jpeg', cap: '' }],
   orden: 0,
   familia: null,

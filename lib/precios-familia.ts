@@ -29,13 +29,13 @@ function formatear(n: number): string {
 // MÍNIMO de sus opciones con precio conocido — "Desde $X", igual criterio
 // que ya usa el sitio para combos/talles con precios distintos por opción.
 export function resolverEstadoProducto(
-  producto: Pick<ProductoPublico, 'codigo' | 'talles'>,
+  producto: Pick<ProductoPublico, 'codigo' | 'variantes'>,
   precios: PreciosMapa,
   sinStock: Record<string, boolean>,
   pocasUnidades: Record<string, boolean>
 ): EstadoPrecio {
-  const codigos = producto.talles && producto.talles.length
-    ? producto.talles.map((t) => t.codigo)
+  const codigos = producto.variantes && producto.variantes.length
+    ? producto.variantes.map((v) => v.codigo)
     : producto.codigo
       ? [producto.codigo]
       : [];
@@ -46,7 +46,7 @@ export function resolverEstadoProducto(
   if (!conocidos.length) return { texto: null, sinStock: false, pocasUnidades: false };
 
   const min = Math.min(...conocidos.map((c) => precios[c]));
-  const esRango = producto.talles != null && producto.talles.length > 1;
+  const esRango = producto.variantes != null && producto.variantes.length > 1;
   const texto = esRango ? 'Desde ' + formatear(min) : formatear(min);
 
   // Sin stock: sólo si TODOS los códigos que se conocen están sin stock

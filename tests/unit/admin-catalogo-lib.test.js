@@ -13,7 +13,7 @@ import {
 } from '../../lib/admin-catalogo.ts';
 
 function producto(overrides) {
-  return { id: 'x', codigo: null, talles: null, familia: null, ...overrides };
+  return { id: 'x', codigo: null, variantes: null, familia: null, ...overrides };
 }
 
 describe('admin-catalogo — validarCodigo', () => {
@@ -41,8 +41,8 @@ describe('admin-catalogo — codigosDe', () => {
     expect(codigosDe(producto({ codigo: 'A' }))).toEqual(['A']);
   });
   it('producto de talles', () => {
-    const talles = [{ nombre: 'Chico', codigo: 'A' }, { nombre: 'Grande', codigo: 'B' }];
-    expect(codigosDe(producto({ talles }))).toEqual(['A', 'B']);
+    const variantes = [{ talle: 'Chico', codigo: 'A', activo: true }, { talle: 'Grande', codigo: 'B', activo: true }];
+    expect(codigosDe(producto({ variantes }))).toEqual(['A', 'B']);
   });
   it('sin código ni talles', () => {
     expect(codigosDe(producto({}))).toEqual([]);
@@ -66,7 +66,7 @@ describe('admin-catalogo — codigosUsadosPorOtros / codigosBorrables', () => {
   });
 
   it('talles: cada código se chequea por separado', () => {
-    const a = producto({ id: 'a', talles: [{ nombre: 'Chico', codigo: 'X' }, { nombre: 'Grande', codigo: 'Y' }] });
+    const a = producto({ id: 'a', variantes: [{ talle: 'Chico', codigo: 'X', activo: true }, { talle: 'Grande', codigo: 'Y', activo: true }] });
     const b = producto({ id: 'b', codigo: 'Y' });
     const todos = [a, b];
     expect(codigosBorrables(a, todos)).toEqual(['X']);

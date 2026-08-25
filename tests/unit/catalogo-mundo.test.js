@@ -8,7 +8,7 @@ import { mundosDisponibles, productosDeMundo, slugifyMundo } from '../../lib/cat
 function producto(overrides) {
   return {
     id: 'x', mundo: 'globos-fiesta', subcategoriaId: null, titulo: 'X', slug: 'x',
-    codigo: null, specs: null, descripcion: null, tags: null, talles: null,
+    codigo: null, specs: null, descripcion: null, tags: null, variantes: null,
     fotos: [], orden: 0, familia: null,
     ...overrides
   };

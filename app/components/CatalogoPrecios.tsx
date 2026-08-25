@@ -37,9 +37,9 @@ export default function CatalogoPrecios() {
         document.querySelectorAll<HTMLElement>('[data-codigo], [data-talles-codigos]').forEach((el) => {
           const codigo = el.getAttribute('data-codigo');
           const tallesRaw = el.getAttribute('data-talles-codigos');
-          const talles = tallesRaw ? tallesRaw.split(',').map((c) => ({ nombre: '', codigo: c })) : null;
+          const variantes = tallesRaw ? tallesRaw.split(',').map((c) => ({ codigo: c, activo: true })) : null;
 
-          const estado = resolverEstadoProducto({ codigo, talles }, precios, sinStock, pocasUnidades);
+          const estado = resolverEstadoProducto({ codigo, variantes }, precios, sinStock, pocasUnidades);
 
           // Oferta: sólo aplica a productos simples (un código, no talles) —
           // ver el comentario de resolverOferta en lib/precios-familia.ts.

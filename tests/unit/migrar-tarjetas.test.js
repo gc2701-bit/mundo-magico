@@ -108,7 +108,7 @@ describe('migrar-tarjetas-lib — filaProducto', () => {
       slug: 'globo-negro',
       titulo: 'Globo negro',
       codigo: '04375',
-      talles: null,
+      variantes: null,
       publicado: true,
       familia: 'GLOBOS',
       subcategoria_id: null
@@ -134,7 +134,7 @@ describe('migrar-tarjetas-lib — filaProducto', () => {
     expect(fila.familia).toBe('GLOBOS');
   });
 
-  it('producto de talles: codigo null, talles armados como {nombre, codigo}', () => {
+  it('producto de talles: codigo null, variantes armadas como {talle, codigo, activo}', () => {
     const tarjeta = {
       pagina: 'p.html', slug: 'x', titulo: 'X', dataPos: '',
       talles: [{ label: 'Chico', code: '04375' }],
@@ -142,7 +142,7 @@ describe('migrar-tarjetas-lib — filaProducto', () => {
     };
     const fila = filaProducto(tarjeta, null, familiaPorCodigo);
     expect(fila.codigo).toBeNull();
-    expect(fila.talles).toEqual([{ nombre: 'Chico', codigo: '04375' }]);
+    expect(fila.variantes).toEqual([{ talle: 'Chico', codigo: '04375', activo: true }]);
     expect(fila.familia).toBe('GLOBOS');
   });
 

@@ -40,13 +40,13 @@ type Props = {
 
 export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
   const fotos = producto.fotos || [];
-  const esTalles = !!(producto.talles && producto.talles.length);
+  const esTalles = !!(producto.variantes && producto.variantes.length);
   const esGaleria = !esTalles && fotos.length > 1;
   const sinFoto = fotos.length === 0;
 
   const dataAttrs: Record<string, string> = { 'data-id': producto.id };
-  if (esTalles && producto.talles) {
-    dataAttrs['data-talles-codigos'] = producto.talles.map((t) => t.codigo).join(',');
+  if (esTalles && producto.variantes) {
+    dataAttrs['data-talles-codigos'] = producto.variantes.map((v) => v.codigo).join(',');
   } else if (producto.codigo) {
     dataAttrs['data-codigo'] = producto.codigo;
   }

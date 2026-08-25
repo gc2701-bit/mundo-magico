@@ -9,7 +9,7 @@
  */
 
 export type Foto = { src: string; cap: string; codigo?: string };
-export type Talle = { nombre: string; codigo: string };
+export type Variante = { talle?: string; tipo?: string; codigo: string; imagen?: string; activo: boolean };
 
 export type ProductoPublico = {
   id: string;
@@ -21,7 +21,7 @@ export type ProductoPublico = {
   specs: string[] | null;
   descripcion: string | null;
   tags: string[] | null;
-  talles: Talle[] | null;
+  variantes: Variante[] | null;
   fotos: Foto[];
   orden: number;
   familia: string | null;

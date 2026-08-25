@@ -26,8 +26,8 @@ export function codigoNormalizado(valor: string): string | null {
 // Códigos "propios" de un producto: el código simple, o el de cada opción
 // de talles si no tiene código único (mismo criterio que
 // lib/precios-familia.ts).
-export function codigosDe(producto: Pick<ProductoPublico, 'codigo' | 'talles'>): string[] {
-  if (producto.talles && producto.talles.length) return producto.talles.map((t) => t.codigo);
+export function codigosDe(producto: Pick<ProductoPublico, 'codigo' | 'variantes'>): string[] {
+  if (producto.variantes && producto.variantes.length) return producto.variantes.map((v) => v.codigo);
   return producto.codigo ? [producto.codigo] : [];
 }
 
@@ -36,8 +36,8 @@ export function codigosDe(producto: Pick<ProductoPublico, 'codigo' | 'talles'>):
 // mismo código — pasa de verdad en este catálogo (varios productos
 // distintos comparten un código del POS, ej. "11963" en varios anteojos).
 export function codigosUsadosPorOtros(
-  producto: Pick<ProductoPublico, 'id' | 'codigo' | 'talles'>,
-  todos: Pick<ProductoPublico, 'id' | 'codigo' | 'talles'>[]
+  producto: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>,
+  todos: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>[]
 ): Set<string> {
   const propios = new Set(codigosDe(producto));
   const usados = new Set<string>();
@@ -53,8 +53,8 @@ export function codigosUsadosPorOtros(
 // Códigos de un producto que SÍ se pueden borrar de catalogo_precios al
 // eliminarlo definitivamente (los que ningún otro producto comparte).
 export function codigosBorrables(
-  producto: Pick<ProductoPublico, 'id' | 'codigo' | 'talles'>,
-  todos: Pick<ProductoPublico, 'id' | 'codigo' | 'talles'>[]
+  producto: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>,
+  todos: Pick<ProductoPublico, 'id' | 'codigo' | 'variantes'>[]
 ): string[] {
   const usadosPorOtros = codigosUsadosPorOtros(producto, todos);
   return codigosDe(producto).filter((c) => !usadosPorOtros.has(c));
