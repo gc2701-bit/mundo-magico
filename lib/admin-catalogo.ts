@@ -87,3 +87,101 @@ export function rutasDeStorage(fotos: { src: string }[]): string[] {
 }
 
 export { STORAGE_PREFIX };
+
+// ── Tabla de catálogo admin (Sprint 1 del plan, SPEC-catalogo-admin-variantes.md) ──
+
+// Precio/stock por código, tal como los devuelve la RPC admin-only
+// catalogo_precios_admin(codigos[]) — nunca se pide más de lo que hace
+// falta (PostgREST corta en 1000 filas sin avisar, ver el comentario de
+// catalogo_08_stock_privado.sql).
+export type MapaPreciosAdmin = Record<string, { precio: number; stock: number | null }>;
+
+// Precio/stock de un producto para la columna de la tabla: el mínimo
+// entre sus códigos propios con dato conocido (mismo criterio de mínimo
+// que resolverEstadoProducto, pero acá se muestra el número, no un texto
+// formateado — esto es el panel admin, no la ficha pública). A
+// diferencia del selector público, acá NO se filtra por variante
+// `activo` — el admin necesita ver todo, incluso lo que sacó de la
+// venta. Si ningún código tiene precio conocido, `precio` es null (no
+// inventa un placeholder). Si hay precio pero ningún código tiene stock
+// cargado (ej. combos, ver spec sección 8), `stock` es null.
+export function precioStockDe(
+  producto: Pick<ProductoPublico, 'codigo' | 'variantes'>,
+  mapa: MapaPreciosAdmin
+): { precio: number | null; stock: number | null } {
+  const conocidos = codigosDe(producto)
+    .map((c) => mapa[c])
+    .filter((v): v is { precio: number; stock: number | null } => v != null);
+  if (!conocidos.length) return { precio: null, stock: null };
+  const precio = Math.min(...conocidos.map((v) => v.precio));
+  const stocks = conocidos.map((v) => v.stock).filter((s): s is number => s != null);
+  return { precio, stock: stocks.length ? Math.min(...stocks) : null };
+}
+
+// Sentinel para el filtro de Familia — "— sin familia —" no es una
+// familia real, así que no puede confundirse con un valor que Búho
+// mande alguna vez.
+export const SIN_FAMILIA = '__sin_familia__';
+
+export type FilaCatalogoAdmin = {
+  id: string;
+  codigo: string;
+  titulo: string;
+  familia: string | null;
+  mundoSlug: string;
+  mundoNombre: string;
+  stock: number | null;
+  precio: number | null;
+  publicado: boolean;
+};
+
+export type ColumnaOrdenCatalogo = 'codigo' | 'titulo' | 'familia' | 'mundo' | 'stock' | 'precio' | 'estado';
+
+// Orden pedido por el usuario en el brainstorming: Código · Nombre ·
+// Familia · Mundo · Stock · Precio (Estado se suma al final, ya existía
+// como columna antes de esta tanda). Nulls de stock/precio siempre al
+// final, en cualquier dirección — un producto sin dato conocido no debe
+// interrumpir el orden de los que sí lo tienen.
+export function ordenarCatalogo(
+  filas: FilaCatalogoAdmin[],
+  columna: ColumnaOrdenCatalogo,
+  direccion: 'asc' | 'desc' = 'asc'
+): FilaCatalogoAdmin[] {
+  const factor = direccion === 'asc' ? 1 : -1;
+  return [...filas].sort((a, b) => {
+    if (columna === 'stock' || columna === 'precio') {
+      const av = a[columna];
+      const bv = b[columna];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return (av - bv) * factor;
+    }
+    if (columna === 'estado') {
+      if (a.publicado === b.publicado) return 0;
+      return (a.publicado ? -1 : 1) * factor;
+    }
+    const av = columna === 'mundo' ? a.mundoNombre : columna === 'familia' ? a.familia || '' : a[columna];
+    const bv = columna === 'mundo' ? b.mundoNombre : columna === 'familia' ? b.familia || '' : b[columna];
+    return av.localeCompare(bv, 'es') * factor;
+  });
+}
+
+// Búsqueda libre (código + título) + Familia (con SIN_FAMILIA) + Mundo —
+// sin filtro de stock/precio, decidido en brainstorming (stock es sólo
+// lectura desde Búho, precio se ordena por columna pero no se acota por
+// rango en esta tanda).
+export function filtrarCatalogo(
+  filas: FilaCatalogoAdmin[],
+  opts: { busqueda?: string; familia?: string; mundoSlug?: string }
+): FilaCatalogoAdmin[] {
+  const q = (opts.busqueda || '').trim().toLowerCase();
+  return filas.filter((f) => {
+    if (opts.familia) {
+      if (opts.familia === SIN_FAMILIA ? !!f.familia : f.familia !== opts.familia) return false;
+    }
+    if (opts.mundoSlug && f.mundoSlug !== opts.mundoSlug) return false;
+    if (!q) return true;
+    return f.titulo.toLowerCase().includes(q) || f.codigo.toLowerCase().includes(q);
+  });
+}

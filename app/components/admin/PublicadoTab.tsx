@@ -11,20 +11,45 @@ import {
   codigosBorrables,
   familiasVistas,
   contarSinFamilia,
-  rutasDeStorage
+  rutasDeStorage,
+  precioStockDe,
+  ordenarCatalogo,
+  filtrarCatalogo,
+  SIN_FAMILIA,
+  type MapaPreciosAdmin,
+  type FilaCatalogoAdmin,
+  type ColumnaOrdenCatalogo
 } from '@/lib/admin-catalogo';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 type ProductoAdmin = ProductoPublico & { publicado: boolean };
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
+const COLUMNAS: { col: ColumnaOrdenCatalogo; label: string; alinear?: 'right' }[] = [
+  { col: 'codigo', label: 'Código' },
+  { col: 'titulo', label: 'Nombre' },
+  { col: 'familia', label: 'Familia' },
+  { col: 'mundo', label: 'Mundo' },
+  { col: 'stock', label: 'Stock', alinear: 'right' },
+  { col: 'precio', label: 'Precio', alinear: 'right' },
+  { col: 'estado', label: 'Estado' }
+];
+
 export default function PublicadoTab() {
   const [productos, setProductos] = useState<ProductoAdmin[]>([]);
+  const [mapaPrecios, setMapaPrecios] = useState<MapaPreciosAdmin>({});
   const [mundos, setMundos] = useState<{ slug: string; nombre: string }[]>([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
-  const [soloSinFamilia, setSoloSinFamilia] = useState(false);
+  const [familiaFiltro, setFamiliaFiltro] = useState('');
+  const [mundoFiltro, setMundoFiltro] = useState('');
+  const [columna, setColumna] = useState<ColumnaOrdenCatalogo>('titulo');
+  const [direccion, setDireccion] = useState<'asc' | 'desc'>('asc');
   const [seleccionado, setSeleccionado] = useState<ProductoAdmin | null>(null);
 
   useEffect(() => {
@@ -43,21 +68,73 @@ export default function PublicadoTab() {
       .from('catalogo_productos')
       .select('id, titulo, slug, codigo, specs, descripcion, tags, variantes, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden')
       .order('titulo');
-    if (!error && data) setProductos(data as ProductoAdmin[]);
+    if (!error && data) {
+      const lista = data as ProductoAdmin[];
+      setProductos(lista);
+      const codigos = Array.from(new Set(lista.flatMap((p) => codigosDe(p))));
+      if (codigos.length) {
+        const { data: precios } = await sb.rpc('catalogo_precios_admin', { p_codigos: codigos });
+        const mapa: MapaPreciosAdmin = {};
+        (precios || []).forEach((r: { codigo: string; precio: number; stock: number | null }) => {
+          mapa[r.codigo] = { precio: r.precio, stock: r.stock };
+        });
+        setMapaPrecios(mapa);
+      } else {
+        setMapaPrecios({});
+      }
+    }
     setCargando(false);
   }
 
   const sinFamilia = contarSinFamilia(productos);
   const familias = familiasVistas(productos);
 
-  const visibles = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
-    return productos.filter((p) => {
-      if (soloSinFamilia && p.familia) return false;
-      if (!q) return true;
-      return p.titulo.toLowerCase().includes(q) || (p.codigo || '').toLowerCase().includes(q);
-    });
-  }, [productos, busqueda, soloSinFamilia]);
+  const filasBase: FilaCatalogoAdmin[] = useMemo(
+    () =>
+      productos.map((p) => {
+        const { precio, stock } = precioStockDe(p, mapaPrecios);
+        return {
+          id: p.id,
+          codigo: codigosDe(p).join(', ') || '—',
+          titulo: p.titulo,
+          familia: p.familia,
+          mundoSlug: p.mundo,
+          mundoNombre: mundos.find((m) => m.slug === p.mundo)?.nombre || p.mundo,
+          stock,
+          precio,
+          publicado: p.publicado
+        };
+      }),
+    [productos, mapaPrecios, mundos]
+  );
+
+  const filas = useMemo(
+    () =>
+      ordenarCatalogo(
+        filtrarCatalogo(filasBase, { busqueda, familia: familiaFiltro, mundoSlug: mundoFiltro }),
+        columna,
+        direccion
+      ),
+    [filasBase, busqueda, familiaFiltro, mundoFiltro, columna, direccion]
+  );
+
+  function alOrdenar(col: ColumnaOrdenCatalogo) {
+    if (columna === col) {
+      setDireccion((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setColumna(col);
+      setDireccion('asc');
+    }
+  }
+
+  function SortIcon({ col }: { col: ColumnaOrdenCatalogo }) {
+    if (columna !== col) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-muted-foreground/50" />;
+    return direccion === 'asc' ? (
+      <ArrowUp className="ml-1 inline h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 inline h-3 w-3" />
+    );
+  }
 
   function actualizarLocal(id: string, campos: Partial<ProductoAdmin>) {
     setProductos((prev) => prev.map((p) => (p.id === id ? { ...p, ...campos } : p)));
@@ -86,56 +163,94 @@ export default function PublicadoTab() {
   }
 
   return (
-    <div>
-      <div className="adm-lista-toolbar">
-        <input
+    <div className="space-y-3">
+      <div className="adm-lista-toolbar flex flex-wrap items-center gap-3">
+        <Input
           type="search"
           placeholder="Buscar por título o código"
           aria-label="Buscar productos"
+          className="sm:w-64"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-        <label>
-          <input type="checkbox" checked={soloSinFamilia} onChange={(e) => setSoloSinFamilia(e.target.checked)} />
-          {' '}Sólo sin familia ({sinFamilia})
-        </label>
+        <Select value={familiaFiltro || '__todas__'} onValueChange={(v) => setFamiliaFiltro(v === '__todas__' ? '' : (v as string))}>
+          <SelectTrigger className="sm:w-48" aria-label="Filtrar por familia">
+            <SelectValue placeholder="Todas las familias" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__todas__">Todas las familias</SelectItem>
+            <SelectItem value={SIN_FAMILIA}>— sin familia — ({sinFamilia})</SelectItem>
+            {familias.map((f) => (
+              <SelectItem key={f} value={f}>
+                {f}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={mundoFiltro || '__todos__'} onValueChange={(v) => setMundoFiltro(v === '__todos__' ? '' : (v as string))}>
+          <SelectTrigger className="sm:w-48" aria-label="Filtrar por mundo">
+            <SelectValue placeholder="Todos los mundos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__todos__">Todos los mundos</SelectItem>
+            {mundos.map((m) => (
+              <SelectItem key={m.slug} value={m.slug}>
+                {m.nombre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-      <table className="adm-lista-tabla">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Título</th>
-            <th>Mundo</th>
-            <th>Familia</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibles.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="adm-detalle-solo-lectura">
+      <Table className="adm-lista-tabla">
+        <TableHeader>
+          <TableRow>
+            {COLUMNAS.map(({ col, label, alinear }) => (
+              <TableHead
+                key={col}
+                className={'cursor-pointer select-none whitespace-nowrap hover:text-foreground' + (alinear === 'right' ? ' text-right' : '')}
+                onClick={() => alOrdenar(col)}
+              >
+                {label}
+                <SortIcon col={col} />
+              </TableHead>
+            ))}
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filas.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={COLUMNAS.length + 1} className="adm-detalle-solo-lectura text-center">
                 No hay artículos que coincidan.
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ) : (
-            visibles.map((p) => (
-              <tr key={p.id}>
-                <td>{p.codigo || '—'}</td>
-                <td>{p.titulo}</td>
-                <td>{mundos.find((m) => m.slug === p.mundo)?.nombre || p.mundo}</td>
-                <td>{p.familia || <span className="adm-badge-sin-stock">sin familia</span>}</td>
-                <td>{p.publicado ? 'Visible' : 'Oculto'}</td>
-                <td>
-                  <button type="button" className="btn btn-ghost" onClick={() => setSeleccionado(p)}>
+            filas.map((f) => (
+              <TableRow key={f.id}>
+                <TableCell className="font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
+                <TableCell className="font-medium">{f.titulo}</TableCell>
+                <TableCell>{f.familia || <span className="adm-badge-sin-stock">sin familia</span>}</TableCell>
+                <TableCell>{f.mundoNombre}</TableCell>
+                <TableCell className="text-right">{f.stock == null ? '—' : f.stock}</TableCell>
+                <TableCell className="text-right">{f.precio == null ? '—' : fmt.format(f.precio)}</TableCell>
+                <TableCell>{f.publicado ? 'Visible' : 'Oculto'}</TableCell>
+                <TableCell>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      const p = productos.find((prod) => prod.id === f.id);
+                      if (p) setSeleccionado(p);
+                    }}
+                  >
                     Editar
                   </button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
