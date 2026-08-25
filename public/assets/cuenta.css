@@ -147,6 +147,16 @@
    por separado. Va ANTES del carrito en el orden visual (order:3, el
    carrito pasa a order:4 — ver carrito.css). */
 .nav .cuenta-nav-wrap{ order:3; position:relative; flex:0 0 auto; }
+/* Este archivo lo cargan dos maquetas distintas: las páginas HTML viejas
+ * (admin-catalogo.html, etc., con <nav class="nav">, donde vale la regla
+ * de arriba) y el header nuevo de Next.js (app/components/Nav.tsx, con
+ * <nav id="nav-desktop"> — sin class="nav", el order/flex de acá ya lo
+ * resuelve el propio JSX/Tailwind). Sin este selector sin ".nav ", el
+ * position:relative nunca aplicaba ahí: .cuenta-pop (position:absolute)
+ * quedaba sin ancestro posicionado y terminaba anclada muy abajo del
+ * documento en vez de justo debajo del ícono — bug reportado por el
+ * usuario, ver tests/unit/cuenta-nav-position.test.tsx. */
+.cuenta-nav-wrap{ position:relative; }
 @media(max-width:820px){
   .nav .cuenta-nav-wrap{ margin-left:auto; }
   /* Si los dos empujan con auto, el navegador reparte el espacio libre por
