@@ -1,4 +1,4 @@
-import type { ProductoPublico } from './catalogo-familia';
+import type { ProductoPublico, Variante } from './catalogo-familia';
 
 /**
  * Funciones puras del panel admin de catálogo (Sprint 4). Con todo
@@ -226,4 +226,48 @@ export function codigosBorrablesLote(
   const propios = new Set(seleccionados.flatMap((p) => codigosDe(p)));
   const usadosPorOtros = new Set(otros.flatMap((p) => codigosDe(p)));
   return Array.from(propios).filter((c) => !usadosPorOtros.has(c));
+}
+
+// ── Editor de variantes del modal de edición (Sprint 4 del plan) ──
+
+// Fila nueva del editor: activa por default ("a la venta" apenas se
+// carga, coherente con el resto del catálogo — nada empieza oculto sin
+// que un admin lo decida a propósito).
+export function nuevaVarianteVacia(): Variante {
+  return { talle: '', tipo: '', codigo: '', activo: true };
+}
+
+// A diferencia de validarCodigo (el código simple, que puede quedar
+// vacío para "sacarle el código a un producto"), una fila de variante
+// SIEMPRE necesita su propio código — si no, no hay forma de saber a qué
+// artículo de Búho corresponde esa opción.
+export function validarFilaVariante(fila: Pick<Variante, 'codigo'>): string | null {
+  const c = (fila.codigo || '').trim();
+  if (!c) return 'Cada variante necesita un código.';
+  if (c.length > 16) return 'El código no puede tener más de 16 caracteres.';
+  return null;
+}
+
+// Primer error entre todas las filas (o null si todas son válidas) — lo
+// que el modal necesita para bloquear "Guardar" con un solo mensaje, sin
+// tener que recorrer la lista dos veces en el componente.
+export function primerErrorDeVariantes(variantes: Pick<Variante, 'codigo'>[]): string | null {
+  for (const fila of variantes) {
+    const err = validarFilaVariante(fila);
+    if (err) return err;
+  }
+  return null;
+}
+
+// Normaliza antes de guardar: recorta espacios, y un talle/tipo vacío se
+// guarda como undefined (no como '') para no ensuciar el jsonb con
+// strings vacíos que después haya que volver a filtrar al leer.
+export function normalizarVariantes(variantes: Variante[]): Variante[] {
+  return variantes.map((v) => ({
+    talle: v.talle?.trim() || undefined,
+    tipo: v.tipo?.trim() || undefined,
+    codigo: v.codigo.trim(),
+    imagen: v.imagen,
+    activo: v.activo
+  }));
 }

@@ -277,6 +277,7 @@ export default function PublicadoTab() {
         familiasConocidas={familias}
         mundosConocidos={mundos}
         todos={productos}
+        mapaPrecios={mapaPrecios}
         onCerrar={() => setSeleccionado(null)}
         onActualizado={actualizarLocal}
         onEliminado={quitarLocal}

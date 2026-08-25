@@ -16,7 +16,11 @@ import {
   SIN_FAMILIA,
   estadoSeleccionEncabezado,
   redondearPrecio,
-  codigosBorrablesLote
+  codigosBorrablesLote,
+  nuevaVarianteVacia,
+  validarFilaVariante,
+  primerErrorDeVariantes,
+  normalizarVariantes
 } from '../../lib/admin-catalogo.ts';
 
 function producto(overrides) {
@@ -301,5 +305,58 @@ describe('admin-catalogo — codigosBorrablesLote', () => {
     const a = producto({ id: 'a', variantes: [{ talle: 'Chico', codigo: 'X', activo: true }, { talle: 'Grande', codigo: 'Y', activo: true }] });
     const b = producto({ id: 'b', codigo: 'Y' });
     expect(codigosBorrablesLote([a], [a, b])).toEqual(['X']);
+  });
+});
+
+describe('admin-catalogo — nuevaVarianteVacia', () => {
+  it('arranca activa ("a la venta"), sin talle/tipo/código', () => {
+    expect(nuevaVarianteVacia()).toEqual({ talle: '', tipo: '', codigo: '', activo: true });
+  });
+});
+
+describe('admin-catalogo — validarFilaVariante', () => {
+  it('código vacío es inválido (a diferencia del código simple)', () => {
+    expect(validarFilaVariante({ codigo: '' })).not.toBeNull();
+    expect(validarFilaVariante({ codigo: '   ' })).not.toBeNull();
+  });
+
+  it('código con contenido es válido', () => {
+    expect(validarFilaVariante({ codigo: '04375' })).toBeNull();
+  });
+
+  it('más de 16 caracteres es inválido', () => {
+    expect(validarFilaVariante({ codigo: '12345678901234567' })).not.toBeNull();
+  });
+});
+
+describe('admin-catalogo — primerErrorDeVariantes', () => {
+  it('sin filas, null', () => {
+    expect(primerErrorDeVariantes([])).toBeNull();
+  });
+
+  it('todas válidas, null', () => {
+    expect(primerErrorDeVariantes([{ codigo: 'A' }, { codigo: 'B' }])).toBeNull();
+  });
+
+  it('devuelve el error de la primera fila inválida que encuentra', () => {
+    expect(primerErrorDeVariantes([{ codigo: 'A' }, { codigo: '' }])).not.toBeNull();
+  });
+});
+
+describe('admin-catalogo — normalizarVariantes', () => {
+  it('recorta espacios de talle/tipo/código', () => {
+    const out = normalizarVariantes([{ talle: '  Chico  ', tipo: '  ', codigo: ' 001 ', activo: true }]);
+    expect(out).toEqual([{ talle: 'Chico', tipo: undefined, codigo: '001', imagen: undefined, activo: true }]);
+  });
+
+  it('talle/tipo vacíos quedan undefined, no string vacío', () => {
+    const out = normalizarVariantes([{ talle: '', tipo: '', codigo: 'X', activo: false }]);
+    expect(out[0].talle).toBeUndefined();
+    expect(out[0].tipo).toBeUndefined();
+  });
+
+  it('conserva imagen y activo tal cual', () => {
+    const out = normalizarVariantes([{ codigo: 'X', imagen: 'https://cdn/x.webp', activo: false }]);
+    expect(out[0]).toEqual({ talle: undefined, tipo: undefined, codigo: 'X', imagen: 'https://cdn/x.webp', activo: false });
   });
 });

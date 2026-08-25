@@ -59,6 +59,15 @@ const { sb, escrituras, storageRemovidas } = vi.hoisted(() => {
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
 
+// procesarFoto usa createImageBitmap/canvas — jsdom no lo simula (mismo
+// motivo por el que lib/procesar-foto.ts no tiene test unitario propio,
+// ver su comentario). Se stubea para poder probar el flujo de "subir
+// imagen a una variante" sin canvas real.
+vi.mock('@/lib/procesar-foto', () => ({
+  procesarFoto: vi.fn().mockResolvedValue(new Blob(['x'], { type: 'image/webp' })),
+  subirFoto: vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/variante.webp')
+}));
+
 function producto(overrides: any) {
   return {
     id: 'p1', titulo: 'Anteojo estrella', slug: 'anteojo-estrella', codigo: '001',
@@ -73,6 +82,7 @@ const MUNDOS = [
   { slug: 'disfraces', nombre: 'Disfraces' }
 ];
 const FAMILIAS = ['RUIDO', 'LUMINOSOS'];
+const MAPA_PRECIOS = { '001': { precio: 1000, stock: 5 } };
 
 function montar(overrides: any = {}, cerrar = vi.fn(), actualizado = vi.fn(), eliminado = vi.fn()) {
   render(
@@ -81,6 +91,7 @@ function montar(overrides: any = {}, cerrar = vi.fn(), actualizado = vi.fn(), el
       familiasConocidas={FAMILIAS}
       mundosConocidos={MUNDOS}
       todos={[producto(overrides)]}
+      mapaPrecios={MAPA_PRECIOS}
       onCerrar={cerrar}
       onActualizado={actualizado}
       onEliminado={eliminado}
@@ -97,7 +108,7 @@ beforeEach(() => {
 describe('ProductoEditModal — layout', () => {
   it('sin producto (null) no renderiza nada', () => {
     render(
-      <ProductoEditModal producto={null} familiasConocidas={[]} mundosConocidos={[]} todos={[]} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={vi.fn()} />
+      <ProductoEditModal producto={null} familiasConocidas={[]} mundosConocidos={[]} todos={[]} mapaPrecios={{}} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={vi.fn()} />
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -113,7 +124,7 @@ describe('ProductoEditModal — layout', () => {
 
   it('las fotos van al fondo, después de los campos editables', () => {
     render(
-      <ProductoEditModal producto={producto({})} familiasConocidas={FAMILIAS} mundosConocidos={MUNDOS} todos={[]} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={vi.fn()} />
+      <ProductoEditModal producto={producto({})} familiasConocidas={FAMILIAS} mundosConocidos={MUNDOS} todos={[]} mapaPrecios={MAPA_PRECIOS} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={vi.fn()} />
     );
     // El Dialog se monta en un portal (document.body), no dentro del
     // `container` de render() — se busca en todo el documento.
@@ -192,7 +203,7 @@ describe('ProductoEditModal — eliminar', () => {
     const p = producto({ id: 'p1', codigo: '001', fotos: [{ src: 'https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/anteojo.webp', cap: '' }] });
     const eliminado = vi.fn();
     render(
-      <ProductoEditModal producto={p} familiasConocidas={FAMILIAS} mundosConocidos={MUNDOS} todos={[p]} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={eliminado} />
+      <ProductoEditModal producto={p} familiasConocidas={FAMILIAS} mundosConocidos={MUNDOS} todos={[p]} mapaPrecios={MAPA_PRECIOS} onCerrar={vi.fn()} onActualizado={vi.fn()} onEliminado={eliminado} />
     );
 
     await user.click(screen.getByRole('button', { name: 'Eliminar definitivamente' }));
@@ -205,5 +216,120 @@ describe('ProductoEditModal — eliminar', () => {
     expect(eliminado).toHaveBeenCalledWith('p1');
 
     vi.restoreAllMocks();
+  });
+});
+
+describe('ProductoEditModal — editor de variantes', () => {
+  it('"+ Agregar variante" suma una fila vacía y activa, y el código simple queda deshabilitado', async () => {
+    const user = userEvent.setup();
+    montar({ codigo: '001', variantes: null });
+
+    await user.click(screen.getByRole('button', { name: '+ Agregar variante' }));
+
+    expect(screen.getByText(/este producto tiene variantes/)).toBeInTheDocument();
+    const checkboxesActivo = screen.getAllByRole('checkbox', { name: 'A la venta' });
+    expect(checkboxesActivo).toHaveLength(1);
+    expect(checkboxesActivo[0]).toBeChecked();
+  });
+
+  it('completar talle/tipo/código de una variante nueva y guardar la persiste en catalogo_productos.variantes', async () => {
+    const user = userEvent.setup();
+    const { actualizado } = montar({ id: 'p1', codigo: '001', variantes: null });
+
+    await user.click(screen.getByRole('button', { name: '+ Agregar variante' }));
+    await user.type(screen.getByPlaceholderText('Ej: Chico'), 'Chico');
+    await user.type(screen.getByPlaceholderText('Ej: Rojo'), 'Rojo');
+    // Con 1+ variante el label del código simple de arriba cambia a
+    // "Código (este producto tiene variantes...)" — el único label con el
+    // texto accesible exacto "Código" pasa a ser el de la fila.
+    await user.type(screen.getByLabelText('Código'), 'V001');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.variantes).toEqual([{ talle: 'Chico', tipo: 'Rojo', codigo: 'V001', imagen: undefined, activo: true }]);
+    expect(update.campos.codigo).toBeNull(); // el código simple se limpia: ahora manda la lista de variantes
+    expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({
+      variantes: [{ talle: 'Chico', tipo: 'Rojo', codigo: 'V001', imagen: undefined, activo: true }]
+    }));
+  });
+
+  it('guardar con una variante sin código bloquea y no escribe nada', async () => {
+    const user = userEvent.setup();
+    montar({ variantes: null });
+
+    await user.click(screen.getByRole('button', { name: '+ Agregar variante' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(screen.getByText('Cada variante necesita un código.')).toBeInTheDocument();
+    expect(escrituras).toHaveLength(0);
+  });
+
+  it('desactivar ("a la venta") una variante existente y guardar persiste activo:false', async () => {
+    const user = userEvent.setup();
+    const existentes = [{ talle: 'Chico', codigo: 'V001', activo: true }, { talle: 'Grande', codigo: 'V002', activo: true }];
+    const { actualizado } = montar({ id: 'p1', codigo: null, variantes: existentes });
+
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'A la venta' });
+    expect(checkboxes).toHaveLength(2);
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.variantes).toEqual([
+      { talle: 'Chico', tipo: undefined, codigo: 'V001', imagen: undefined, activo: false },
+      { talle: 'Grande', tipo: undefined, codigo: 'V002', imagen: undefined, activo: true }
+    ]);
+    expect(actualizado).toHaveBeenCalled();
+  });
+
+  it('"Quitar" saca la fila de la lista sin tocar las demás', async () => {
+    const user = userEvent.setup();
+    const existentes = [{ talle: 'Chico', codigo: 'V001', activo: true }, { talle: 'Grande', codigo: 'V002', activo: true }];
+    montar({ codigo: null, variantes: existentes });
+
+    const filas = screen.getAllByRole('button', { name: 'Quitar' });
+    await user.click(filas[0]);
+
+    expect(screen.getAllByRole('checkbox', { name: 'A la venta' })).toHaveLength(1);
+    expect(screen.getByDisplayValue('Grande')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Chico')).not.toBeInTheDocument();
+  });
+
+  it('quitar todas las variantes reactiva el código simple', async () => {
+    const user = userEvent.setup();
+    const existentes = [{ talle: 'Chico', codigo: 'V001', activo: true }];
+    montar({ codigo: null, variantes: existentes });
+
+    await user.click(screen.getByRole('button', { name: 'Quitar' }));
+
+    expect(screen.queryByText(/este producto tiene variantes/)).not.toBeInTheDocument();
+  });
+
+  it('muestra precio/stock de sólo lectura desde mapaPrecios para el código de la fila', () => {
+    montar({ codigo: null, variantes: [{ talle: 'Chico', codigo: '001', activo: true }] }); // '001' está en MAPA_PRECIOS
+    expect(screen.getByText(/stock 5/)).toBeInTheDocument();
+  });
+
+  it('un código sin dato en mapaPrecios muestra "Sin datos de precio todavía", no inventa nada', () => {
+    montar({ codigo: null, variantes: [{ talle: 'Chico', codigo: 'NUEVO-999', activo: true }] });
+    expect(screen.getByText('Sin datos de precio todavía')).toBeInTheDocument();
+  });
+
+  it('subir una imagen a una variante la asocia a esa fila, y guardar la persiste', async () => {
+    const user = userEvent.setup();
+    const existentes = [{ talle: 'Chico', codigo: 'V001', activo: true }];
+    const { actualizado } = montar({ id: 'p1', codigo: null, variantes: existentes });
+
+    const archivo = new File(['x'], 'chico.webp', { type: 'image/webp' });
+    const inputArchivo = screen.getByLabelText('Imagen') as HTMLInputElement;
+    await user.upload(inputArchivo, archivo);
+
+    await screen.findByAltText(''); // el <img> de miniatura aparece cuando termina de subir
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.variantes[0].imagen).toBe('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/variante.webp');
+    expect(actualizado).toHaveBeenCalled();
   });
 });

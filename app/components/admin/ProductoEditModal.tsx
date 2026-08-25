@@ -2,12 +2,23 @@
 
 import { useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
-import type { ProductoPublico } from '@/lib/catalogo-familia';
+import type { ProductoPublico, Variante } from '@/lib/catalogo-familia';
 import { slugifyMundo } from '@/lib/catalogo-mundo';
-import { validarCodigo, codigoNormalizado, codigosDe, codigosBorrables, rutasDeStorage } from '@/lib/admin-catalogo';
+import {
+  validarCodigo,
+  codigoNormalizado,
+  codigosBorrables,
+  rutasDeStorage,
+  nuevaVarianteVacia,
+  primerErrorDeVariantes,
+  normalizarVariantes,
+  type MapaPreciosAdmin
+} from '@/lib/admin-catalogo';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+
+const fmtPrecio = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
 export type ProductoAdmin = ProductoPublico & { publicado: boolean };
 
@@ -36,23 +47,30 @@ export async function borrarProductoYPrecios(
 }
 
 /**
- * Modal de edición de un producto publicado (Sprint 3 del plan de
- * catálogo admin, SPEC-catalogo-admin-variantes.md sección 5) — antes era
- * una pantalla que reemplazaba la lista (DetalleProducto dentro de
+ * Modal de edición de un producto publicado (Sprints 3-4 del plan de
+ * catálogo admin, SPEC-catalogo-admin-variantes.md secciones 5) — antes
+ * era una pantalla que reemplazaba la lista (DetalleProducto dentro de
  * PublicadoTab.tsx); ahora es un Dialog que se superpone a la tabla, que
  * sigue montada detrás. Reordenado respecto a la pantalla vieja: Código ·
- * Nombre · Mundo · Familia arriba (en ese orden, pedido explícito del
- * brainstorming), fotos generales al fondo (antes arriba).
+ * Nombre · Mundo · Familia arriba, editor de variantes, Descripción,
+ * toggle de carrusel del home, fotos generales al fondo.
  *
- * El editor de variantes y la composición de combo (de sólo lectura)
- * quedan para los Sprints 4 y 6 — acá el código simple se edita como
- * siempre, sin tocar `variantes` todavía.
+ * Editor de variantes (Sprint 4): agregar/quitar filas de talle y/o
+ * tipo/color, cada una con su propio código, imagen e "a la venta"
+ * (activo). Precio/stock de cada fila son de sólo lectura (vienen de
+ * `mapaPrecios`, la misma consulta batch que ya hace PublicadoTab.tsx
+ * para toda la tabla — no se pide de nuevo acá). El código simple de
+ * arriba y la lista de variantes son mutuamente excluyentes: tener 1+
+ * variante deshabilita el código simple (pasa a null al guardar).
+ *
+ * La composición de combo (de sólo lectura) queda para el Sprint 6.
  */
 export default function ProductoEditModal({
   producto,
   familiasConocidas,
   mundosConocidos,
   todos,
+  mapaPrecios,
   onCerrar,
   onActualizado,
   onEliminado
@@ -61,6 +79,7 @@ export default function ProductoEditModal({
   familiasConocidas: string[];
   mundosConocidos: { slug: string; nombre: string }[];
   todos: ProductoAdmin[];
+  mapaPrecios: MapaPreciosAdmin;
   onCerrar: () => void;
   onActualizado: (id: string, campos: Partial<ProductoAdmin>) => void;
   onEliminado: (id: string) => void;
@@ -75,6 +94,7 @@ export default function ProductoEditModal({
           familiasConocidas={familiasConocidas}
           mundosConocidos={mundosConocidos}
           todos={todos}
+          mapaPrecios={mapaPrecios}
           onCerrar={onCerrar}
           onActualizado={onActualizado}
           onEliminado={onEliminado}
@@ -89,6 +109,7 @@ function FormularioProducto({
   familiasConocidas,
   mundosConocidos,
   todos,
+  mapaPrecios,
   onCerrar,
   onActualizado,
   onEliminado
@@ -97,6 +118,7 @@ function FormularioProducto({
   familiasConocidas: string[];
   mundosConocidos: { slug: string; nombre: string }[];
   todos: ProductoAdmin[];
+  mapaPrecios: MapaPreciosAdmin;
   onCerrar: () => void;
   onActualizado: (id: string, campos: Partial<ProductoAdmin>) => void;
   onEliminado: (id: string) => void;
@@ -110,25 +132,68 @@ function FormularioProducto({
   const [mundo, setMundo] = useState(producto.mundo);
   const [mundoNuevo, setMundoNuevo] = useState('');
   const [destacadoHome, setDestacadoHome] = useState(!!producto.destacadoHome);
+  const [variantes, setVariantes] = useState<Variante[]>(producto.variantes || []);
+  const [errorVariantes, setErrorVariantes] = useState<string | null>(null);
+  const [subiendoVarianteIdx, setSubiendoVarianteIdx] = useState<number | null>(null);
   const [fotos, setFotos] = useState(producto.fotos || []);
   const [guardando, setGuardando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
 
-  const esTalles = !!(producto.variantes && producto.variantes.length);
+  // Reactivo, no una foto fija del producto original: agregar la primera
+  // variante o quitar la última cambia si el código simple de arriba se
+  // edita o queda deshabilitado, en el mismo guardado (sin recargar).
+  const tieneVariantes = variantes.length > 0;
 
   function onCambiarCodigo(v: string) {
     setCodigo(v);
     setErrorCodigo(validarCodigo(v));
   }
 
-  async function guardar() {
-    const err = validarCodigo(codigo);
-    if (err) {
-      setErrorCodigo(err);
-      return;
+  function agregarVariante() {
+    setVariantes((prev) => [...prev, nuevaVarianteVacia()]);
+  }
+
+  function quitarVariante(i: number) {
+    setVariantes((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  function actualizarVariante(i: number, campo: 'talle' | 'tipo' | 'codigo', valor: string) {
+    setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, [campo]: valor } : v)));
+  }
+
+  function alternarActivoVariante(i: number, activo: boolean) {
+    setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, activo } : v)));
+  }
+
+  async function subirImagenVariante(i: number, file: File) {
+    setSubiendoVarianteIdx(i);
+    setError('');
+    try {
+      const blob = await procesarFoto(file);
+      const carpeta = producto.familia ? producto.familia.toLowerCase().replace(/\s+/g, '-') : 'productos';
+      const url = await subirFoto(supabaseBrowser(), blob, carpeta, `${producto.slug}-variante-${i}`, 1);
+      setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, imagen: url } : v)));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSubiendoVarianteIdx(null);
     }
+  }
+
+  async function guardar() {
+    if (!tieneVariantes) {
+      const err = validarCodigo(codigo);
+      if (err) {
+        setErrorCodigo(err);
+        return;
+      }
+    }
+    const errVar = tieneVariantes ? primerErrorDeVariantes(variantes) : null;
+    setErrorVariantes(errVar);
+    if (errVar) return;
+
     const mundoNuevoTrim = mundoNuevo.trim();
     const mundoFinal = mundoNuevoTrim ? slugifyMundo(mundoNuevoTrim) : mundo;
     if (!mundoFinal) {
@@ -149,6 +214,7 @@ function FormularioProducto({
       }
     }
     const familiaFinal = familiaNueva.trim() || familia || null;
+    const variantesFinal = tieneVariantes ? normalizarVariantes(variantes) : null;
     // dbCampos usa nombres de columna (snake_case donde corresponde,
     // destacado_home) — nunca se manda tal cual a onActualizado porque el
     // tipo local (ProductoPublico) usa destacadoHome (camelCase, mismo
@@ -156,7 +222,8 @@ function FormularioProducto({
     const dbCampos = {
       titulo: titulo.trim(),
       descripcion: descripcion.trim() || null,
-      codigo: esTalles ? producto.codigo : codigoNormalizado(codigo),
+      codigo: tieneVariantes ? null : codigoNormalizado(codigo),
+      variantes: variantesFinal,
       familia: familiaFinal,
       mundo: mundoFinal,
       fotos,
@@ -172,6 +239,7 @@ function FormularioProducto({
       titulo: dbCampos.titulo,
       descripcion: dbCampos.descripcion,
       codigo: dbCampos.codigo,
+      variantes: dbCampos.variantes,
       familia: dbCampos.familia,
       mundo: dbCampos.mundo,
       fotos: dbCampos.fotos,
@@ -232,12 +300,12 @@ function FormularioProducto({
       <div className="adm-detalle-campos-editables">
         <div className="adm-detalle-campo">
           <label>
-            Código {esTalles ? '(este producto tiene talles — el código de cada opción no se edita acá)' : ''}
+            Código {tieneVariantes ? '(este producto tiene variantes — se editan en la lista de abajo)' : ''}
             <input
               type="text"
-              value={esTalles ? codigosDe(producto).join(', ') : codigo}
+              value={tieneVariantes ? variantes.map((v) => v.codigo).join(', ') : codigo}
               onChange={(e) => onCambiarCodigo(e.target.value)}
-              disabled={esTalles}
+              disabled={tieneVariantes}
             />
           </label>
           {errorCodigo && <p className="adm-msg adm-msg-error">{errorCodigo}</p>}
@@ -280,6 +348,60 @@ function FormularioProducto({
             o escribir una nueva
             <input type="text" value={familiaNueva} onChange={(e) => setFamiliaNueva(e.target.value)} placeholder="Nombre de familia nueva" />
           </label>
+        </div>
+        <div className="adm-detalle-campo">
+          <p>Variantes (talle y/o tipo/color — cada una es un artículo distinto de Búho, con su propio código)</p>
+          <div className="flex flex-col gap-3">
+            {variantes.map((v, i) => {
+              const precioStock = mapaPrecios[v.codigo];
+              return (
+                <div key={i} className="flex flex-wrap items-end gap-3 rounded-lg border border-input p-3">
+                  <label className="flex flex-col gap-1 text-sm">
+                    Talle
+                    <input type="text" value={v.talle || ''} onChange={(e) => actualizarVariante(i, 'talle', e.target.value)} placeholder="Ej: Chico" />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm">
+                    Tipo/Color
+                    <input type="text" value={v.tipo || ''} onChange={(e) => actualizarVariante(i, 'tipo', e.target.value)} placeholder="Ej: Rojo" />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm">
+                    Código
+                    <input type="text" value={v.codigo} onChange={(e) => actualizarVariante(i, 'codigo', e.target.value)} />
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm">
+                    <input type="checkbox" checked={v.activo} onChange={(e) => alternarActivoVariante(i, e.target.checked)} />
+                    A la venta
+                  </label>
+                  <span className="text-xs text-muted-foreground">
+                    {precioStock
+                      ? `${fmtPrecio.format(precioStock.precio)} · stock ${precioStock.stock == null ? '—' : precioStock.stock}`
+                      : 'Sin datos de precio todavía'}
+                  </span>
+                  {v.imagen && <img src={v.imagen} alt="" width={40} height={40} className="rounded object-cover" />}
+                  <label className="flex flex-col gap-1 text-sm">
+                    Imagen
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={subiendoVarianteIdx === i}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) subirImagenVariante(i, file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <button type="button" className="btn btn-ghost" onClick={() => quitarVariante(i)}>
+                    Quitar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" className="btn mt-2" onClick={agregarVariante}>
+            + Agregar variante
+          </button>
+          {errorVariantes && <p className="adm-msg adm-msg-error">{errorVariantes}</p>}
         </div>
         <div className="adm-detalle-campo">
           <label>
