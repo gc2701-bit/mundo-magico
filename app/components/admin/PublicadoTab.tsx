@@ -449,8 +449,10 @@ export default function PublicadoTab() {
                   </TableCell>
                   <TableCell className="whitespace-normal break-words font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
                   <TableCell className="whitespace-normal break-words font-medium">{f.titulo}</TableCell>
-                  <TableCell>{f.familia || <span className="adm-badge-sin-stock">sin familia</span>}</TableCell>
-                  <TableCell>{f.mundoNombre}</TableCell>
+                  <TableCell className="truncate" title={f.familia || undefined}>
+                    {f.familia || <span className="adm-badge-sin-stock">sin familia</span>}
+                  </TableCell>
+                  <TableCell className="truncate" title={f.mundoNombre}>{f.mundoNombre}</TableCell>
                   <TableCell className="text-right">{f.stock == null ? '—' : f.stock}</TableCell>
                   <TableCell className="text-right">{f.precio == null ? '—' : fmt.format(f.precio)}</TableCell>
                   <TableCell>{f.publicado ? 'Visible' : 'Oculto'}</TableCell>

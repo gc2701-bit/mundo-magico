@@ -4,8 +4,23 @@ import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
 import { slugifyMundo } from '@/lib/catalogo-mundo';
+import { Input } from '@/components/ui/input';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+// Mismos anchos en % que PublicadoTab.tsx (nunca puede superar el 100%
+// del contenedor en table-fixed) — acá con las columnas propias de esta
+// pestaña (sin Mundo/Estado: todavía no están categorizados ni
+// publicados) más la de acción, que ahí es "Editar" y acá "Activar".
+const COLUMNAS: { label: string; alinear?: 'right'; widthPct: number }[] = [
+  { label: 'Código', widthPct: 12 },
+  { label: 'Nombre', widthPct: 28 },
+  { label: 'Familia', widthPct: 16 },
+  { label: 'Precio', alinear: 'right', widthPct: 12 },
+  { label: 'Stock', alinear: 'right', widthPct: 10 },
+  { label: 'Tipo', widthPct: 12 }
+];
 
 type FilaEspejo = {
   codigo: string;
@@ -58,13 +73,16 @@ export default function EspejoTab() {
     );
   }
 
+  const mensajeVacio = busqueda ? 'No hay artículos sin activar que coincidan con la búsqueda.' : 'No hay artículos para activar todavía.';
+
   return (
-    <div>
-      <div className="adm-lista-toolbar">
-        <input
+    <div className="space-y-3">
+      <div className="adm-lista-toolbar flex flex-wrap items-center gap-3">
+        <Input
           type="search"
           placeholder="Buscar por nombre, código o familia"
           aria-label="Buscar en el espejo de Búho"
+          className="sm:w-64"
           value={busqueda}
           onChange={(e) => {
             setBusqueda(e.target.value);
@@ -72,44 +90,88 @@ export default function EspejoTab() {
           }}
         />
       </div>
-      <table className="adm-lista-tabla">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Familia</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Tipo</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {lista.length === 0 ? (
-            <tr>
-              <td colSpan={7} className="adm-detalle-solo-lectura">
-                {busqueda ? 'No hay artículos sin activar que coincidan con la búsqueda.' : 'No hay artículos para activar todavía.'}
-              </td>
-            </tr>
-          ) : (
-            lista.map((f) => (
-              <tr key={f.codigo}>
-                <td>{f.codigo}</td>
-                <td>{f.nombre}</td>
-                <td>{f.familia || '—'}</td>
-                <td>{fmt.format(f.precio)}</td>
-                <td>{f.stock == null ? '—' : f.stock}</td>
-                <td>{f.es_combo ? 'Combo' : 'Artículo'}</td>
-                <td>
-                  <button type="button" className="btn btn-primary" onClick={() => setActivando(f)}>
-                    Activar
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+
+      {/* Mismo patrón responsive que PublicadoTab.tsx: tabla real en
+       * desktop (≥1024px), lista de tarjetas en mobile — para que "Sin
+       * activar" se vea como una copia visual de "Publicado", con la
+       * única diferencia real (que no está publicado). */}
+      <div className="hidden lg:block">
+        <Table className="adm-lista-tabla table-fixed">
+          <TableHeader>
+            <TableRow>
+              {COLUMNAS.map(({ label, alinear, widthPct }) => (
+                <TableHead key={label} style={{ width: `${widthPct}%` }} className={'whitespace-nowrap' + (alinear === 'right' ? ' text-right' : '')}>
+                  {label}
+                </TableHead>
+              ))}
+              <TableHead style={{ width: '10%' }} />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lista.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={COLUMNAS.length + 1} className="adm-detalle-solo-lectura text-center">
+                  {mensajeVacio}
+                </TableCell>
+              </TableRow>
+            ) : (
+              lista.map((f) => (
+                <TableRow key={f.codigo}>
+                  <TableCell className="whitespace-normal break-words font-mono text-sm text-muted-foreground">{f.codigo}</TableCell>
+                  <TableCell className="whitespace-normal break-words font-medium">{f.nombre}</TableCell>
+                  <TableCell className="truncate" title={f.familia || undefined}>{f.familia || '—'}</TableCell>
+                  <TableCell className="text-right">{fmt.format(f.precio)}</TableCell>
+                  <TableCell className="text-right">{f.stock == null ? '—' : f.stock}</TableCell>
+                  <TableCell className="truncate">{f.es_combo ? 'Combo' : 'Artículo'}</TableCell>
+                  <TableCell>
+                    <button type="button" className="btn btn-primary" onClick={() => setActivando(f)}>
+                      Activar
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <ul role="list" className="grid gap-3 lg:hidden">
+        {lista.length === 0 ? (
+          <li className="adm-detalle-solo-lectura list-none text-center">{mensajeVacio}</li>
+        ) : (
+          lista.map((f) => (
+            <li key={f.codigo} className="list-none rounded-lg border p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium break-words">{f.nombre}</p>
+                  <p className="break-words font-mono text-xs text-muted-foreground">{f.codigo}</p>
+                </div>
+                <button type="button" className="btn btn-primary shrink-0" onClick={() => setActivando(f)}>
+                  Activar
+                </button>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">Familia</dt>
+                  <dd>{f.familia || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Tipo</dt>
+                  <dd>{f.es_combo ? 'Combo' : 'Artículo'}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Stock</dt>
+                  <dd>{f.stock == null ? '—' : f.stock}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Precio</dt>
+                  <dd>{fmt.format(f.precio)}</dd>
+                </div>
+              </dl>
+            </li>
+          ))
+        )}
+      </ul>
     </div>
   );
 }

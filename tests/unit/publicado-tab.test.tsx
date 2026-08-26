@@ -136,6 +136,27 @@ describe('PublicadoTab — tabla', () => {
     const tabla = await screen.findByRole('table');
     expect(within(tabla).getByText('No hay artículos que coincidan.')).toBeInTheDocument();
   });
+
+  it('Familia y Mundo truncan con ellipsis en vez de desbordar sobre la celda vecina (bug reportado: los nombres se superponían)', async () => {
+    // TableCell (components/ui/table.tsx) trae whitespace-nowrap por
+    // default y ninguna otra regla de overflow — en una tabla table-fixed
+    // con columnas angostas, un nombre largo sin espacios se salía
+    // visualmente de su celda y tapaba la de al lado. La clase `truncate`
+    // (overflow-hidden + text-overflow-ellipsis, ya incluye
+    // whitespace-nowrap) contiene el desborde sin cortar el texto real
+    // del DOM — por eso este test mira las clases, no el texto visible.
+    estado.catalogo_productos = [
+      producto({ id: 'p1', titulo: 'Producto', familia: 'UNA_FAMILIA_MUY_LARGA_SIN_ESPACIOS', mundo: 'cotillon' })
+    ];
+    render(<PublicadoTab />);
+    const fila = await screen.findByRole('row', { name: /Producto/ });
+    const celdas = within(fila).getAllByRole('cell');
+
+    expect(celdas[3]).toHaveClass('truncate'); // Familia
+    expect(celdas[4]).toHaveClass('truncate'); // Mundo
+    // El texto completo sigue en el DOM (sólo se trunca visualmente).
+    expect(celdas[3]).toHaveTextContent('UNA_FAMILIA_MUY_LARGA_SIN_ESPACIOS');
+  });
 });
 
 describe('PublicadoTab — responsive: tabla en desktop, tarjetas en mobile', () => {
