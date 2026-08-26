@@ -1,0 +1,25 @@
+-- Catálogo 18 — GRANT olvidado en familia/destacado_home/precio_oferta de
+-- catalogo_productos.
+--
+-- Bug real reportado por el usuario (2026-08-26): desde el panel admin no
+-- podía cambiar la familia de un producto ya publicado ("no tengo permisos
+-- para tabla catalogo_productos"). es_admin() (RLS) pasaba bien — el
+-- bloqueo era el GRANT/REVOKE de columna (mismo patrón de separación
+-- fila/columna que el resto de este archivo de migraciones, ver
+-- catalogo_00_base.sql y catalogo_03_subcategorias.sql).
+--
+-- Root cause: `familia` se agregó en catalogo_08_familia.sql y
+-- `destacado_home`/`precio_oferta` en catalogo_12_busqueda.sql — ninguna
+-- de las dos migraciones sumó el GRANT UPDATE/INSERT correspondiente al
+-- que ya tenía catalogo_03_subcategorias.sql para el resto de las
+-- columnas (a diferencia de catalogo_tarjetas, donde sí se hizo bien al
+-- sumar subcategoria_id/codigo_override en ese mismo archivo). Los
+-- privilegios de columna nunca son retroactivos: una columna nueva no
+-- hereda el GRANT de tabla ya revocado, hace falta uno explícito por
+-- columna.
+--
+-- Los privilegios de columna son aditivos — esto no pisa el GRANT ya
+-- existente de catalogo_03_subcategorias.sql sobre el resto de las
+-- columnas.
+grant update (familia, destacado_home, precio_oferta) on public.catalogo_productos to authenticated;
+grant insert (familia, destacado_home, precio_oferta) on public.catalogo_productos to authenticated;
