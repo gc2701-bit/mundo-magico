@@ -5,6 +5,13 @@
    de admin-pedidos.css — misma familia de producto que el resto de admin. */
 
 .adm-wrap{ max-width:960px; margin:0 auto; padding:40px 20px 80px; }
+/* AdminGate.tsx (panel logueado): el wrap compartido de 960px, pensado
+   para las pantallas angostas de pedidos/envíos, cortaba nombres/filas de
+   la tabla de PublicadoTab.tsx en desktop aunque sus columnas ya sumen
+   100% del contenedor (table-fixed) — el contenedor mismo era el que
+   sobraba de ancho de pantalla disponible. No se toca .adm-wrap en sí
+   porque AdminPedidosGate.tsx/AdminEnviosGate.tsx la reusan tal cual. */
+.adm-wrap-catalogo{ max-width:none; }
 .adm-head{ margin-bottom:24px; }
 .adm-head h1{ margin:0 0 6px; font-size:clamp(28px,4vw,38px); }
 .adm-sesion-info{ margin:0; color:var(--muted); font-size:14px; }

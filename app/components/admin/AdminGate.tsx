@@ -59,20 +59,13 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
     if (err) setError(err.message);
   }
 
-  async function cerrarSesion() {
-    await supabaseBrowser().auth.signOut();
-  }
-
   if (estado === 'cargando') return null;
 
   if (estado === 'admin') {
     return (
-      <div className="adm-wrap">
+      <div className="adm-wrap adm-wrap-catalogo">
         <div className="adm-head">
           <h1>Catálogo</h1>
-          <button type="button" className="adm-logout-btn" onClick={cerrarSesion}>
-            Cerrar sesión
-          </button>
         </div>
         {children}
       </div>
