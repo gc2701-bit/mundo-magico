@@ -11,12 +11,22 @@ import { CATALOGO_TAG } from '@/lib/catalogo-server';
  * nunca desde el navegador: el secreto compartido vive sólo como variable
  * de entorno de Netlify (REVALIDATE_SECRET), nunca en este repo.
  *
- * `{ expire: 0 }` en vez de `'max'`: Next 16 cambió revalidateTag para
- * necesitar un segundo argumento — 'max' da stale-while-revalidate (el
- * visitante siguiente todavía ve la versión vieja mientras se regenera en
- * segundo plano), pero para un webhook externo que pide que el dato quede
- * al día YA, la doc de Next recomienda expirar inmediato con
- * `{ expire: 0 }` (ver node_modules/next/dist/docs/.../revalidateTag.md).
+ * `'max'` (incidente de producción 2026-08-28): este archivo usaba
+ * `{ expire: 0 }`, leyendo mal la doc de Next — esa forma NO es "expirar
+ * ya, pero seguir sirviendo la versión vieja mientras se regenera atrás".
+ * `node_modules/next/dist/docs/.../revalidateTag.md` dice literal que
+ * `{ expire: 0 }` hace que **la próxima request sea un "blocking
+ * revalidate/cache miss"** — sin red de contención — y recomienda `'max'`
+ * (stale-while-revalidate real) para todos los casos salvo necesitar la
+ * expiración inmediata de verdad. Con `{ expire: 0 }`, el primer visitante
+ * después de cada llamada de este webhook pagaba una regeneración
+ * bloqueante de `/[mundo]` y `/[mundo]/[slug]` (páginas `revalidate:
+ * false`, sin autocorrección por tiempo); una sola vez que esa
+ * regeneración tropezó, quedó cacheado un 404 permanente en
+ * mundomagico.ar, reproducido en vivo con una única llamada limpia (sin
+ * ráfaga) a este endpoint. `'max'` deja al visitante viendo la versión
+ * anterior (buena) mientras se regenera en segundo plano — ningún
+ * visitante paga ni arriesga una regeneración bloqueante.
  *
  * No inspecciona el payload del webhook más allá de validar el secreto:
  * hoy hay un solo tag ('catalogo') compartido por todo el catálogo
@@ -29,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  revalidateTag(CATALOGO_TAG, { expire: 0 });
+  revalidateTag(CATALOGO_TAG, 'max');
 
   return NextResponse.json({ revalidated: true, tag: CATALOGO_TAG, now: Date.now() });
 }

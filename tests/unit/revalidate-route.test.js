@@ -34,10 +34,10 @@ describe('app/api/revalidate — POST', () => {
     expect(revalidateTag).not.toHaveBeenCalled();
   });
 
-  it('200 + revalidateTag(CATALOGO_TAG, {expire: 0}) con el secreto correcto', async () => {
+  it("200 + revalidateTag(CATALOGO_TAG, 'max') con el secreto correcto", async () => {
     const res = await POST(req({ 'x-revalidate-secret': 'el-secreto' }));
     expect(res.status).toBe(200);
-    expect(revalidateTag).toHaveBeenCalledWith(CATALOGO_TAG, { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith(CATALOGO_TAG, 'max');
     expect(revalidateTag).toHaveBeenCalledTimes(1);
   });
 
