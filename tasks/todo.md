@@ -34,6 +34,7 @@ de este repo).
   - [ ] Tras push real: verificar `commit_ref` del deploy contra `git log` (no confiar en "ready")
   - [ ] Repetir en vivo la prueba del Sprint 0 (una llamada limpia a `/api/revalidate`, confirmar 200 antes y después)
 
-- [ ] **Sprint 3 — aparte, en Supabase, no bloquea lo de arriba**
-  - [ ] Debounce en `catalogo_revalidar_home()` (no llamar si hubo una llamada hace <N segundos)
-  - [ ] Confirmación explícita del usuario antes de `apply_migration`
+- [x] **Sprint 3 — aparte, en Supabase, no bloquea lo de arriba** — commit `304334c`
+  - [x] Debounce en `catalogo_revalidar_home()` (10s, columna `catalogo_config.ultima_revalidacion`) — verificado en vivo (dos UPDATE seguidos → una sola llamada al webhook)
+  - [x] Confirmación explícita del usuario antes de `apply_migration`
+  - [x] Hallazgo adicional: `REVALIDATE_SECRET` estaba commiteado en texto plano en un repo público — rotado (Vault + Netlify), sin versionar el valor nuevo en ningún archivo
