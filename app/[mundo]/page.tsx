@@ -27,9 +27,20 @@ import CatalogoPrecios from '../components/CatalogoPrecios';
  * lo que hubiera roto Halloween/Navidad apenas se sumaron. Ahora sólo
  * 404 si el slug no es un mundo real; sin productos muestra el
  * EmptyState de "está por venir", igual que la vidriera del home.
+ *
+ * `dynamicParams` (sin export, default `true` desde el incidente de
+ * producción 2026-08-28, Sprint 2 de tasks/plan.md): antes era `false`
+ * — bloqueaba cualquier slug no visto en `generateStaticParams` en el
+ * build. Efecto colateral real: si la caché ISR de un mundo conocido
+ * quedaba en mal estado (ver Sprint 0, el `revalidateTag` con
+ * `{expire:0}` que rompió esto en producción), no había forma de
+ * autocorregirlo salvo un redeploy — con `dynamicParams` en su default,
+ * el próximo visitante dispara un render on-the-fly normal para ese
+ * path. Costo: un slug inventado ya no es 404 instantáneo del router,
+ * dispara un render real — pero termina en el mismo `notFound()` de
+ * abajo igual, así que sólo lo paga tráfico inválido/bots.
  */
 export const revalidate = false;
-export const dynamicParams = false;
 
 export async function generateStaticParams() {
   const catalogo = await obtenerCatalogoPublico();

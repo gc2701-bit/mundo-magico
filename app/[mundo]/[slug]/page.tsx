@@ -30,9 +30,14 @@ import CatalogoPrecios from '../../components/CatalogoPrecios';
  * estado (imagen de la variante elegida), algo que este Server Component
  * no puede sostener. El resto de la página (breadcrumbs, relacionados,
  * CTA sticky, hidratación de precios) se queda acá sin cambios.
+ *
+ * `dynamicParams` (sin export, default `true` desde el incidente de
+ * producción 2026-08-28, Sprint 2 de tasks/plan.md) — mismo motivo que
+ * `app/[mundo]/page.tsx`: si la caché ISR de un producto conocido queda
+ * en mal estado, el próximo visitante dispara un render on-the-fly en
+ * vez de quedar atado a un 404 permanente hasta un redeploy.
  */
 export const revalidate = false;
-export const dynamicParams = false;
 
 export async function generateStaticParams() {
   const catalogo = await obtenerCatalogoPublico();
