@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { obtenerPreciosPublicos, type PreciosPublico } from '@/lib/catalogo-precios-publico';
+import { resolverEstadoProducto, resolverOferta } from '@/lib/precios-familia';
 
 /**
  * Carrusel de ofertas/destacados del home (Sprint 4, ver
@@ -16,9 +18,15 @@ import type { ProductoPublico } from '@/lib/catalogo-familia';
  * el fallback resuelto desde app/page.tsx (primeros publicados) para que
  * el carrusel nunca esté vacío mientras no exista curación real.
  *
- * Reusa el mismo mecanismo de precio que ProductoCard.tsx: data-codigo +
- * .pricetag, hidratado por CatalogoPrecios.tsx (ya montado en esta
- * página) — sin duplicar lógica de precio/oferta.
+ * Precio propio (no vía CatalogoPrecios.tsx): ese componente hidrata el
+ * DOM UNA sola vez al montar la página, lo cual sirve para las tarjetas
+ * de grilla (nodo fijo por producto) pero no acá — este carrusel reusa
+ * un único nodo `.pricetag` al cambiar de destacado (sólo cambia el
+ * estado `i`, el `<Link>` no se desmonta), así que ese texto quedaba
+ * pegado al del primer destacado para siempre. Mismo fetch cacheado
+ * (obtenerPreciosPublicos(), sin red extra) pero resuelto con React
+ * state para que se recalcule en cada cambio de `i` — mismo patrón que
+ * usePrecioDeCodigo en carrito/AccionesProducto.tsx.
  *
  * Transición con fundido (sumada a pedido del usuario, 2026-08-24 — el
  * cambio de destacado se sentía "tosco/repentino"): al cambiar de índice
@@ -30,6 +38,23 @@ import type { ProductoPublico } from '@/lib/catalogo-familia';
 export default function HeroCarrusel({ productos }: { productos: ProductoPublico[] }) {
   const [i, setI] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [precios, setPrecios] = useState<PreciosPublico | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    obtenerPreciosPublicos()
+      .then((datos) => {
+        if (!cancelado) setPrecios(datos);
+      })
+      .catch(() => {
+        // Silencioso, mismo criterio que CatalogoPrecios.tsx: sin precio
+        // hidratado el carrusel sigue siendo usable (foto/título ya
+        // vinieron server-rendered).
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   function irA(nuevo: number) {
     setVisible(false);
@@ -49,9 +74,15 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
   if (!productos.length) return null;
   const p = productos[Math.min(i, productos.length - 1)];
   const foto = p.fotos?.[0];
-  const dataAttrs: Record<string, string> = {};
-  if (p.codigo) dataAttrs['data-codigo'] = p.codigo;
-  if (p.precioOferta != null) dataAttrs['data-precio-oferta'] = String(p.precioOferta);
+
+  const estado = precios
+    ? resolverEstadoProducto(p, precios.precios, precios.sinStock, precios.pocasUnidades)
+    : { texto: null, sinStock: false, pocasUnidades: false };
+  const precioReal = precios && p.codigo != null ? precios.precios[p.codigo] ?? null : null;
+  const oferta =
+    p.precioOferta != null
+      ? resolverOferta(precioReal, p.precioOferta)
+      : { enOferta: false, precioAntes: null, precioAhora: null, porcentajeOff: null };
 
   const anterior = () => irA((i - 1 + productos.length) % productos.length);
   const siguiente = () => irA((i + 1) % productos.length);
@@ -85,7 +116,6 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
           'mx-auto flex max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
           (visible ? 'opacity-100' : 'opacity-0')
         }
-        {...dataAttrs}
       >
         {foto ? (
           <img
@@ -110,7 +140,16 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
             Destacado
           </span>
           <h2 className="font-display text-fs3 text-ink">{p.titulo}</h2>
-          <span className="pricetag mt-s1 block! static! rounded-none! bg-transparent! p-0! font-body! text-fs2! font-extrabold! text-ink! shadow-none! [&_.pricetag-antes]:mr-1.5 [&_.pricetag-antes]:font-normal [&_.pricetag-antes]:text-muted [&_.pricetag-antes]:line-through" />
+          <span className="pricetag mt-s1 block! static! rounded-none! bg-transparent! p-0! font-body! text-fs2! font-extrabold! text-ink! shadow-none! [&_.pricetag-antes]:mr-1.5 [&_.pricetag-antes]:font-normal [&_.pricetag-antes]:text-muted [&_.pricetag-antes]:line-through">
+            {oferta.enOferta ? (
+              <>
+                <span className="pricetag-antes">{oferta.precioAntes}</span>
+                <span className="pricetag-ahora">{oferta.precioAhora}</span>
+              </>
+            ) : (
+              estado.texto
+            )}
+          </span>
           <span className="mt-s2 inline-block rounded-brand bg-green px-s4 py-s2 font-body text-fs0 font-semibold text-white!">
             Ver más →
           </span>
