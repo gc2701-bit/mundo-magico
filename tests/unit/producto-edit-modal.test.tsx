@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProductoEditModal from '../../app/components/admin/ProductoEditModal';
+import { subirFoto } from '@/lib/procesar-foto';
 
 const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(() => {
   const escrituras: any[] = [];
@@ -108,6 +109,7 @@ function montar(overrides: any = {}, cerrar = vi.fn(), actualizado = vi.fn(), el
 beforeEach(() => {
   escrituras.length = 0;
   storageRemovidas.length = 0;
+  (subirFoto as any).mockClear();
 });
 
 describe('ProductoEditModal — layout', () => {
@@ -373,5 +375,35 @@ describe('ProductoEditModal — composición de combo (Sprint 6)', () => {
     });
 
     expect(await screen.findByText('3× ANTIFAZ')).toBeInTheDocument();
+  });
+});
+
+describe('ProductoEditModal — sanea la carpeta antes de subir foto (mismo bug de raíz que EspejoTab.tsx, ver tasks/plan-activar-invalid-key.md)', () => {
+  it('agregar foto general: la carpeta (de familia con tilde) llega ASCII-safe a subirFoto', async () => {
+    const user = userEvent.setup();
+    montar({ familia: 'Decoración' });
+
+    const input = screen.getByLabelText(/Agregar foto/);
+    await user.upload(input, new File(['x'], 'foto.jpg', { type: 'image/jpeg' }));
+
+    expect(subirFoto).toHaveBeenCalledTimes(1);
+    const [, , carpeta] = (subirFoto as any).mock.calls[0];
+    expect(carpeta).toBe('decoracion');
+  });
+
+  it('subir imagen de una variante: la carpeta (de familia con tilde) llega ASCII-safe a subirFoto', async () => {
+    const user = userEvent.setup();
+    montar({
+      familia: 'Decoración',
+      codigo: null,
+      variantes: [{ talle: 'Chico', codigo: '001', activo: true }]
+    });
+
+    const input = screen.getByLabelText('Imagen');
+    await user.upload(input, new File(['x'], 'foto.jpg', { type: 'image/jpeg' }));
+
+    expect(subirFoto).toHaveBeenCalledTimes(1);
+    const [, , carpeta] = (subirFoto as any).mock.calls[0];
+    expect(carpeta).toBe('decoracion');
   });
 });

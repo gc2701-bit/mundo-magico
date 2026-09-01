@@ -16,6 +16,7 @@ import {
   type MapaPreciosAdmin
 } from '@/lib/admin-catalogo';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
+import { slugify } from '@/lib/slug';
 import { obtenerComposicionCombo, type ItemComboComposicion } from '@/lib/combo-composicion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -213,7 +214,7 @@ function FormularioProducto({
     setError('');
     try {
       const blob = await procesarFoto(file);
-      const carpeta = producto.familia ? producto.familia.toLowerCase().replace(/\s+/g, '-') : 'productos';
+      const carpeta = producto.familia ? slugify(producto.familia) : 'productos';
       const url = await subirFoto(supabaseBrowser(), blob, carpeta, `${producto.slug}-variante-${i}`, 1);
       setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, imagen: url } : v)));
     } catch (err) {
@@ -321,7 +322,7 @@ function FormularioProducto({
     setError('');
     try {
       const blob = await procesarFoto(file);
-      const carpeta = producto.familia ? producto.familia.toLowerCase().replace(/\s+/g, '-') : 'productos';
+      const carpeta = producto.familia ? slugify(producto.familia) : 'productos';
       const url = await subirFoto(supabaseBrowser(), blob, carpeta, producto.slug, fotos.length + 1);
       setFotos((prev) => [...prev, { src: url, cap: '' }]);
       setMensaje('Foto lista — apretá "Guardar" para dejarla en el producto.');
