@@ -16,8 +16,10 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EspejoTab from '../../app/components/admin/EspejoTab';
 
-const { estado, sb } = vi.hoisted(() => {
-  const estado: any = { catalogo_buho_espejo: [] };
+const { estado, sb, escrituras, subirFotoMock } = vi.hoisted(() => {
+  const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [] };
+  const escrituras: any[] = [];
+  const subirFotoMock = vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/foto.webp');
 
   function chain(data: any) {
     const p: any = Promise.resolve({ data, error: null });
@@ -28,16 +30,36 @@ const { estado, sb } = vi.hoisted(() => {
     return p;
   }
 
+  function armarEscritura(tabla: string, tipo: 'insert' | 'upsert' | 'update', campos: any) {
+    const registro: any = { tabla, tipo, campos, eqs: [] };
+    escrituras.push(registro);
+    const promesa: any = Promise.resolve({ data: null, error: null });
+    promesa.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return promesa; };
+    return promesa;
+  }
+
   const sb = {
     from: (tabla: string) => ({
-      select: () => chain(estado[tabla] || [])
+      select: () => chain(estado[tabla] || []),
+      insert: (campos: any) => armarEscritura(tabla, 'insert', campos),
+      upsert: (campos: any) => armarEscritura(tabla, 'upsert', campos),
+      update: (campos: any) => armarEscritura(tabla, 'update', campos)
     })
   };
 
-  return { estado, sb };
+  return { estado, sb, escrituras, subirFotoMock };
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
+
+// procesarFoto usa createImageBitmap/canvas — jsdom no lo simula (mismo
+// motivo que tests/unit/producto-edit-modal.test.tsx). subirFoto se
+// stubea para poder afirmar CON QUÉ argumentos se llamó — es lo que este
+// bug rompía (fila.codigo/carpeta crudos, ver tasks/plan-activar-invalid-key.md).
+vi.mock('@/lib/procesar-foto', () => ({
+  procesarFoto: vi.fn().mockResolvedValue(new Blob(['x'], { type: 'image/webp' })),
+  subirFoto: subirFotoMock
+}));
 
 function fila(overrides: any) {
   return {
@@ -49,6 +71,9 @@ function fila(overrides: any) {
 
 beforeEach(() => {
   estado.catalogo_buho_espejo = [];
+  estado.catalogo_mundos = [];
+  escrituras.length = 0;
+  subirFotoMock.mockClear();
 });
 
 describe('EspejoTab — misma estructura visual que PublicadoTab', () => {
@@ -127,5 +152,49 @@ describe('EspejoTab — misma estructura visual que PublicadoTab', () => {
     expect(within(tabla).getByText('No hay artículos para activar todavía.')).toBeInTheDocument();
     const lista = screen.getByRole('list');
     expect(within(lista).getByText('No hay artículos para activar todavía.')).toBeInTheDocument();
+  });
+});
+
+describe('ActivacionEspejo — sanea código/carpeta antes de subir foto (fix Invalid key, ver tasks/plan-activar-invalid-key.md)', () => {
+  it('sube la foto con el código y la carpeta sin ñ/tildes, aunque fila.codigo/fila.familia los traigan', async () => {
+    const user = userEvent.setup();
+    estado.catalogo_buho_espejo = [fila({ codigo: 'MOÑOLUZ', nombre: 'Moño luminoso', familia: 'LUMINOSOS' })];
+    render(<EspejoTab />);
+
+    const fil = await screen.findByRole('row', { name: /Moño luminoso/ });
+    await user.click(within(fil).getByRole('button', { name: 'Activar' }));
+
+    const input = screen.getByLabelText(/Foto \(obligatoria para activar/);
+    const archivo = new File(['x'], 'moño.jpg', { type: 'image/jpeg' });
+    await user.upload(input, archivo);
+
+    expect(subirFotoMock).toHaveBeenCalledTimes(1);
+    const [, , carpeta, slugProducto] = subirFotoMock.mock.calls[0];
+    expect(carpeta).toBe('luminosos');
+    expect(slugProducto).toBe('monoluz');
+  });
+
+  it('al activar, catalogo_productos.codigo sigue siendo el código crudo de Búho (no el sanitizado) — no romper el matcheo con el POS', async () => {
+    const user = userEvent.setup();
+    estado.catalogo_buho_espejo = [fila({ codigo: 'MOÑOLUZ', nombre: 'Moño luminoso', familia: 'LUMINOSOS' })];
+    estado.catalogo_mundos = [{ slug: 'cotillon', nombre: 'Cotillón' }];
+    render(<EspejoTab />);
+
+    const fil = await screen.findByRole('row', { name: /Moño luminoso/ });
+    await user.click(within(fil).getByRole('button', { name: 'Activar' }));
+
+    const input = screen.getByLabelText(/Foto \(obligatoria para activar/);
+    await user.upload(input, new File(['x'], 'moño.jpg', { type: 'image/jpeg' }));
+    await screen.findByAltText('Moño luminoso');
+
+    await user.selectOptions(screen.getByLabelText(/Mundo \(obligatorio para activar\)/), 'cotillon');
+    await user.click(screen.getByRole('button', { name: 'Activar' }));
+
+    const insertProducto = await vi.waitFor(() => {
+      const registro = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'insert');
+      if (!registro) throw new Error('todavía no se llamó insert en catalogo_productos');
+      return registro;
+    });
+    expect(insertProducto.campos.codigo).toBe('MOÑOLUZ');
   });
 });

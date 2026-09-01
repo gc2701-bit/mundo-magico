@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
 import { slugifyMundo } from '@/lib/catalogo-mundo';
+import { slugify } from '@/lib/slug';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
@@ -198,8 +199,8 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
     setError('');
     try {
       const blob = await procesarFoto(file);
-      const carpeta = fila.familia ? fila.familia.toLowerCase().replace(/\s+/g, '-') : 'productos';
-      const url = await subirFoto(supabaseBrowser(), blob, carpeta, fila.codigo, fotos.length + 1);
+      const carpeta = fila.familia ? slugify(fila.familia) : 'productos';
+      const url = await subirFoto(supabaseBrowser(), blob, carpeta, slugify(fila.codigo), fotos.length + 1);
       setFotos((prev) => [...prev, { src: url, cap: '' }]);
     } catch (err) {
       setError((err as Error).message);
@@ -223,12 +224,7 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
     setError('');
     try {
       const sb = supabaseBrowser();
-      const slugTitulo = fila.nombre
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      const slugTitulo = slugify(fila.nombre);
 
       if (mundoNuevoTrim) {
         const { error: errMundo } = await sb
