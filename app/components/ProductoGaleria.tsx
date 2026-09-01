@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Foto } from '@/lib/catalogo-familia';
+import { urlFoto, type Foto } from '@/lib/catalogo-familia';
 
 /**
  * Galería de fotos de la ficha de producto (Sprint 7, ver
@@ -53,7 +53,7 @@ export default function ProductoGaleria({ fotos, titulo, fotoDestacada }: { foto
     <div className="flex flex-col gap-s2">
       <div className="aspect-square overflow-hidden rounded-brand border border-line bg-surface">
         <img
-          src={'/' + foto.src}
+          src={urlFoto(foto.src)}
           alt={titulo + (foto.cap ? ' · ' + foto.cap : '')}
           width={800}
           height={800}
@@ -75,7 +75,7 @@ export default function ProductoGaleria({ fotos, titulo, fotoDestacada }: { foto
                 (i === activa ? 'border-green' : 'border-line')
               }
             >
-              <img src={'/' + f.src} alt="" width={64} height={64} className="h-full w-full object-contain" />
+              <img src={urlFoto(f.src)} alt="" width={64} height={64} className="h-full w-full object-contain" />
             </button>
           ))}
         </div>

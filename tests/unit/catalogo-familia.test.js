@@ -3,7 +3,7 @@
  * ahora es mundo, ver tests/unit/catalogo-mundo.test.js.
  */
 import { describe, it, expect } from 'vitest';
-import { buscarProductos } from '../../lib/catalogo-familia.ts';
+import { buscarProductos, urlFoto } from '../../lib/catalogo-familia.ts';
 
 function producto(overrides) {
   return {
@@ -35,5 +35,21 @@ describe('catalogo-familia — buscarProductos', () => {
   it('sin coincidencias da lista vacía', () => {
     const productos = [producto({ titulo: 'Globo' })];
     expect(buscarProductos(productos, 'inexistente')).toEqual([]);
+  });
+});
+
+describe('catalogo-familia — urlFoto (fix imagen rota: URL completa de Supabase vs. ruta relativa del HTML viejo, ver tasks/plan-imagenes-productos.md)', () => {
+  it('ruta relativa: le antepone /', () => {
+    expect(urlFoto('productos/anteojo.jpeg')).toBe('/productos/anteojo.jpeg');
+  });
+
+  it('URL completa (https://) de Supabase Storage: la deja tal cual, sin anteponer /', () => {
+    expect(urlFoto('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/x.webp')).toBe(
+      'https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/x.webp'
+    );
+  });
+
+  it('URL completa (http://) también se deja tal cual', () => {
+    expect(urlFoto('http://ejemplo.com/x.webp')).toBe('http://ejemplo.com/x.webp');
   });
 });

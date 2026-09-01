@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { urlFoto, type ProductoPublico } from '@/lib/catalogo-familia';
 import { obtenerPreciosPublicos, type PreciosPublico } from '@/lib/catalogo-precios-publico';
 import { resolverEstadoProducto, resolverOferta } from '@/lib/precios-familia';
 
@@ -119,7 +119,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
       >
         {foto ? (
           <img
-            src={'/' + foto.src}
+            src={urlFoto(foto.src)}
             alt={p.titulo}
             width={480}
             height={480}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { urlFoto, type ProductoPublico } from '@/lib/catalogo-familia';
 import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
 
 /**
@@ -81,7 +81,7 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
             {fotos.map((f, i) => (
               <img
                 key={i}
-                src={'/' + f.src}
+                src={urlFoto(f.src)}
                 alt={producto.titulo + (f.cap ? ' · ' + f.cap : '')}
                 width={600}
                 height={600}
@@ -92,7 +92,7 @@ export default function ProductoCard({ producto, precioOferta, nuevo }: Props) {
           </div>
         ) : (
           <img
-            src={'/' + fotos[0].src}
+            src={urlFoto(fotos[0].src)}
             alt={producto.titulo}
             width={600}
             height={600}

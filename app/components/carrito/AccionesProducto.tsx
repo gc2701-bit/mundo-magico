@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useCarrito } from './CarritoProvider';
 import { cargarFavoritos, guardarFavoritos, toggleFavorito, claveFavorito } from '@/lib/favoritos';
-import type { ProductoPublico, Variante } from '@/lib/catalogo-familia';
+import { urlFoto, type ProductoPublico, type Variante } from '@/lib/catalogo-familia';
 import {
   ejeElegible,
   valoresDeEje,
@@ -71,7 +71,7 @@ export function FavoritoBoton({ producto, variante = 'card' }: { producto: Produ
     const favoritos = cargarFavoritos();
     const siguiente = toggleFavorito(favoritos, claveFav, {
       title: producto.titulo,
-      img: '/' + (producto.fotos[0]?.src || ''),
+      img: producto.fotos[0] ? urlFoto(producto.fotos[0].src) : '',
       url: producto.mundo ? '/' + producto.mundo : '/explorar',
     });
     guardarFavoritos(siguiente);
@@ -158,7 +158,7 @@ export function AgregarControl({
 
   const tieneVariantes = variantesActivas.length > 1;
   const mostrarSelector = tieneVariantes && (variante === 'pagina' || eligiendo);
-  const foto = '/' + (producto.fotos[0]?.src || '');
+  const foto = producto.fotos[0] ? urlFoto(producto.fotos[0].src) : '';
   const simple = {
     title: producto.titulo,
     code: producto.codigo || variantesActivas[0]?.codigo || '',

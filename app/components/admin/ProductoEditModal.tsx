@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
-import type { ProductoPublico, Variante } from '@/lib/catalogo-familia';
+import { urlFoto, type ProductoPublico, type Variante } from '@/lib/catalogo-familia';
 import { slugifyMundo } from '@/lib/catalogo-mundo';
 import {
   validarCodigo,
@@ -471,7 +471,7 @@ function FormularioProducto({
       <div className="adm-detalle-fotos">
         {fotos.map((f, i) => (
           <figure key={i}>
-            <img src={f.src.startsWith('http') ? f.src : '/' + f.src} alt={f.cap || producto.titulo} />
+            <img src={urlFoto(f.src)} alt={f.cap || producto.titulo} />
             <button type="button" className="adm-detalle-quitar-foto" onClick={() => setFotos((prev) => prev.filter((_, idx) => idx !== i))}>
               Quitar
             </button>

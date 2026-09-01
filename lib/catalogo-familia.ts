@@ -11,6 +11,18 @@
 export type Foto = { src: string; cap: string; codigo?: string };
 export type Variante = { talle?: string; tipo?: string; codigo: string; imagen?: string; activo: boolean };
 
+// subirFoto() (lib/procesar-foto.ts) guarda `Foto.src` como URL pública
+// COMPLETA de Supabase Storage (https://...) desde que el catálogo se
+// edita desde la web (ver CLAUDE.md) — las fotos viejas del sitio HTML
+// siguen siendo rutas relativas (`productos/...`). Un componente que
+// antepone '/' a ciegas rompe las primeras (`/https://...`, URL
+// inválida) — este helper es el único punto de esa decisión (antes
+// duplicada sólo en ProductoEditModal.tsx, ver
+// tasks/plan-imagenes-productos.md).
+export function urlFoto(src: string): string {
+  return src.startsWith('http') ? src : '/' + src;
+}
+
 export type ProductoPublico = {
   id: string;
   mundo: string;

@@ -81,4 +81,10 @@ describe('ProductoCard', () => {
     const link = screen.getByRole('link');
     expect(link).not.toHaveAttribute('data-precio-oferta');
   });
+
+  it('foto con URL completa de Supabase: el src es esa URL, no "/https://..." (fix imagen rota, ver tasks/plan-imagenes-productos.md)', () => {
+    const url = 'https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/x.webp';
+    render(<ProductoCard producto={{ ...base, fotos: [{ src: url, cap: '' }] }} />);
+    expect(screen.getByAltText('Anteojo estrella')).toHaveAttribute('src', url);
+  });
 });

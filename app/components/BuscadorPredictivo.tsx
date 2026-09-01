@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { buscarCatalogo, type ProductoBuscado } from '@/lib/busqueda';
+import { urlFoto } from '@/lib/catalogo-familia';
 import { supabaseBrowser } from '@/lib/supabase';
 import { plata } from '@/lib/envios';
 
@@ -95,7 +96,7 @@ export default function BuscadorPredictivo({ variante, onCerrar }: Props) {
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-brand bg-background">
               {p.fotos[0] ? (
-                <img src={'/' + p.fotos[0].src} alt="" width={48} height={48} className="h-full w-full object-contain" />
+                <img src={urlFoto(p.fotos[0].src)} alt="" width={48} height={48} className="h-full w-full object-contain" />
               ) : (
                 <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="" width={28} height={28} className="h-7 w-7 rounded-full opacity-60" />
               )}
