@@ -339,6 +339,32 @@ describe('ProductoEditModal — editor de variantes', () => {
     expect(update.campos.variantes[0].imagen).toBe('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/variante.webp');
     expect(actualizado).toHaveBeenCalled();
   });
+
+  it('"Quitar imagen" sólo aparece cuando la variante ya tiene una imagen propia', () => {
+    const conImagen = [{ talle: 'Chico', codigo: 'V001', imagen: 'https://x.supabase.co/chico.webp', activo: true }];
+    const sinImagen = [{ talle: 'Grande', codigo: 'V002', activo: true }];
+    montar({ id: 'p1', codigo: null, variantes: [...conImagen, ...sinImagen] });
+
+    expect(screen.getAllByRole('button', { name: 'Quitar imagen' })).toHaveLength(1);
+  });
+
+  it('"Quitar imagen" saca la miniatura de la variante, y guardar persiste sin esa imagen', async () => {
+    const user = userEvent.setup();
+    const existentes = [{ talle: 'Chico', codigo: 'V001', imagen: 'https://x.supabase.co/chico.webp', activo: true }];
+    const { actualizado } = montar({ id: 'p1', codigo: null, variantes: existentes });
+
+    expect(screen.getByAltText('')).toHaveAttribute('src', 'https://x.supabase.co/chico.webp');
+
+    await user.click(screen.getByRole('button', { name: 'Quitar imagen' }));
+    expect(screen.queryByAltText('')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quitar imagen' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.variantes[0].imagen).toBeUndefined();
+    expect(actualizado).toHaveBeenCalled();
+  });
 });
 
 describe('ProductoEditModal — composición de combo (Sprint 6)', () => {

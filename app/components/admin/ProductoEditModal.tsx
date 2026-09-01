@@ -209,6 +209,13 @@ function FormularioProducto({
     setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, activo } : v)));
   }
 
+  // Mismo criterio que "Quitar" de las fotos generales (abajo): sólo saca
+  // la referencia del estado local, no borra el archivo de Storage — ver
+  // tasks/plan-imagenes-productos.md (gap preexistente, no nuevo acá).
+  function quitarImagenVariante(i: number) {
+    setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, imagen: undefined } : v)));
+  }
+
   async function subirImagenVariante(i: number, file: File) {
     setSubiendoVarianteIdx(i);
     setError('');
@@ -419,7 +426,14 @@ function FormularioProducto({
                       ? `${fmtPrecio.format(precioStock.precio)} · stock ${precioStock.stock == null ? '—' : precioStock.stock}`
                       : 'Sin datos de precio todavía'}
                   </span>
-                  {v.imagen && <img src={v.imagen} alt="" width={40} height={40} className="rounded object-cover" />}
+                  {v.imagen && (
+                    <div className="flex items-center gap-1.5">
+                      <img src={v.imagen} alt="" width={40} height={40} className="rounded object-cover" />
+                      <button type="button" className="btn btn-ghost" onClick={() => quitarImagenVariante(i)}>
+                        Quitar imagen
+                      </button>
+                    </div>
+                  )}
                   <label className="flex flex-col gap-1 text-sm">
                     Imagen
                     <input
