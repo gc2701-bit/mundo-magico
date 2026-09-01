@@ -7,7 +7,8 @@ import {
   valoresAlcanzables,
   seleccionCompleta,
   resolverVariante,
-  etiquetaVariante
+  etiquetaVariante,
+  fotosDeVariantes
 } from '../../lib/variantes.ts';
 
 const MATRIZ = [
@@ -145,5 +146,36 @@ describe('variantes — etiquetaVariante', () => {
 
   it('sin ninguno, string vacío', () => {
     expect(etiquetaVariante({})).toBe('');
+  });
+});
+
+describe('variantes — fotosDeVariantes (mostrar todas las fotos de variantes en el carrusel de la ficha, ver tasks/plan-imagenes-productos.md)', () => {
+  it('una foto por variante activa con imagen propia, cap = etiquetaVariante', () => {
+    const variantes = [
+      { tipo: 'Rojo', codigo: 'R', imagen: 'https://x.supabase.co/rojo.webp', activo: true },
+      { tipo: 'Azul', codigo: 'A', imagen: 'https://x.supabase.co/azul.webp', activo: true }
+    ];
+    expect(fotosDeVariantes(variantes)).toEqual([
+      { src: 'https://x.supabase.co/rojo.webp', cap: 'Rojo' },
+      { src: 'https://x.supabase.co/azul.webp', cap: 'Azul' }
+    ]);
+  });
+
+  it('ignora variantes sin imagen propia', () => {
+    const variantes = [
+      { tipo: 'Rojo', codigo: 'R', imagen: 'https://x.supabase.co/rojo.webp', activo: true },
+      { tipo: 'Azul', codigo: 'A', activo: true }
+    ];
+    expect(fotosDeVariantes(variantes)).toEqual([{ src: 'https://x.supabase.co/rojo.webp', cap: 'Rojo' }]);
+  });
+
+  it('ignora variantes inactivas (sacadas de la venta), aunque tengan imagen', () => {
+    const variantes = [{ tipo: 'Rojo', codigo: 'R', imagen: 'https://x.supabase.co/rojo.webp', activo: false }];
+    expect(fotosDeVariantes(variantes)).toEqual([]);
+  });
+
+  it('sin variantes (null o []) da lista vacía', () => {
+    expect(fotosDeVariantes(null)).toEqual([]);
+    expect(fotosDeVariantes([])).toEqual([]);
   });
 });

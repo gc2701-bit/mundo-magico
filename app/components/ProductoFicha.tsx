@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
+import { fotosDeVariantes } from '@/lib/variantes';
 import ProductoGaleria from './ProductoGaleria';
 import ComboComposicion from './ComboComposicion';
 import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
@@ -25,6 +26,13 @@ import { FavoritoBoton, AgregarControl } from './carrito/AccionesProducto';
 export default function ProductoFicha({ producto }: { producto: ProductoPublico }) {
   const [imagenSeleccionada, setImagenSeleccionada] = useState<string | null>(null);
 
+  // Sprint 1 del plan de imágenes (tasks/plan-imagenes-productos.md): el
+  // carrusel general suma la foto propia de cada variante activa, además
+  // de producto.fotos — antes nunca se mezclaban y un producto sin fotos
+  // generales (común en los que sólo cargaron fotos por variante) caía
+  // siempre en el logo genérico de ProductoGaleria.
+  const fotos = [...producto.fotos, ...fotosDeVariantes(producto.variantes)];
+
   const esTalles = !!(producto.variantes && producto.variantes.filter((v) => v.activo).length > 1);
   const dataAttrs: Record<string, string> = {};
   if (esTalles && producto.variantes) {
@@ -38,7 +46,7 @@ export default function ProductoFicha({ producto }: { producto: ProductoPublico 
 
   return (
     <div className="wrap grid grid-cols-1 gap-s5 py-s5 md:grid-cols-2 md:gap-s8">
-      <ProductoGaleria fotos={producto.fotos} titulo={producto.titulo} fotoDestacada={imagenSeleccionada} />
+      <ProductoGaleria fotos={fotos} titulo={producto.titulo} fotoDestacada={imagenSeleccionada} />
 
       <div {...dataAttrs} className="flex flex-col gap-s3">
         <span

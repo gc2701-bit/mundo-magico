@@ -9,7 +9,7 @@
  * admin) nunca se ofrece como opción acá — sigue guardada, pero el
  * visitante no puede elegirla.
  */
-import type { Variante } from './catalogo-familia';
+import type { Foto, Variante } from './catalogo-familia';
 
 export type Eje = 'talle' | 'tipo';
 export type Seleccion = { talle: string | null; tipo: string | null };
@@ -81,4 +81,16 @@ export function resolverVariante(variantes: Variante[], seleccion: Seleccion): V
 // talle y tipo cuando los dos existen ("Chico · Rojo"), o el que haya.
 export function etiquetaVariante(v: Pick<Variante, 'talle' | 'tipo'>): string {
   return [v.talle, v.tipo].filter(Boolean).join(' · ');
+}
+
+// Una foto por variante ACTIVA con imagen propia — lo que ProductoFicha.tsx
+// suma a producto.fotos para que el carrusel general muestre todas las
+// fotos de variantes (antes no se mostraba ninguna: producto.fotos y
+// variante.imagen nunca se mezclaban, ver tasks/plan-imagenes-productos.md).
+// Mismo criterio de "activa" que el resto del selector — una variante
+// sacada de la venta no debe verse en la ficha pública.
+export function fotosDeVariantes(variantes: Variante[] | null): Foto[] {
+  return (variantes || [])
+    .filter((v) => v.activo && v.imagen)
+    .map((v) => ({ src: v.imagen as string, cap: etiquetaVariante(v) }));
 }
