@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ESTADOS, ESTADOS_TXT, MOTIVOS_AUSENTE, MOTIVOS_AUSENTE_TXT, siguientes, telWa, fechaLegible, isodow, type DatosEnvios } from '@/lib/envios';
-import { esAtrasado, diasAtraso, esTraslado, bultosDe, sugerirFechaEnvio, type Pedido, type PedidoEvento } from '@/lib/pedidos-admin';
+import { ESTADOS, ESTADOS_TXT, MOTIVOS_AUSENTE, MOTIVOS_AUSENTE_TXT, siguientes, telWa, fechaLegible, isodow, plata, type DatosEnvios } from '@/lib/envios';
+import {
+  esAtrasado, diasAtraso, esTraslado, bultosDe, sugerirFechaEnvio,
+  codigosDelPedido, mapaPreciosPedido, precioItemPedido, resumenPrecioPedido,
+  type Pedido, type PedidoEvento, type MapaPreciosPedido,
+} from '@/lib/pedidos-admin';
 
 type Props = {
   sb: SupabaseClient;
@@ -23,6 +27,23 @@ type Props = {
 export default function PedidoCard({ sb, pedido: p, datosEnvios, onActualizar, onAvisar }: Props) {
   const traslado = esTraslado(p);
   const atrasado = esAtrasado(p);
+
+  const [preciosMapa, setPreciosMapa] = useState<MapaPreciosPedido | null>(null);
+
+  // Precio en vivo (Sprint C del dashboard admin) — el pedido nunca guardó
+  // precio, se resuelve contra catalogo_precios_admin() cada vez que se
+  // monta la tarjeta. No bloquea nada del flujo operativo si tarda o falla:
+  // sin mapa, simplemente no se muestra precio todavía (ver render abajo).
+  useEffect(() => {
+    let cancelado = false;
+    const codigos = codigosDelPedido(p.items || []);
+    if (!codigos.length) { setPreciosMapa({}); return; }
+    sb.rpc('catalogo_precios_admin', { p_codigos: codigos }).then(({ data }: { data: { codigo: string; precio: number; stock: number | null }[] | null }) => {
+      if (!cancelado) setPreciosMapa(mapaPreciosPedido(data || []));
+    });
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.id]);
 
   const partes: string[] = [];
   if (traslado) {
@@ -65,10 +86,25 @@ export default function PedidoCard({ sb, pedido: p, datosEnvios, onActualizar, o
       )}
 
       <ul className="adm-card-items">
-        {(p.items || []).map((it, i) => (
-          <li key={i}>{`${it.q}x ${it.t}${it.v ? ' — ' + it.v : ''}${it.c ? ` [${it.c}]` : ''}`}</li>
-        ))}
+        {(p.items || []).map((it, i) => {
+          const precio = precioItemPedido(it, preciosMapa);
+          return (
+            <li key={i}>
+              {`${it.q}x ${it.t}${it.v ? ' — ' + it.v : ''}${it.c ? ` [${it.c}]` : ''}`}
+              {precio != null && ` — ${plata(precio * it.q)}`}
+            </li>
+          );
+        })}
       </ul>
+      {p.items && p.items.length > 0 && preciosMapa && (() => {
+        const r = resumenPrecioPedido(p.items, preciosMapa);
+        if (r.conPrecio === 0) return <p className="adm-card-precio-resumen">Sin precios disponibles.</p>;
+        return (
+          <p className="adm-card-precio-resumen">
+            {(r.completo ? 'Total: ' : 'Subtotal: ') + plata(r.suma) + (r.completo ? '' : ` (${r.sinPrecio} sin precio)`)}
+          </p>
+        );
+      })()}
 
       <BloqueTamano sb={sb} pedido={p} onActualizar={onActualizar} />
 

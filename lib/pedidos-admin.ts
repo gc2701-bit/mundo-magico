@@ -179,3 +179,41 @@ export function franjasDelPedido(datos: DatosEnvios, fecha: string) {
 export function zonaDePedido(datos: DatosEnvios, p: Pick<Pedido, 'zona_id'>) {
   return zonaPorIdOSlug(datos.zonas, p.zona_id);
 }
+
+// --- Precio en vivo por ítem (Sprint C del dashboard admin) ---------------
+// Un pedido nunca guardó precio (se confirma por WhatsApp, no hay checkout
+// con pago real todavía) — se resuelve en vivo contra
+// catalogo_precios_admin(), la misma fuente que actualiza el worker de
+// Búho cada ~15 min, nunca un snapshot guardado en `pedidos`. Mismo
+// criterio que resumen() de lib/carrito.ts: subtotal + cuántos ítems
+// faltan, nunca un "Total" que sugiera estar completo si hay huecos.
+
+export type FilaPrecioAdmin = { codigo: string; precio: number; stock: number | null };
+export type MapaPreciosPedido = Record<string, { precio: number; stock: number | null }>;
+
+export function codigosDelPedido(items: ItemPedido[]): string[] {
+  return Array.from(new Set(items.map((it) => it.c).filter((c): c is string => !!c)));
+}
+
+export function mapaPreciosPedido(filas: FilaPrecioAdmin[]): MapaPreciosPedido {
+  const mapa: MapaPreciosPedido = {};
+  filas.forEach((f) => { mapa[f.codigo] = { precio: f.precio, stock: f.stock }; });
+  return mapa;
+}
+
+export function precioItemPedido(it: ItemPedido, mapa: MapaPreciosPedido | null): number | null {
+  if (!it.c || !mapa?.[it.c]) return null;
+  return mapa[it.c].precio;
+}
+
+export type ResumenPrecioPedido = { suma: number; conPrecio: number; sinPrecio: number; completo: boolean };
+
+export function resumenPrecioPedido(items: ItemPedido[], mapa: MapaPreciosPedido | null): ResumenPrecioPedido {
+  let suma = 0, conPrecio = 0, sinPrecio = 0;
+  items.forEach((it) => {
+    const precio = precioItemPedido(it, mapa);
+    if (precio != null) { suma += precio * it.q; conPrecio++; }
+    else sinPrecio++;
+  });
+  return { suma, conPrecio, sinPrecio, completo: items.length > 0 && conPrecio > 0 && sinPrecio === 0 };
+}

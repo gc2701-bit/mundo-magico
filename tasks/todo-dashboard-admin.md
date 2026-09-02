@@ -17,14 +17,14 @@ siempre con subagentes de `agent-skills` (nunca `general-purpose` ni
   - [x] Checkpoint: suite completa en verde (579 unit tests, build, e2e — 2 fallos preexistentes en
         `producto.spec.js` no relacionados, ya fallaban en `master` antes de este sprint), commit
 
-- [ ] **Sprint B — Métricas de catálogo**
-  - [ ] Task B1 — RPC `catalogo_metricas_admin()`
-  - [ ] Task B2 — Página `/admin/metricas`
-  - [ ] Checkpoint: suite completa en verde, commit
+- [x] **Sprint B — Métricas de catálogo** — commit `c7705be`
+  - [x] Task B1 — RPC `catalogo_metricas_admin()` (verificada contra la base real)
+  - [x] Task B2 — Página `/admin/metricas`
+  - [x] Checkpoint: suite completa en verde, commit
 
-- [ ] **Sprint C — Pedidos con precio en vivo**
-  - [ ] Task C1 — Resolver precio/stock en `PedidoCard` vía `catalogo_precios_admin()`
-  - [ ] Checkpoint: suite completa en verde, commit
+- [x] **Sprint C — Pedidos con precio en vivo**
+  - [x] Task C1 — Resolver precio/stock en `PedidoCard` vía `catalogo_precios_admin()`
+  - [x] Checkpoint: suite completa en verde, commit
 
 - [ ] **Sprint D — Usuarios (admins + clientes)**
   - [ ] Task D1 — RPCs `admin_listar_admins`/`admin_buscar_usuario_por_email`/`admin_quitar`
