@@ -244,13 +244,29 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
       });
       if (err1) throw err1;
 
-      const { error: err2 } = await sb.from('catalogo_precios').upsert({
+      // No usar upsert(): el worker de Búho ya sincroniza precio/stock
+      // directo en catalogo_precios para códigos todavía sin publicar (ver
+      // catalogo_buho_espejo), así que casi siempre esta fila YA EXISTE acá.
+      // El upsert de supabase-js genera `on conflict (codigo) do update set
+      // codigo = excluded.codigo, ...` — pisa `codigo` aunque no cambie, y
+      // esa columna no tiene GRANT de UPDATE a propósito (catalogo_00_base.sql,
+      // para que nadie reasigne en silencio el precio de un producto a otro).
+      // Insert-o-update evita tocar `codigo` en la rama de actualización.
+      const sinStock = fila.stock != null && fila.stock <= 0;
+      const { error: errPrecioInsert } = await sb.from('catalogo_precios').insert({
         codigo: fila.codigo,
         precio: fila.precio,
         stock: fila.stock,
-        sin_stock: fila.stock != null && fila.stock <= 0
+        sin_stock: sinStock
       });
-      if (err2) throw err2;
+      if (errPrecioInsert) {
+        if (errPrecioInsert.code !== '23505') throw errPrecioInsert;
+        const { error: errPrecioUpdate } = await sb
+          .from('catalogo_precios')
+          .update({ precio: fila.precio, stock: fila.stock, sin_stock: sinStock })
+          .eq('codigo', fila.codigo);
+        if (errPrecioUpdate) throw errPrecioUpdate;
+      }
 
       const { error: err3 } = await sb.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', fila.codigo);
       if (err3) throw err3;

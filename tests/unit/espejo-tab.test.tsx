@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import EspejoTab from '../../app/components/admin/EspejoTab';
 
 const { estado, sb, escrituras, subirFotoMock } = vi.hoisted(() => {
-  const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [] };
+  const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [], _preciosExistentes: new Set<string>() };
   const escrituras: any[] = [];
   const subirFotoMock = vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/foto.webp');
 
@@ -33,7 +33,15 @@ const { estado, sb, escrituras, subirFotoMock } = vi.hoisted(() => {
   function armarEscritura(tabla: string, tipo: 'insert' | 'upsert' | 'update', campos: any) {
     const registro: any = { tabla, tipo, campos, eqs: [] };
     escrituras.push(registro);
-    const promesa: any = Promise.resolve({ data: null, error: null });
+    // catalogo_precios real tiene `codigo` primary key SIN grant de UPDATE
+    // (a propósito, ver catalogo_00_base.sql) — un insert de un código que
+    // el worker de Búho ya sincronizó choca con unique_violation (23505),
+    // igual que en Postgres real.
+    let error: any = null;
+    if (tabla === 'catalogo_precios' && tipo === 'insert' && estado._preciosExistentes.has(campos.codigo)) {
+      error = { code: '23505', message: 'duplicate key value violates unique constraint "catalogo_precios_pkey"' };
+    }
+    const promesa: any = Promise.resolve({ data: null, error });
     promesa.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return promesa; };
     return promesa;
   }
@@ -72,9 +80,22 @@ function fila(overrides: any) {
 beforeEach(() => {
   estado.catalogo_buho_espejo = [];
   estado.catalogo_mundos = [];
+  estado._preciosExistentes = new Set<string>();
   escrituras.length = 0;
   subirFotoMock.mockClear();
 });
+
+async function activarHastaElFinal(user: ReturnType<typeof userEvent.setup>, nombreProducto: string, mundoSlug = 'cotillon') {
+  const fil = await screen.findByRole('row', { name: new RegExp(nombreProducto) });
+  await user.click(within(fil).getByRole('button', { name: 'Activar' }));
+
+  const input = screen.getByLabelText(/Foto \(obligatoria para activar/);
+  await user.upload(input, new File(['x'], 'foto.jpg', { type: 'image/jpeg' }));
+  await screen.findByAltText(nombreProducto);
+
+  await user.selectOptions(screen.getByLabelText(/Mundo \(obligatorio para activar\)/), mundoSlug);
+  await user.click(screen.getByRole('button', { name: 'Activar' }));
+}
 
 describe('EspejoTab — misma estructura visual que PublicadoTab', () => {
   it('desktop: tabla oculta bajo lg, lista de tarjetas visible sólo bajo lg (mismo patrón que PublicadoTab)', async () => {
@@ -196,5 +217,61 @@ describe('ActivacionEspejo — sanea código/carpeta antes de subir foto (fix In
       return registro;
     });
     expect(insertProducto.campos.codigo).toBe('MOÑOLUZ');
+  });
+});
+
+describe('ActivacionEspejo — guarda el precio aunque el worker de Búho ya haya sincronizado ese código antes de publicarlo', () => {
+  it('si catalogo_precios YA tiene una fila para ese código (bug real: "permission denied for table catalogo_precios"), cae a UPDATE en vez de romper', async () => {
+    const user = userEvent.setup();
+    estado.catalogo_buho_espejo = [fila({ codigo: '001', nombre: 'Producto ya sincronizado', precio: 3000, stock: 7 })];
+    estado.catalogo_mundos = [{ slug: 'cotillon', nombre: 'Cotillón' }];
+    estado._preciosExistentes = new Set(['001']);
+
+    render(<EspejoTab />);
+    await activarHastaElFinal(user, 'Producto ya sincronizado');
+
+    // No debe quedar un error visible ni la pantalla de activación trabada.
+    await vi.waitFor(() => {
+      expect(screen.queryByText(/permission denied/i)).not.toBeInTheDocument();
+    });
+
+    const insertPrecio = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert');
+    expect(insertPrecio).toBeTruthy();
+
+    const updatePrecio = await vi.waitFor(() => {
+      const registro = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'update');
+      if (!registro) throw new Error('todavía no se llamó update en catalogo_precios');
+      return registro;
+    });
+    // Clave del fix: el UPDATE nunca debe incluir `codigo` (columna sin
+    // GRANT de UPDATE a propósito) — sólo precio/stock/sin_stock.
+    expect(updatePrecio.campos).toEqual({ precio: 3000, stock: 7, sin_stock: false });
+    expect(updatePrecio.eqs).toEqual([['codigo', '001']]);
+
+    // Y el flujo completo de activación sigue hasta el final (se marca
+    // publicado en catalogo_buho_espejo), no queda a mitad de camino.
+    await vi.waitFor(() => {
+      const marcaPublicado = escrituras.find((e) => e.tabla === 'catalogo_buho_espejo' && e.tipo === 'update');
+      if (!marcaPublicado) throw new Error('todavía no se marcó publicado en catalogo_buho_espejo');
+      expect(marcaPublicado.eqs).toEqual([['codigo', '001']]);
+    });
+  });
+
+  it('si catalogo_precios NO tiene fila para ese código, el INSERT alcanza y no dispara ningún UPDATE', async () => {
+    const user = userEvent.setup();
+    estado.catalogo_buho_espejo = [fila({ codigo: '002', nombre: 'Producto nuevo de precio', precio: 1200, stock: null })];
+    estado.catalogo_mundos = [{ slug: 'cotillon', nombre: 'Cotillón' }];
+    // _preciosExistentes vacío: este código todavía no tiene fila.
+
+    render(<EspejoTab />);
+    await activarHastaElFinal(user, 'Producto nuevo de precio');
+
+    const insertPrecio = await vi.waitFor(() => {
+      const registro = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert');
+      if (!registro) throw new Error('todavía no se llamó insert en catalogo_precios');
+      return registro;
+    });
+    expect(insertPrecio.campos).toEqual({ codigo: '002', precio: 1200, stock: null, sin_stock: false });
+    expect(escrituras.some((e) => e.tabla === 'catalogo_precios' && e.tipo === 'update')).toBe(false);
   });
 });
