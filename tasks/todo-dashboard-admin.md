@@ -32,10 +32,10 @@ siempre con subagentes de `agent-skills` (nunca `general-purpose` ni
   - [x] Task D3 — RPC `clientes_resumen()` + tab Clientes + ficha de cliente (sin "total histórico": el precio actual contra pedidos viejos sería un número falso)
   - [x] Checkpoint: suite completa en verde, commit
 
-- [ ] **Sprint E — Carritos abandonados/completados** (sólo usuarios logueados)
-  - [ ] Task E1 — Tabla `carrito_eventos` + `lib/carrito-tracking.ts`
-  - [ ] Task E2 — Clasificación completado/abandonado + página `/admin/carritos`
-  - [ ] Checkpoint: suite completa en verde, commit
+- [x] **Sprint E — Carritos abandonados/completados** (sólo usuarios logueados)
+  - [x] Task E1 — Tabla `carrito_eventos` + `lib/carrito-tracking.ts` (RLS de insert propia, sin RPC — no es acción privilegiada)
+  - [x] Task E2 — RPC `carritos_admin()` + clasificación (`lib/carritos-admin.ts`, umbral 48hs) + página `/admin/carritos`
+  - [x] Checkpoint: suite completa en verde (build + e2e de carrito real sin regresión), commit
 
 - [ ] **Sprint F — Analíticas (visitas + ranking, todos los visitantes)**
   - [ ] Task F1 — Tabla `analytics_eventos` + Route Handler + instrumentación

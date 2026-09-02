@@ -3,10 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useCuenta } from '../cuenta/CuentaProvider';
 import {
-  cargarCarrito, guardarCarrito, ponerCantidad, quitarItem as quitarItemPuro, cantidadDe, cantidadTotalDe,
+  cargarCarrito, guardarCarrito, ponerCantidad, quitarItem as quitarItemPuro, itemPorClave, cantidadDe, cantidadTotalDe,
   resumen, construirMensaje, urlPedido, waLink, guardarPedido, itemsParaLink,
   type ItemCarrito, type PreciosMapa, type Resumen,
 } from '@/lib/carrito';
+import { registrarEventoCarrito } from '@/lib/carrito-tracking';
 import {
   estadoInicial, leerDatos, validar, resumenTexto, calcularProximoTurno,
   type EstadoEnvioForm, type DatosEntrega,
@@ -87,6 +88,21 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     guardarCarrito(siguiente);
   }, []);
 
+  // Tracking de carritos (Sprint E del dashboard admin) — sólo con sesión
+  // activa, a propósito (ver lib/carrito-tracking.ts). Nunca bloquea el
+  // carrito: se dispara "en segundo plano", sin esperar su resultado.
+  const trackear = useCallback((prod: Pick<ProductoParaCarrito, 'title' | 'code' | 'variant'>, n: number) => {
+    if (!sesion) return;
+    registrarEventoCarrito(sb, {
+      user_id: sesion.user.id,
+      tipo: n > 0 ? 'agregado' : 'quitado',
+      titulo: prod.title,
+      codigo: prod.code || null,
+      variante: prod.variant || null,
+      cantidad: n > 0 ? n : null,
+    });
+  }, [sesion, sb]);
+
   const agregar = useCallback((prod: ProductoParaCarrito) => {
     setItems((actuales) => {
       const n = cantidadDe(actuales, { title: prod.title, code: prod.code, variant: prod.variant }) + 1;
@@ -96,9 +112,10 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         return actuales;
       }
       guardarCarrito(r.items);
+      trackear(prod, n);
       return r.items;
     });
-  }, []);
+  }, [trackear]);
 
   const setCantidad = useCallback((prod: ProductoParaCarrito, n: number) => {
     setItems((actuales) => {
@@ -108,17 +125,20 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         return actuales;
       }
       guardarCarrito(r.items);
+      trackear(prod, n);
       return r.items;
     });
-  }, []);
+  }, [trackear]);
 
   const quitarItem = useCallback((clave: string) => {
     setItems((actuales) => {
+      const item = itemPorClave(actuales, clave);
       const siguiente = quitarItemPuro(actuales, clave);
       guardarCarrito(siguiente);
+      if (item) trackear({ title: item.title, code: item.code, variant: item.variant }, 0);
       return siguiente;
     });
-  }, []);
+  }, [trackear]);
 
   const abrirPanel = useCallback(() => setPanelAbierto(true), []);
   const cerrarPanel = useCallback(() => setPanelAbierto(false), []);
@@ -192,6 +212,12 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
       const mensaje = construirMensaje({ items, precios, nombre: datosEntrega.nombre, entregaLineas, nota: nota.trim(), link });
 
       if (sesion) {
+        items.forEach((it) => {
+          registrarEventoCarrito(sb, {
+            user_id: sesion.user.id, tipo: 'checkout_iniciado',
+            titulo: it.title, codigo: it.code || null, variante: it.variant || null, cantidad: it.qty,
+          });
+        });
         await guardarPedido(sb, {
           user_id: sesion.user.id,
           items: itemsParaLink(items),
