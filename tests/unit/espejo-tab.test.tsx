@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import EspejoTab from '../../app/components/admin/EspejoTab';
 
 const { estado, sb, escrituras, subirFotoMock } = vi.hoisted(() => {
-  const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [], _preciosExistentes: new Set<string>() };
+  const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [], catalogo_productos: [], _preciosExistentes: new Set<string>() };
   const escrituras: any[] = [];
   const subirFotoMock = vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/foto.webp');
 
@@ -80,6 +80,7 @@ function fila(overrides: any) {
 beforeEach(() => {
   estado.catalogo_buho_espejo = [];
   estado.catalogo_mundos = [];
+  estado.catalogo_productos = [];
   estado._preciosExistentes = new Set<string>();
   escrituras.length = 0;
   subirFotoMock.mockClear();
@@ -273,5 +274,39 @@ describe('ActivacionEspejo — guarda el precio aunque el worker de Búho ya hay
     });
     expect(insertPrecio.campos).toEqual({ codigo: '002', precio: 1200, stock: null, sin_stock: false });
     expect(escrituras.some((e) => e.tabla === 'catalogo_precios' && e.tipo === 'update')).toBe(false);
+  });
+});
+
+describe('ActivacionEspejo — reintentar un código que quedó a mitad de camino por el bug de precio (ej. combos)', () => {
+  it('si catalogo_productos YA tiene una fila para ese código (bug real: "duplicate key value violates catalogo_productos_slug_por_pagina"), no inserta de nuevo — sólo sincroniza precio y marca publicado', async () => {
+    const user = userEvent.setup();
+    estado.catalogo_buho_espejo = [fila({ codigo: 'MOÑOLUZ', nombre: 'COMBO MOÑO CON LUZ Y LENTEJUELA X12', familia: 'LUMINOSOS', precio: 22000, stock: 45, es_combo: true })];
+    estado.catalogo_mundos = [{ slug: 'globos-fiesta', nombre: 'Globos y fiesta' }];
+    // El producto ya existe (insertado en un intento anterior que murió en
+    // el paso de precio, antes del fix de arriba) — activar() no debería
+    // volver a insertarlo.
+    estado.catalogo_productos = [{ id: 'ya-existente' }];
+
+    render(<EspejoTab />);
+    await activarHastaElFinal(user, 'COMBO MOÑO CON LUZ Y LENTEJUELA X12', 'globos-fiesta');
+
+    await vi.waitFor(() => {
+      expect(screen.queryByText(/duplicate key|slug_por_pagina/i)).not.toBeInTheDocument();
+    });
+
+    expect(escrituras.some((e) => e.tabla === 'catalogo_productos' && e.tipo === 'insert')).toBe(false);
+
+    const insertPrecio = await vi.waitFor(() => {
+      const registro = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert');
+      if (!registro) throw new Error('todavía no se llamó insert en catalogo_precios');
+      return registro;
+    });
+    expect(insertPrecio.campos).toEqual({ codigo: 'MOÑOLUZ', precio: 22000, stock: 45, sin_stock: false });
+
+    await vi.waitFor(() => {
+      const marcaPublicado = escrituras.find((e) => e.tabla === 'catalogo_buho_espejo' && e.tipo === 'update');
+      if (!marcaPublicado) throw new Error('todavía no se marcó publicado en catalogo_buho_espejo');
+      expect(marcaPublicado.eqs).toEqual([['codigo', 'MOÑOLUZ']]);
+    });
   });
 });

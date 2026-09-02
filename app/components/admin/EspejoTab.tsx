@@ -233,16 +233,33 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
         if (errMundo) throw errMundo;
       }
 
-      const { error: err1 } = await sb.from('catalogo_productos').insert({
-        titulo: fila.nombre,
-        slug: slugTitulo,
-        codigo: fila.codigo,
-        familia: fila.familia,
-        mundo: mundoFinal,
-        fotos,
-        publicado: true
-      });
-      if (err1) throw err1;
+      // Chequear si este código ya tiene un producto creado antes de insertar
+      // uno nuevo: un intento de activación anterior puede haber quedado a
+      // mitad de camino (ver el fix de arriba, el mismo incidente dejó
+      // productos ya insertados en catalogo_productos con
+      // catalogo_buho_espejo.publicado todavía en false). Reintentar sin este
+      // chequeo revienta con `catalogo_productos_slug_por_pagina` (unique en
+      // mundo+slug) si el nombre no cambió — un error confuso para algo que en
+      // realidad ya está armado, sólo falta sincronizar precio y la marca acá
+      // abajo.
+      const { data: yaCreados, error: errBuscarProducto } = await sb
+        .from('catalogo_productos')
+        .select('id')
+        .eq('codigo', fila.codigo);
+      if (errBuscarProducto) throw errBuscarProducto;
+
+      if (!yaCreados || yaCreados.length === 0) {
+        const { error: err1 } = await sb.from('catalogo_productos').insert({
+          titulo: fila.nombre,
+          slug: slugTitulo,
+          codigo: fila.codigo,
+          familia: fila.familia,
+          mundo: mundoFinal,
+          fotos,
+          publicado: true
+        });
+        if (err1) throw err1;
+      }
 
       // No usar upsert(): el worker de Búho ya sincroniza precio/stock
       // directo en catalogo_precios para códigos todavía sin publicar (ver
