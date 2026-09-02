@@ -26,11 +26,11 @@ siempre con subagentes de `agent-skills` (nunca `general-purpose` ni
   - [x] Task C1 — Resolver precio/stock en `PedidoCard` vía `catalogo_precios_admin()`
   - [x] Checkpoint: suite completa en verde, commit
 
-- [ ] **Sprint D — Usuarios (admins + clientes)**
-  - [ ] Task D1 — RPCs `admin_listar_admins`/`admin_buscar_usuario_por_email`/`admin_quitar`
-  - [ ] Task D2 — Tab Administradores en `/admin/usuarios`
-  - [ ] Task D3 — RPC `clientes_resumen()` + tab Clientes + ficha de cliente
-  - [ ] Checkpoint: suite completa en verde, commit
+- [x] **Sprint D — Usuarios (admins + clientes)**
+  - [x] Task D1 — RPCs `admin_listar_admins`/`admin_buscar_usuario_por_email`/`admin_agregar`/`admin_quitar` (sin RLS de insert/delete en `admins`, todo por función)
+  - [x] Task D2 — Tab Administradores en `/admin/usuarios`
+  - [x] Task D3 — RPC `clientes_resumen()` + tab Clientes + ficha de cliente (sin "total histórico": el precio actual contra pedidos viejos sería un número falso)
+  - [x] Checkpoint: suite completa en verde, commit
 
 - [ ] **Sprint E — Carritos abandonados/completados** (sólo usuarios logueados)
   - [ ] Task E1 — Tabla `carrito_eventos` + `lib/carrito-tracking.ts`
