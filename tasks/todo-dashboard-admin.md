@@ -37,10 +37,10 @@ siempre con subagentes de `agent-skills` (nunca `general-purpose` ni
   - [x] Task E2 — RPC `carritos_admin()` + clasificación (`lib/carritos-admin.ts`, umbral 48hs) + página `/admin/carritos`
   - [x] Checkpoint: suite completa en verde (build + e2e de carrito real sin regresión), commit
 
-- [ ] **Sprint F — Analíticas (visitas + ranking, todos los visitantes)**
-  - [ ] Task F1 — Tabla `analytics_eventos` + Route Handler + instrumentación
-  - [ ] Task F2 — Página `/admin/analiticas` (gráfico + ranking)
-  - [ ] Checkpoint final: suite completa en verde, los 6 tiles activos, commit, revisión con el usuario
+- [x] **Sprint F — Analíticas (visitas + ranking, todos los visitantes)**
+  - [x] Task F1 — Tabla `analytics_eventos` + instrumentación (sin Route Handler/service role: RLS de insert abierta, ver el comentario de desviación en supabase/analytics_00_eventos.sql) + `AnalyticsTracker` (detecta ficha de producto por forma de ruta, sin tocar `app/[mundo]/[slug]/page.tsx`)
+  - [x] Task F2 — Página `/admin/analiticas` (shadcn/ui charts + ranking), RPCs `analytics_visitas_por_dia`/`analytics_ranking_productos` agrupando por `ruta` (no por `codigo`, que queda null en productos con variantes)
+  - [x] Checkpoint final: suite completa en verde, los 6 tiles activos, commit
 
 **Fuera de alcance (ver spec §5):** facturación/cobro real, trigger
 on-demand al worker de Búho, corregir los 279 códigos "sin activar" ya

@@ -7,6 +7,7 @@ import { mundosDisponibles } from "@/lib/catalogo-mundo";
 import { CuentaProvider } from "./components/cuenta/CuentaProvider";
 import CuentaOverlays from "./components/cuenta/CuentaOverlays";
 import { CarritoProvider } from "./components/carrito/CarritoProvider";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import "./globals.css";
 import { nunitoSans } from "./fonts";
 import { cn } from "@/lib/utils";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <CuentaProvider>
+          <AnalyticsTracker />
           <CarritoProvider>
             <Nav mundos={mundos} />
             {/* pb-16: deja lugar para la barra inferior fija de Nav.tsx en
