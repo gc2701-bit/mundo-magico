@@ -10,11 +10,12 @@ commit, sin push sin pedido explícito del usuario, build/test/frontend
 siempre con subagentes de `agent-skills` (nunca `general-purpose` ni
 `superpowers` para código/tests de este repo).
 
-- [ ] **Sprint A — Gate único + shell del dashboard** (bloquea todo lo demás)
-  - [ ] Task A1 — Gate único (`AdminGate.tsx` con `useCuenta()`)
-  - [ ] Task A2 — Montar el gate en `app/admin/layout.tsx`, sacar los 2 gates viejos
-  - [ ] Task A3 — `AdminHomeLauncher` + `/admin/page.tsx` + link "Dashboard" en `CuentaNavButton`
-  - [ ] Checkpoint: suite completa en verde, flujo real probado, commit
+- [x] **Sprint A — Gate único + shell del dashboard** (bloquea todo lo demás) — commit `b463042`
+  - [x] Task A1 — Gate único (`AdminGate.tsx` con `useCuenta()`)
+  - [x] Task A2 — Montar el gate en `app/admin/layout.tsx`, sacar los 2 gates viejos
+  - [x] Task A3 — `AdminHomeLauncher` + `/admin/page.tsx` + link "Dashboard" en `CuentaNavButton`
+  - [x] Checkpoint: suite completa en verde (579 unit tests, build, e2e — 2 fallos preexistentes en
+        `producto.spec.js` no relacionados, ya fallaban en `master` antes de este sprint), commit
 
 - [ ] **Sprint B — Métricas de catálogo**
   - [ ] Task B1 — RPC `catalogo_metricas_admin()`
