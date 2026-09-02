@@ -1,72 +1,66 @@
-/* app/components/admin/AdminGate.tsx — dos bugs reportados por el usuario
- * sobre /admin/catalogo en desktop (agent-skills:debugging-and-error-recovery):
+/* app/components/admin/AdminGate.tsx — gate único para todo /admin/*
+ * (Sprint A del dashboard admin, ver tasks/plan-dashboard-admin.md).
  *
- * 1. Un botón "Cerrar sesión" duplicado: el Nav del sitio (app/layout.tsx,
- *    site-wide, también sobre /admin/*) ya trae uno propio en el menú
- *    "Mi cuenta" (CuentaNavButton.tsx) contra la misma sesión de Supabase
- *    Auth — no hace falta uno aparte acá. Se saca del todo, junto con la
- *    función cerrarSesion() que ya no se usa.
- * 2. La tabla de PublicadoTab no ocupaba el 100% del ancho de pantalla:
- *    .adm-wrap (public/assets/admin-catalogo.css) la cappea a 960px, un
- *    ancho pensado para las pantallas angostas de pedidos/envíos
- *    (AdminPedidosGate.tsx/AdminEnviosGate.tsx, que reusan la misma
- *    clase) — nombres/filas quedaban comprimidos aunque las columnas de
- *    la tabla ya sumen 100% de SU contenedor (table-fixed). Fix: clase
- *    modificadora .adm-wrap-catalogo, sólo en este componente, que
- *    levanta el max-width sin tocar .adm-wrap compartida.
- *
- * Igual que tests/unit/cuenta-nav-position.test.tsx: se carga el CSS real
- * y se afirma con getComputedStyle, porque el bug de (2) está en si la
- * regla de CSS efectivamente le gana al max-width heredado, no en el JSX.
+ * Antes había 3 gates distintos, uno por sección: éste (con su propio
+ * mini-login + Turnstile), y los de pedidos/envíos (que ya reusaban
+ * useCuenta()). Este test reemplaza al viejo (que probaba el login con
+ * Turnstile y la clase .adm-wrap-catalogo, ambos movidos/eliminados en
+ * este sprint) por el comportamiento genérico compartido: sin sesión,
+ * sesión sin permisos, y sesión admin.
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import AdminGate from '../../app/components/admin/AdminGate';
 
-vi.mock('@/lib/supabase', () => ({
-  supabaseBrowser: () => ({
-    auth: {
-      getSession: () => Promise.resolve({ data: { session: { user: { id: 'u1' } } } }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: vi.fn() } } }),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn()
-    },
-    rpc: () => Promise.resolve({ data: true, error: null })
-  })
+const pedirSesion = vi.fn();
+
+vi.mock('@/app/components/cuenta/CuentaProvider', () => ({
+  useCuenta: () => mockUseCuenta(),
 }));
 
-let estilo: HTMLStyleElement;
-
-beforeEach(() => {
-  const css = readFileSync(join(__dirname, '../../public/assets/admin-catalogo.css'), 'utf8');
-  estilo = document.createElement('style');
-  estilo.textContent = css;
-  document.head.appendChild(estilo);
-});
+let mockUseCuenta: () => {
+  sesion: unknown;
+  cargandoSesion: boolean;
+  esAdmin: boolean;
+  pedirSesion: typeof pedirSesion;
+};
 
 afterEach(() => {
-  estilo.remove();
   cleanup();
+  pedirSesion.mockClear();
 });
 
-describe('AdminGate — sesión admin', () => {
-  it('no muestra un botón "Cerrar sesión" propio (el del Nav del sitio ya alcanza)', async () => {
-    render(<AdminGate><p>contenido</p></AdminGate>);
-
-    await screen.findByText('contenido');
-
-    expect(screen.queryByRole('button', { name: /cerrar sesión/i })).not.toBeInTheDocument();
+describe('AdminGate', () => {
+  it('mientras carga la sesión, no muestra nada (ni gate ni contenido)', () => {
+    mockUseCuenta = () => ({ sesion: null, cargandoSesion: true, esAdmin: false, pedirSesion });
+    const { container } = render(<AdminGate><p>contenido</p></AdminGate>);
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it('el wrap del panel usa .adm-wrap-catalogo, que levanta el max-width de 960px de .adm-wrap', async () => {
+  it('sin sesión: muestra el gate con botón "Iniciar sesión" que abre el modal de cuenta', async () => {
+    mockUseCuenta = () => ({ sesion: null, cargandoSesion: false, esAdmin: false, pedirSesion });
     render(<AdminGate><p>contenido</p></AdminGate>);
 
-    await screen.findByText('contenido');
+    expect(screen.getByText(/Necesitás iniciar sesión/i)).toBeInTheDocument();
+    expect(screen.queryByText('contenido')).not.toBeInTheDocument();
 
-    const wrap = screen.getByText('Catálogo').closest('.adm-wrap')!;
-    expect(wrap).toHaveClass('adm-wrap-catalogo');
-    expect(getComputedStyle(wrap).maxWidth).toBe('none');
+    screen.getByRole('button', { name: 'Iniciar sesión' }).click();
+    expect(pedirSesion).toHaveBeenCalledWith(undefined, 'login');
+  });
+
+  it('con sesión pero sin permisos de admin: muestra "no autorizado", nunca el contenido', () => {
+    mockUseCuenta = () => ({ sesion: { user: { id: 'u1' } }, cargandoSesion: false, esAdmin: false, pedirSesion });
+    render(<AdminGate><p>contenido</p></AdminGate>);
+
+    expect(screen.getByText(/no tiene permisos de administrador/i)).toBeInTheDocument();
+    expect(screen.queryByText('contenido')).not.toBeInTheDocument();
+  });
+
+  it('con sesión admin: renderiza el contenido, sin envoltorio propio ni botón de logout duplicado', () => {
+    mockUseCuenta = () => ({ sesion: { user: { id: 'u1' } }, cargandoSesion: false, esAdmin: true, pedirSesion });
+    render(<AdminGate><p>contenido</p></AdminGate>);
+
+    expect(screen.getByText('contenido')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cerrar sesión/i })).not.toBeInTheDocument();
   });
 });

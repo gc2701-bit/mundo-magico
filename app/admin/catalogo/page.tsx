@@ -1,15 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import AdminGate from '../../components/admin/AdminGate';
 import PublicadoTab from '../../components/admin/PublicadoTab';
 import EspejoTab from '../../components/admin/EspejoTab';
 
+/**
+ * El gate de acceso (antes propio, AdminGate.tsx con su mini-login) ahora
+ * se monta una sola vez en app/admin/layout.tsx para todo /admin/* — esta
+ * página ya no lo envuelve, y pasa a poner su propio <h1> (Sprint A del
+ * dashboard admin).
+ */
 export default function AdminCatalogoPage() {
   const [tab, setTab] = useState<'publicado' | 'espejo'>('publicado');
 
   return (
-    <AdminGate>
+    <div className="adm-wrap adm-wrap-catalogo">
+      <div className="adm-head">
+        <h1>Catálogo</h1>
+      </div>
       <div className="adm-panel">
         <div className="adm-tabs" role="tablist">
           <button
@@ -38,6 +46,6 @@ export default function AdminCatalogoPage() {
           {tab === 'espejo' && <EspejoTab />}
         </div>
       </div>
-    </AdminGate>
+    </div>
   );
 }

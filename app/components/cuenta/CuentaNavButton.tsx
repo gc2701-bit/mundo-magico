@@ -59,7 +59,7 @@ export default function CuentaNavButton() {
           <button type="button" className="cuenta-pop-item" onClick={() => { setPopAbierto(false); abrirAjustes('pedidos'); }}>Mis pedidos</button>
           <button type="button" className="cuenta-pop-item" onClick={() => { setPopAbierto(false); abrirFavoritos(); }}>Mis favoritos</button>
           {esAdmin && (
-            <a className="cuenta-pop-item cuenta-pop-admin" href="/admin/catalogo" role="menuitem">Catálogo</a>
+            <a className="cuenta-pop-item cuenta-pop-admin" href="/admin" role="menuitem">Dashboard</a>
           )}
           <button type="button" className="cuenta-pop-out" onClick={() => { setPopAbierto(false); cerrarSesion(); }}>Cerrar sesión</button>
         </div>
