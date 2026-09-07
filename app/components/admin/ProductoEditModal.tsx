@@ -50,6 +50,56 @@ export async function borrarProductoYPrecios(
 }
 
 /**
+ * Bootstrapea catalogo_precios para códigos que un producto YA PUBLICADO
+ * acaba de ganar (código simple nuevo, o una variante nueva agregada acá
+ * mismo en el editor) — bug real reportado por el usuario 2026-09-07:
+ * "Sin activar" (EspejoTab.tsx) sólo cubre productos nuevos; un código
+ * agregado a un producto ya publicado no pasaba por ningún lado que lo
+ * sincronizara con catalogo_precios, así que quedaba "sin stock, sin
+ * precio" para siempre aunque el worker de Búho lo siguiera espejando en
+ * catalogo_buho_espejo.
+ *
+ * Mismo patrón insert-o-update que EspejoTab.activar() (nunca `.upsert()`:
+ * pisaría `codigo`, sin GRANT de UPDATE a propósito — ver
+ * catalogo_00_base.sql). Devuelve los códigos que NO se pudieron
+ * sincronizar porque no existen de verdad en el espejo de Búho, para que
+ * el caller se lo avise al admin en vez de dejarlo en silencio.
+ */
+export async function sincronizarPreciosDeCodigos(
+  sb: ReturnType<typeof supabaseBrowser>,
+  codigos: string[]
+): Promise<string[]> {
+  if (!codigos.length) return [];
+
+  const { data: existentes } = await sb.from('catalogo_precios').select('codigo').in('codigo', codigos);
+  const yaTienenPrecio = new Set((existentes || []).map((f: { codigo: string }) => f.codigo));
+  const faltantes = codigos.filter((c) => !yaTienenPrecio.has(c));
+  if (!faltantes.length) return [];
+
+  const { data: espejo } = await sb
+    .from('catalogo_buho_espejo')
+    .select('codigo, precio, stock')
+    .in('codigo', faltantes);
+
+  const sinEspejo = new Set(faltantes);
+  for (const fila of (espejo || []) as { codigo: string; precio: number; stock: number | null }[]) {
+    sinEspejo.delete(fila.codigo);
+    const sinStock = fila.stock != null && fila.stock <= 0;
+    const { error: errInsert } = await sb
+      .from('catalogo_precios')
+      .insert({ codigo: fila.codigo, precio: fila.precio, stock: fila.stock, sin_stock: sinStock });
+    if (errInsert && errInsert.code === '23505') {
+      await sb
+        .from('catalogo_precios')
+        .update({ precio: fila.precio, stock: fila.stock, sin_stock: sinStock })
+        .eq('codigo', fila.codigo);
+    }
+    await sb.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', fila.codigo);
+  }
+  return Array.from(sinEspejo);
+}
+
+/**
  * Modal de edición de un producto publicado (Sprints 3-4 del plan de
  * catálogo admin, SPEC-catalogo-admin-variantes.md secciones 5) — antes
  * era una pantalla que reemplazaba la lista (DetalleProducto dentro de
@@ -279,11 +329,18 @@ function FormularioProducto({
       destacado_home: destacadoHome
     };
     const { error: err2 } = await sb.from('catalogo_productos').update(dbCampos).eq('id', producto.id);
-    setGuardando(false);
     if (err2) {
+      setGuardando(false);
       setError(err2.message);
       return;
     }
+
+    // Bootstrapea catalogo_precios para cualquier código nuevo (simple o
+    // de variante) que este guardado acaba de agregar — ver el comentario
+    // grande de sincronizarPreciosDeCodigos más arriba.
+    const sinSincronizar = await sincronizarPreciosDeCodigos(sb, codigosDe({ codigo: dbCampos.codigo, variantes: dbCampos.variantes }));
+    setGuardando(false);
+
     onActualizado(producto.id, {
       titulo: dbCampos.titulo,
       descripcion: dbCampos.descripcion,
@@ -294,7 +351,11 @@ function FormularioProducto({
       fotos: dbCampos.fotos,
       destacadoHome
     });
-    setMensaje('Guardado.');
+    setMensaje(
+      sinSincronizar.length
+        ? `Guardado. Ojo: ${sinSincronizar.join(', ')} no existe(n) todavía en el espejo de Búho — va(n) a quedar sin precio hasta que lo revises.`
+        : 'Guardado.'
+    );
   }
 
   async function alternarPublicado() {

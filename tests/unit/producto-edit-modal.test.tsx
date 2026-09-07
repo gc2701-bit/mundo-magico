@@ -16,10 +16,15 @@ import userEvent from '@testing-library/user-event';
 import ProductoEditModal from '../../app/components/admin/ProductoEditModal';
 import { subirFoto } from '@/lib/procesar-foto';
 
-const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(() => {
+const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla } = vi.hoisted(() => {
   const escrituras: any[] = [];
   const storageRemovidas: string[] = [];
   const composicionPorCodigo: Record<string, any[]> = {};
+  // Filas que `.select().in(...)` puede devolver, por tabla — usado por
+  // sincronizarPreciosDeCodigos() (catalogo_precios/catalogo_buho_espejo).
+  // Vacío por default: ningún código "ya tiene precio" ni "existe en el
+  // espejo de Búho", salvo que un test lo cargue explícitamente.
+  const filasPorTabla: Record<string, any[]> = { catalogo_precios: [], catalogo_buho_espejo: [] };
 
   function resultado(data: any) {
     const p: any = Promise.resolve({ data, error: null });
@@ -33,7 +38,16 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(()
   function armarEscritura(tabla: string, tipo: 'update' | 'delete' | 'insert', campos?: any) {
     const registro: any = { tabla, tipo, campos, eqs: [], ins: [] };
     escrituras.push(registro);
-    const chain: any = resultado(tipo === 'insert' ? [{ id: 'nuevo' }] : {});
+    // catalogo_precios real tiene `codigo` primary key sin GRANT de UPDATE
+    // (a propósito) — un insert de un código ya existente choca con
+    // unique_violation (23505), igual que en Postgres real (mismo patrón
+    // que tests/unit/espejo-tab.test.tsx).
+    let error: any = null;
+    if (tabla === 'catalogo_precios' && tipo === 'insert' && filasPorTabla.catalogo_precios.some((f) => f.codigo === campos.codigo)) {
+      error = { code: '23505', message: 'duplicate key value violates unique constraint "catalogo_precios_pkey"' };
+    }
+    const chain: any = Promise.resolve({ data: tipo === 'insert' && !error ? [{ id: 'nuevo' }] : null, error });
+    chain.select = () => chain;
     chain.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return chain; };
     chain.in = (k: string, v: any) => { registro.ins.push([k, v]); return chain; };
     return chain;
@@ -41,7 +55,7 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(()
 
   const sb = {
     from: (tabla: string) => ({
-      select: () => resultado([]),
+      select: () => resultado(filasPorTabla[tabla] || []),
       update: (campos: any) => armarEscritura(tabla, 'update', campos),
       delete: () => armarEscritura(tabla, 'delete'),
       insert: (campos: any) => armarEscritura(tabla, 'insert', campos)
@@ -60,7 +74,7 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo } = vi.hoisted(()
     }
   };
 
-  return { sb, escrituras, storageRemovidas, composicionPorCodigo };
+  return { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla };
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
@@ -109,6 +123,8 @@ function montar(overrides: any = {}, cerrar = vi.fn(), actualizado = vi.fn(), el
 beforeEach(() => {
   escrituras.length = 0;
   storageRemovidas.length = 0;
+  filasPorTabla.catalogo_precios = [];
+  filasPorTabla.catalogo_buho_espejo = [];
   (subirFoto as any).mockClear();
 });
 
@@ -431,5 +447,58 @@ describe('ProductoEditModal — sanea la carpeta antes de subir foto (mismo bug 
     expect(subirFoto).toHaveBeenCalledTimes(1);
     const [, , carpeta] = (subirFoto as any).mock.calls[0];
     expect(carpeta).toBe('decoracion');
+  });
+});
+
+describe('ProductoEditModal — bootstrapea catalogo_precios para códigos nuevos (bug real, 2026-09-07)', () => {
+  // Antes de este fix, guardar() sólo tocaba catalogo_productos.variantes
+  // — un código de variante nuevo (o el código simple de un producto que
+  // no tenía) quedaba sin fila en catalogo_precios para siempre, aunque
+  // el worker de Búho lo siguiera espejando en catalogo_buho_espejo.
+
+  it('variante nueva con código que SÍ existe en el espejo de Búho: crea la fila en catalogo_precios y marca el espejo publicado', async () => {
+    filasPorTabla.catalogo_buho_espejo = [{ codigo: 'V001', precio: 5000, stock: 12 }];
+    const user = userEvent.setup();
+    montar({ id: 'p1', codigo: '001', variantes: null });
+
+    await user.click(screen.getByRole('button', { name: '+ Agregar variante' }));
+    await user.type(screen.getByPlaceholderText('Ej: Chico'), 'Chico');
+    await user.type(screen.getByLabelText('Código'), 'V001');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await screen.findByText('Guardado.');
+    const insertPrecio = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert');
+    expect(insertPrecio.campos).toEqual({ codigo: 'V001', precio: 5000, stock: 12, sin_stock: false });
+
+    const marcaEspejo = escrituras.find((e) => e.tabla === 'catalogo_buho_espejo' && e.tipo === 'update');
+    expect(marcaEspejo.campos).toEqual({ publicado: true });
+    expect(marcaEspejo.eqs).toEqual([['codigo', 'V001']]);
+  });
+
+  it('variante nueva con código que NO existe en el espejo de Búho: avisa en vez de dejarlo en silencio', async () => {
+    // filasPorTabla.catalogo_buho_espejo vacío (default) — el código no
+    // existe de verdad en Búho, como pasó con el Florero (24000/zf20).
+    const user = userEvent.setup();
+    montar({ id: 'p1', codigo: '001', variantes: null });
+
+    await user.click(screen.getByRole('button', { name: '+ Agregar variante' }));
+    await user.type(screen.getByPlaceholderText('Ej: Chico'), 'Grande');
+    await user.type(screen.getByLabelText('Código'), '24000');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText(/no existe.*24000|24000.*no existe/i)).toBeInTheDocument();
+    expect(escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert')).toBeUndefined();
+  });
+
+  it('código que ya tiene fila en catalogo_precios: no vuelve a tocarla', async () => {
+    filasPorTabla.catalogo_precios = [{ codigo: '001' }];
+    const user = userEvent.setup();
+    montar({ id: 'p1', codigo: '001', variantes: null });
+
+    await user.type(screen.getByLabelText('Nombre'), ' actualizado');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await screen.findByText('Guardado.');
+    expect(escrituras.find((e) => e.tabla === 'catalogo_precios')).toBeUndefined();
   });
 });
