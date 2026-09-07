@@ -6,7 +6,6 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import MundoVideoHeader from '../components/MundoVideoHeader';
 import MundoContenido from '../components/MundoContenido';
 import EmptyState from '../components/EmptyState';
-import CatalogoPrecios from '../components/CatalogoPrecios';
 
 /**
  * Página de mundo — rediseño Sprint 5 (ver
@@ -93,8 +92,6 @@ export default async function MundoPage({ params }: { params: Promise<{ mundo: s
           </div>
         </>
       )}
-
-      <CatalogoPrecios />
     </main>
   );
 }

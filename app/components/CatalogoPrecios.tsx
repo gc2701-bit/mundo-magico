@@ -10,12 +10,21 @@ import { resolverEstadoProducto, resolverOferta } from '@/lib/precios-familia';
  * lib/catalogo-precios-publico.ts con quien más lo necesite en la misma
  * página, ej. AgregarControl en la ficha de producto — Sprint 5),
  * aplicado a todas las tarjetas con data-codigo o data-talles-codigos.
- * Se monta una sola vez por página (ver app/[familia]/page.tsx) — nunca
- * por tarjeta, para no repetir el fetch.
+ * Se monta una sola vez por página — nunca por tarjeta, para no repetir
+ * el fetch.
  *
  * Un cambio de precio se ve instantáneo para quien ya tiene la página
  * abierta; no espera ninguna revalidación de ISR (eso es solo para el
  * contenido estructural — título/fotos — no para precio/stock).
+ *
+ * OJO — sólo sirve para páginas que se montan una vez y no vuelven a
+ * reemplazar sus tarjetas (home, ficha de producto): el querySelectorAll
+ * de abajo corre UNA sola vez, al montar. `app/explorar/page.tsx` y
+ * `app/[mundo]/page.tsx` NO lo usan más (bug real, 2026-09-07): su grilla
+ * (MundoContenido.tsx) reemplaza las tarjetas después del mount al
+ * buscar/filtrar/paginar, y las nuevas nunca se hidrataban. Esas páginas
+ * resuelven precio/oferta/stock por React, en ProductoCard.tsx (prop
+ * `precios`) — ver el comentario grande de ese archivo.
  */
 export default function CatalogoPrecios() {
   useEffect(() => {

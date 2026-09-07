@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { listarCatalogo, buscarCatalogo, type ProductoBase, type ProductoListado, type ProductoBuscado } from '@/lib/busqueda';
 import { siguienteCursorListado, siguienteCursorBusqueda } from '@/lib/busqueda-cursor';
+import { obtenerPreciosPublicos, type PreciosPublico } from '@/lib/catalogo-precios-publico';
 import Breadcrumbs from './Breadcrumbs';
 import ProductoCard from './ProductoCard';
 import EmptyState from './EmptyState';
@@ -83,6 +84,20 @@ export default function MundoContenido({
   const [hayMas, setHayMas] = useState(hayMasInicial);
   const [cargando, setCargando] = useState(false);
   const [filtroAbierto, setFiltroAbierto] = useState(false);
+  const [precios, setPrecios] = useState<PreciosPublico | undefined>(undefined);
+
+  // Esta grilla reemplaza sus tarjetas después del mount (buscar/filtrar/
+  // "Cargar más") — CatalogoPrecios.tsx no sirve acá, sólo hidrata el DOM
+  // una vez al montar la página. Se pasa `precios` a cada ProductoCard
+  // para que resuelva su propio precio/oferta/stock por React en cada
+  // render (ver el comentario grande de ProductoCard.tsx).
+  useEffect(() => {
+    let cancelado = false;
+    obtenerPreciosPublicos()
+      .then((r) => { if (!cancelado) setPrecios(r); })
+      .catch(() => {});
+    return () => { cancelado = true; };
+  }, []);
 
   function iniciarBusquedaDesdeUrl(q: string) {
     if (q === query) return;
@@ -281,7 +296,7 @@ export default function MundoContenido({
               <p className="mb-s2 font-body text-fs-1 text-muted">{productos.length} producto{productos.length === 1 ? '' : 's'}{hayMas ? '+' : ''}</p>
               <div className="grid grid-cols-2 gap-s2 md:grid-cols-4 md:gap-s3">
                 {productos.map((p) => (
-                  <ProductoCard key={p.id} producto={p} precioOferta={p.precioOferta} />
+                  <ProductoCard key={p.id} producto={p} precioOferta={p.precioOferta} precios={precios} />
                 ))}
               </div>
               {hayMas && (

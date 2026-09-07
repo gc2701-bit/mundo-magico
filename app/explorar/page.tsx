@@ -1,7 +1,6 @@
 import { obtenerCatalogoPublico } from '@/lib/catalogo-server';
 import { listarCatalogo } from '@/lib/busqueda';
 import MundoContenido from '../components/MundoContenido';
-import CatalogoPrecios from '../components/CatalogoPrecios';
 
 /**
  * Explorar — rediseño Sprint 5 (ver
@@ -44,8 +43,6 @@ export default async function ExplorarPage() {
         productosIniciales={primeraPagina.productos}
         hayMasInicial={primeraPagina.hayMas}
       />
-
-      <CatalogoPrecios />
     </main>
   );
 }
