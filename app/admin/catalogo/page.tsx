@@ -12,6 +12,12 @@ import EspejoTab from '../../components/admin/EspejoTab';
  */
 export default function AdminCatalogoPage() {
   const [tab, setTab] = useState<'publicado' | 'espejo'>('publicado');
+  const [crearAbierto, setCrearAbierto] = useState(false);
+
+  function abrirCrear() {
+    setTab('publicado');
+    setCrearAbierto(true);
+  }
 
   return (
     <div className="adm-wrap adm-wrap-catalogo">
@@ -19,28 +25,35 @@ export default function AdminCatalogoPage() {
         <h1>Catálogo</h1>
       </div>
       <div className="adm-panel">
-        <div className="adm-tabs" role="tablist">
-          <button
-            type="button"
-            className={'adm-tab' + (tab === 'publicado' ? ' is-active' : '')}
-            role="tab"
-            aria-selected={tab === 'publicado'}
-            onClick={() => setTab('publicado')}
-          >
-            Publicado
-          </button>
-          <button
-            type="button"
-            className={'adm-tab' + (tab === 'espejo' ? ' is-active' : '')}
-            role="tab"
-            aria-selected={tab === 'espejo'}
-            onClick={() => setTab('espejo')}
-          >
-            Sin activar
+        <div className="adm-tabs flex items-center justify-between" role="tablist">
+          <div className="flex">
+            <button
+              type="button"
+              className={'adm-tab' + (tab === 'publicado' ? ' is-active' : '')}
+              role="tab"
+              aria-selected={tab === 'publicado'}
+              onClick={() => setTab('publicado')}
+            >
+              Publicado
+            </button>
+            <button
+              type="button"
+              className={'adm-tab' + (tab === 'espejo' ? ' is-active' : '')}
+              role="tab"
+              aria-selected={tab === 'espejo'}
+              onClick={() => setTab('espejo')}
+            >
+              Sin activar
+            </button>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={abrirCrear}>
+            + Nuevo producto
           </button>
         </div>
         <div className="adm-tab-panel" role="tabpanel" hidden={tab !== 'publicado'}>
-          {tab === 'publicado' && <PublicadoTab />}
+          {tab === 'publicado' && (
+            <PublicadoTab crearAbierto={crearAbierto} onCerrarCrear={() => setCrearAbierto(false)} />
+          )}
         </div>
         <div className="adm-tab-panel" role="tabpanel" hidden={tab !== 'espejo'}>
           {tab === 'espejo' && <EspejoTab />}

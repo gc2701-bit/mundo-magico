@@ -16,7 +16,7 @@ import userEvent from '@testing-library/user-event';
 import ProductoEditModal from '../../app/components/admin/ProductoEditModal';
 import { subirFoto } from '@/lib/procesar-foto';
 
-const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla } = vi.hoisted(() => {
+const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla, estadoCreacion } = vi.hoisted(() => {
   const escrituras: any[] = [];
   const storageRemovidas: string[] = [];
   const composicionPorCodigo: Record<string, any[]> = {};
@@ -25,6 +25,10 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla } 
   // Vacío por default: ningún código "ya tiene precio" ni "existe en el
   // espejo de Búho", salvo que un test lo cargue explícitamente.
   const filasPorTabla: Record<string, any[]> = { catalogo_precios: [], catalogo_buho_espejo: [] };
+  // Controla el insert de catalogo_productos (modo "crear") — separado de
+  // filasPorTabla porque acá no hay ningún .select() involucrado, sólo el
+  // resultado del propio .insert().
+  const estadoCreacion = { duplicadoSlug: false, idNuevo: 'p-nuevo' };
 
   function resultado(data: any) {
     const p: any = Promise.resolve({ data, error: null });
@@ -41,13 +45,19 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla } 
     // catalogo_precios real tiene `codigo` primary key sin GRANT de UPDATE
     // (a propósito) — un insert de un código ya existente choca con
     // unique_violation (23505), igual que en Postgres real (mismo patrón
-    // que tests/unit/espejo-tab.test.tsx).
+    // que tests/unit/espejo-tab.test.tsx). catalogo_productos tiene la
+    // unique (mundo, slug) — mismo código de error, distinto constraint.
     let error: any = null;
     if (tabla === 'catalogo_precios' && tipo === 'insert' && filasPorTabla.catalogo_precios.some((f) => f.codigo === campos.codigo)) {
       error = { code: '23505', message: 'duplicate key value violates unique constraint "catalogo_precios_pkey"' };
     }
-    const chain: any = Promise.resolve({ data: tipo === 'insert' && !error ? [{ id: 'nuevo' }] : null, error });
+    if (tabla === 'catalogo_productos' && tipo === 'insert' && estadoCreacion.duplicadoSlug) {
+      error = { code: '23505', message: 'duplicate key value violates unique constraint "catalogo_productos_slug_por_pagina"' };
+    }
+    const datoInsert = tabla === 'catalogo_productos' ? { id: estadoCreacion.idNuevo } : [{ id: 'nuevo' }];
+    const chain: any = Promise.resolve({ data: tipo === 'insert' && !error ? datoInsert : null, error });
     chain.select = () => chain;
+    chain.single = () => chain;
     chain.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return chain; };
     chain.in = (k: string, v: any) => { registro.ins.push([k, v]); return chain; };
     return chain;
@@ -74,7 +84,7 @@ const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla } 
     }
   };
 
-  return { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla };
+  return { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla, estadoCreacion };
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
@@ -120,11 +130,40 @@ function montar(overrides: any = {}, cerrar = vi.fn(), actualizado = vi.fn(), el
   return { cerrar, actualizado, eliminado };
 }
 
+function productoNuevo(overrides: any = {}) {
+  return {
+    id: '', titulo: '', slug: '', codigo: '',
+    variantes: null, familia: null, mundo: '', publicado: false, fotos: [],
+    specs: null, descripcion: null, tags: null, orden: 0, destacadoHome: false,
+    ...overrides
+  };
+}
+
+function montarCrear(overrides: any = {}, onCreado = vi.fn(), cerrar = vi.fn()) {
+  render(
+    <ProductoEditModal
+      producto={productoNuevo(overrides)}
+      esNuevo
+      familiasConocidas={FAMILIAS}
+      mundosConocidos={MUNDOS}
+      todos={[]}
+      mapaPrecios={{}}
+      onCerrar={cerrar}
+      onActualizado={vi.fn()}
+      onCreado={onCreado}
+      onEliminado={vi.fn()}
+    />
+  );
+  return { onCreado, cerrar };
+}
+
 beforeEach(() => {
   escrituras.length = 0;
   storageRemovidas.length = 0;
   filasPorTabla.catalogo_precios = [];
   filasPorTabla.catalogo_buho_espejo = [];
+  estadoCreacion.duplicadoSlug = false;
+  estadoCreacion.idNuevo = 'p-nuevo';
   (subirFoto as any).mockClear();
 });
 
@@ -500,5 +539,82 @@ describe('ProductoEditModal — bootstrapea catalogo_precios para códigos nuevo
 
     await screen.findByText('Guardado.');
     expect(escrituras.find((e) => e.tabla === 'catalogo_precios')).toBeUndefined();
+  });
+});
+
+describe('ProductoEditModal — crear producto nuevo (esNuevo)', () => {
+  it('título fijo "Nuevo producto" en vez del título (vacío) del producto', () => {
+    montarCrear();
+    expect(screen.getByText('Nuevo producto')).toBeInTheDocument();
+  });
+
+  it('esconde "Sacar de la web"/"Publicar" y "Eliminar definitivamente" — nada que dar de baja todavía', () => {
+    montarCrear();
+    expect(screen.queryByRole('button', { name: /Sacar de la web|^Publicar$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Eliminar definitivamente' })).not.toBeInTheDocument();
+  });
+
+  it('sin fotos no deja guardar, y no toca la base', async () => {
+    const user = userEvent.setup();
+    const { onCreado } = montarCrear();
+
+    await user.type(screen.getByLabelText('Nombre'), 'Producto nuevo');
+    await user.selectOptions(screen.getByRole('combobox', { name: /^Mundo/ }), 'cotillon');
+    await user.type(screen.getByLabelText(/^Código/), 'COD1');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Subí al menos una foto antes de crear el producto.')).toBeInTheDocument();
+    expect(escrituras).toHaveLength(0);
+    expect(onCreado).not.toHaveBeenCalled();
+  });
+
+  it('completo + con foto: inserta en catalogo_productos (no update) con slug y publicado:true', async () => {
+    filasPorTabla.catalogo_buho_espejo = [{ codigo: 'COD1', precio: 5000, stock: 3 }];
+    const user = userEvent.setup();
+    const { onCreado } = montarCrear({ fotos: [{ src: 'productos/x.webp', cap: '' }] });
+
+    await user.type(screen.getByLabelText('Nombre'), 'Anteojo nuevo');
+    await user.selectOptions(screen.getByRole('combobox', { name: /^Mundo/ }), 'cotillon');
+    await user.type(screen.getByLabelText(/^Código/), 'COD1');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await screen.findByText('Guardado.');
+    const insert = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'insert');
+    expect(insert).toBeDefined();
+    expect(insert.campos).toMatchObject({
+      titulo: 'Anteojo nuevo', slug: 'anteojo-nuevo', codigo: 'COD1',
+      mundo: 'cotillon', publicado: true
+    });
+    expect(escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update')).toBeUndefined();
+    expect(onCreado).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-nuevo', titulo: 'Anteojo nuevo', codigo: 'COD1' }));
+  });
+
+  it('nombre ya usado en ese mundo: mensaje claro, no rompe con el error crudo de Postgres, no llama onCreado', async () => {
+    estadoCreacion.duplicadoSlug = true;
+    const user = userEvent.setup();
+    const { onCreado } = montarCrear({ fotos: [{ src: 'productos/x.webp', cap: '' }] });
+
+    await user.type(screen.getByLabelText('Nombre'), 'Anteojo estrella');
+    await user.selectOptions(screen.getByRole('combobox', { name: /^Mundo/ }), 'cotillon');
+    await user.type(screen.getByLabelText(/^Código/), 'COD1');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText(/ya existe un producto con ese nombre/i)).toBeInTheDocument();
+    expect(onCreado).not.toHaveBeenCalled();
+  });
+
+  it('código nuevo con datos esperando en el espejo de Búho: sincroniza catalogo_precios igual que al editar', async () => {
+    filasPorTabla.catalogo_buho_espejo = [{ codigo: 'COD1', precio: 4500, stock: 8 }];
+    const user = userEvent.setup();
+    montarCrear({ fotos: [{ src: 'productos/x.webp', cap: '' }] });
+
+    await user.type(screen.getByLabelText('Nombre'), 'Anteojo nuevo');
+    await user.selectOptions(screen.getByRole('combobox', { name: /^Mundo/ }), 'cotillon');
+    await user.type(screen.getByLabelText(/^Código/), 'COD1');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await screen.findByText('Guardado.');
+    const insertPrecio = escrituras.find((e) => e.tabla === 'catalogo_precios' && e.tipo === 'insert');
+    expect(insertPrecio.campos).toEqual({ codigo: 'COD1', precio: 4500, stock: 8, sin_stock: false });
   });
 });

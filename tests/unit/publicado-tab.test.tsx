@@ -11,6 +11,7 @@
  * tests/unit/admin-catalogo-render.test.js para el panel legacy) en vez
  * de un e2e real.
  */
+import { useState } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,10 +32,14 @@ const { estado, sb, escrituras, storageRemovidas } = vi.hoisted(() => {
     return p;
   }
 
-  function armarEscritura(tabla: string, tipo: 'update' | 'delete', campos?: any) {
+  function armarEscritura(tabla: string, tipo: 'update' | 'delete' | 'insert', campos?: any) {
     const registro: any = { tabla, tipo, campos, eqs: [], ins: [] };
     escrituras.push(registro);
-    const chain: any = resultado({});
+    // Sólo catalogo_productos necesita el insert acá (crear producto,
+    // PublicadoTab.tsx) — el id lo pone la base, `select().single()` de
+    // ProductoEditModal.tsx espera un objeto, no un array.
+    const chain: any = resultado(tipo === 'insert' ? { id: 'p-nuevo' } : {});
+    chain.single = () => chain;
     chain.eq = (k: string, v: any) => { registro.eqs.push([k, v]); return chain; };
     chain.in = (k: string, v: any) => { registro.ins.push([k, v]); return chain; };
     return chain;
@@ -44,7 +49,8 @@ const { estado, sb, escrituras, storageRemovidas } = vi.hoisted(() => {
     from: (tabla: string) => ({
       select: () => resultado(estado[tabla] || []),
       update: (campos: any) => armarEscritura(tabla, 'update', campos),
-      delete: () => armarEscritura(tabla, 'delete')
+      delete: () => armarEscritura(tabla, 'delete'),
+      insert: (campos: any) => armarEscritura(tabla, 'insert', campos)
     }),
     rpc: (nombre: string, args: any) => {
       if (nombre !== 'catalogo_precios_admin') return Promise.resolve({ data: null, error: null });
@@ -68,6 +74,15 @@ const { estado, sb, escrituras, storageRemovidas } = vi.hoisted(() => {
 });
 
 vi.mock('@/lib/supabase', () => ({ supabaseBrowser: () => sb }));
+
+// procesarFoto usa createImageBitmap/canvas — jsdom no lo simula (mismo
+// motivo que tests/unit/producto-edit-modal.test.tsx). Sólo lo necesita
+// el describe de "crear producto" al final de este archivo (esNuevo
+// exige al menos una foto antes de guardar).
+vi.mock('@/lib/procesar-foto', () => ({
+  procesarFoto: vi.fn().mockResolvedValue(new Blob(['x'], { type: 'image/webp' })),
+  subirFoto: vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/nueva.webp')
+}));
 
 function producto(overrides: any) {
   return {
@@ -517,5 +532,53 @@ describe('PublicadoTab — lote: eliminar', () => {
 
     const delPrecios = escrituras.find((e: any) => e.tabla === 'catalogo_precios' && e.tipo === 'delete');
     expect(delPrecios.ins).toEqual([['codigo', ['11963']]]);
+  });
+});
+
+// Envoltorio con estado propio de `crearAbierto` — en la app real esa
+// fuente de verdad vive en app/admin/catalogo/page.tsx (el botón "+ Nuevo
+// producto" está ahí, no en PublicadoTab). Sin este wrapper, un
+// `crearAbierto` fijo por prop nunca pasaría a `false` al cerrar, y el
+// diálogo (con el fondo marcado aria-hidden mientras está abierto)
+// taparía las aserciones sobre la tabla de atrás.
+function EnvoltorioConEstado({ onCerrar }: { onCerrar: () => void }) {
+  const [abierto, setAbierto] = useState(true);
+  return (
+    <PublicadoTab
+      crearAbierto={abierto}
+      onCerrarCrear={() => {
+        setAbierto(false);
+        onCerrar();
+      }}
+    />
+  );
+}
+
+describe('PublicadoTab — crear producto nuevo', () => {
+  it('con crearAbierto en true, guardar agrega el producto a la lista visible sin refetch, y cierra', async () => {
+    estado.catalogo_productos = [producto({ id: 'p1', titulo: 'Ya existente' })];
+    const user = userEvent.setup();
+    const cerrar = vi.fn();
+    render(<EnvoltorioConEstado onCerrar={cerrar} />);
+
+    await screen.findByRole('row', { name: /Ya existente/ });
+    expect(screen.getByText('Nuevo producto')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Nombre'), 'Producto recién creado');
+    await user.selectOptions(screen.getByRole('combobox', { name: /^Mundo/ }), 'cotillon');
+    const input = screen.getByLabelText(/Agregar foto/);
+    await user.upload(input, new File(['x'], 'foto.jpg', { type: 'image/jpeg' }));
+    await screen.findByText(/Foto lista/);
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await screen.findByRole('row', { name: /Producto recién creado/ });
+    // La fila que ya estaba sigue ahí — no fue un refetch que la perdiera.
+    expect(screen.getByRole('row', { name: /Ya existente/ })).toBeInTheDocument();
+    expect(cerrar).toHaveBeenCalled();
+  });
+
+  it('con crearAbierto en false, no monta el diálogo de creación', () => {
+    render(<PublicadoTab crearAbierto={false} onCerrarCrear={vi.fn()} />);
+    expect(screen.queryByText('Nuevo producto')).not.toBeInTheDocument();
   });
 });

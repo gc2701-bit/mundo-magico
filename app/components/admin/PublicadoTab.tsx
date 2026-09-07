@@ -25,7 +25,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, ArrowDown, ArrowUpDown, Percent, Trash2, EyeOff, Loader2 } from 'lucide-react';
-import ProductoEditModal, { type ProductoAdmin } from './ProductoEditModal';
+import ProductoEditModal, { PRODUCTO_VACIO, type ProductoAdmin } from './ProductoEditModal';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -47,7 +47,14 @@ const COLUMNAS: { col: ColumnaOrdenCatalogo; label: string; alinear?: 'right'; w
   { col: 'estado', label: 'Estado', widthPct: 9 }
 ];
 
-export default function PublicadoTab() {
+export default function PublicadoTab({
+  crearAbierto = false,
+  onCerrarCrear = () => {}
+}: {
+  /** Controlado por app/admin/catalogo/page.tsx — botón "+ Nuevo producto" en la barra de pestañas. */
+  crearAbierto?: boolean;
+  onCerrarCrear?: () => void;
+} = {}) {
   const [productos, setProductos] = useState<ProductoAdmin[]>([]);
   const [mapaPrecios, setMapaPrecios] = useState<MapaPreciosAdmin>({});
   const [mundos, setMundos] = useState<{ slug: string; nombre: string }[]>([]);
@@ -281,10 +288,27 @@ export default function PublicadoTab() {
     if (p) setSeleccionado(p);
   }
 
+  function agregarLocal(nuevo: ProductoAdmin) {
+    setProductos((prev) => [nuevo, ...prev]);
+    onCerrarCrear();
+  }
+
   if (cargando) return <p className="adm-detalle-solo-lectura">Cargando…</p>;
 
   return (
     <div className="space-y-3">
+      <ProductoEditModal
+        producto={crearAbierto ? PRODUCTO_VACIO : null}
+        esNuevo
+        familiasConocidas={familias}
+        mundosConocidos={mundos}
+        todos={productos}
+        mapaPrecios={mapaPrecios}
+        onCerrar={onCerrarCrear}
+        onActualizado={() => {}}
+        onCreado={agregarLocal}
+        onEliminado={() => {}}
+      />
       <ProductoEditModal
         producto={seleccionado}
         familiasConocidas={familias}

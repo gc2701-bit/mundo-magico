@@ -25,6 +25,16 @@ const fmtPrecio = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 
 
 export type ProductoAdmin = ProductoPublico & { publicado: boolean };
 
+// Estado inicial del modal en modo "crear" (esNuevo) — PublicadoTab.tsx lo
+// pasa como `producto` en vez de uno existente. `id`/`slug` vacíos: el id
+// lo pone la base al insertar, el slug se calcula del título al guardar.
+export const PRODUCTO_VACIO: ProductoAdmin = {
+  id: '', titulo: '', slug: '', codigo: '', subcategoriaId: null,
+  specs: null, descripcion: null, tags: null, variantes: null, fotos: [],
+  orden: 0, familia: null, mundo: '', destacadoHome: false, precioOferta: null,
+  publicado: false
+};
+
 /**
  * Borrado definitivo — compartido entre este modal (un producto) y el
  * borrado en lote de PublicadoTab.tsx (varios). `borrables` lo calcula
@@ -125,21 +135,25 @@ export async function sincronizarPreciosDeCodigos(
  */
 export default function ProductoEditModal({
   producto,
+  esNuevo,
   familiasConocidas,
   mundosConocidos,
   todos,
   mapaPrecios,
   onCerrar,
   onActualizado,
+  onCreado,
   onEliminado
 }: {
   producto: ProductoAdmin | null;
+  esNuevo?: boolean;
   familiasConocidas: string[];
   mundosConocidos: { slug: string; nombre: string }[];
   todos: ProductoAdmin[];
   mapaPrecios: MapaPreciosAdmin;
   onCerrar: () => void;
   onActualizado: (id: string, campos: Partial<ProductoAdmin>) => void;
+  onCreado?: (p: ProductoAdmin) => void;
   onEliminado: (id: string) => void;
 }) {
   if (!producto) return null;
@@ -149,12 +163,14 @@ export default function ProductoEditModal({
         <FormularioProducto
           key={producto.id}
           producto={producto}
+          esNuevo={!!esNuevo}
           familiasConocidas={familiasConocidas}
           mundosConocidos={mundosConocidos}
           todos={todos}
           mapaPrecios={mapaPrecios}
           onCerrar={onCerrar}
           onActualizado={onActualizado}
+          onCreado={onCreado}
           onEliminado={onEliminado}
         />
       </DialogContent>
@@ -164,21 +180,25 @@ export default function ProductoEditModal({
 
 function FormularioProducto({
   producto,
+  esNuevo,
   familiasConocidas,
   mundosConocidos,
   todos,
   mapaPrecios,
   onCerrar,
   onActualizado,
+  onCreado,
   onEliminado
 }: {
   producto: ProductoAdmin;
+  esNuevo: boolean;
   familiasConocidas: string[];
   mundosConocidos: { slug: string; nombre: string }[];
   todos: ProductoAdmin[];
   mapaPrecios: MapaPreciosAdmin;
   onCerrar: () => void;
   onActualizado: (id: string, campos: Partial<ProductoAdmin>) => void;
+  onCreado?: (p: ProductoAdmin) => void;
   onEliminado: (id: string) => void;
 }) {
   const [titulo, setTitulo] = useState(producto.titulo);
@@ -238,6 +258,12 @@ function FormularioProducto({
   // edita o queda deshabilitado, en el mismo guardado (sin recargar).
   const tieneVariantes = variantes.length > 0;
 
+  // producto.slug está vacío mientras se crea (esNuevo) — el nombre de
+  // archivo de una foto subida ANTES de guardar necesita algo mejor que
+  // un slug vacío (subirFoto ya suma Date.now(), así que esto es sólo
+  // legibilidad del path, nunca una fuente real de colisión).
+  const slugParaFotos = producto.slug || slugify(titulo.trim()) || 'nuevo-producto';
+
   function onCambiarCodigo(v: string) {
     setCodigo(v);
     setErrorCodigo(validarCodigo(v));
@@ -272,7 +298,7 @@ function FormularioProducto({
     try {
       const blob = await procesarFoto(file);
       const carpeta = producto.familia ? slugify(producto.familia) : 'productos';
-      const url = await subirFoto(supabaseBrowser(), blob, carpeta, `${producto.slug}-variante-${i}`, 1);
+      const url = await subirFoto(supabaseBrowser(), blob, carpeta, `${slugParaFotos}-variante-${i}`, 1);
       setVariantes((prev) => prev.map((v, idx) => (idx === i ? { ...v, imagen: url } : v)));
     } catch (err) {
       setError((err as Error).message);
@@ -282,6 +308,13 @@ function FormularioProducto({
   }
 
   async function guardar() {
+    // Mismo criterio que EspejoTab.activar(): nunca publicar un producto
+    // sin ninguna foto — para editar uno existente no hace falta (puede
+    // ya tener fotos, o el admin está guardando otro cambio en el medio).
+    if (esNuevo && !fotos.length) {
+      setError('Subí al menos una foto antes de crear el producto.');
+      return;
+    }
     if (!tieneVariantes) {
       const err = validarCodigo(codigo);
       if (err) {
@@ -328,11 +361,33 @@ function FormularioProducto({
       fotos,
       destacado_home: destacadoHome
     };
-    const { error: err2 } = await sb.from('catalogo_productos').update(dbCampos).eq('id', producto.id);
-    if (err2) {
-      setGuardando(false);
-      setError(err2.message);
-      return;
+    let idFinal = producto.id;
+    if (esNuevo) {
+      // slug calculado del título — nunca editable a mano (mismo criterio
+      // que EspejoTab.activar()). El único índice único real es (mundo,
+      // slug): dos productos pueden compartir nombre en mundos distintos.
+      const { data, error: errIns } = await sb
+        .from('catalogo_productos')
+        .insert({ ...dbCampos, slug: slugify(dbCampos.titulo), publicado: true })
+        .select()
+        .single();
+      if (errIns) {
+        setGuardando(false);
+        setError(
+          errIns.code === '23505'
+            ? 'Ya existe un producto con ese nombre en este mundo — cambiá el título.'
+            : errIns.message
+        );
+        return;
+      }
+      idFinal = data.id;
+    } else {
+      const { error: err2 } = await sb.from('catalogo_productos').update(dbCampos).eq('id', producto.id);
+      if (err2) {
+        setGuardando(false);
+        setError(err2.message);
+        return;
+      }
     }
 
     // Bootstrapea catalogo_precios para cualquier código nuevo (simple o
@@ -341,7 +396,7 @@ function FormularioProducto({
     const sinSincronizar = await sincronizarPreciosDeCodigos(sb, codigosDe({ codigo: dbCampos.codigo, variantes: dbCampos.variantes }));
     setGuardando(false);
 
-    onActualizado(producto.id, {
+    const camposFinales = {
       titulo: dbCampos.titulo,
       descripcion: dbCampos.descripcion,
       codigo: dbCampos.codigo,
@@ -350,7 +405,12 @@ function FormularioProducto({
       mundo: dbCampos.mundo,
       fotos: dbCampos.fotos,
       destacadoHome
-    });
+    };
+    if (esNuevo) {
+      onCreado?.({ ...PRODUCTO_VACIO, ...camposFinales, id: idFinal, slug: slugify(dbCampos.titulo), publicado: true });
+    } else {
+      onActualizado(producto.id, camposFinales);
+    }
     setMensaje(
       sinSincronizar.length
         ? `Guardado. Ojo: ${sinSincronizar.join(', ')} no existe(n) todavía en el espejo de Búho — va(n) a quedar sin precio hasta que lo revises.`
@@ -391,7 +451,7 @@ function FormularioProducto({
     try {
       const blob = await procesarFoto(file);
       const carpeta = producto.familia ? slugify(producto.familia) : 'productos';
-      const url = await subirFoto(supabaseBrowser(), blob, carpeta, producto.slug, fotos.length + 1);
+      const url = await subirFoto(supabaseBrowser(), blob, carpeta, slugParaFotos, fotos.length + 1);
       setFotos((prev) => [...prev, { src: url, cap: '' }]);
       setMensaje('Foto lista — apretá "Guardar" para dejarla en el producto.');
     } catch (err) {
@@ -404,7 +464,7 @@ function FormularioProducto({
   return (
     <div className="adm-detalle">
       <DialogHeader>
-        <DialogTitle>{producto.titulo}</DialogTitle>
+        <DialogTitle>{esNuevo ? 'Nuevo producto' : producto.titulo}</DialogTitle>
       </DialogHeader>
 
       <div className="adm-detalle-campos-editables">
@@ -575,12 +635,18 @@ function FormularioProducto({
       <button type="button" className="btn btn-primary adm-detalle-guardar" disabled={guardando} onClick={guardar}>
         Guardar
       </button>
-      <button type="button" className="btn" disabled={guardando} onClick={alternarPublicado}>
-        {producto.publicado ? 'Sacar de la web' : 'Publicar'}
-      </button>
-      <button type="button" className="btn" disabled={guardando} onClick={eliminarDefinitivo}>
-        Eliminar definitivamente
-      </button>
+      {/* Nada que publicar/despublicar/borrar de un producto que todavía
+          no existe en la base. */}
+      {!esNuevo && (
+        <>
+          <button type="button" className="btn" disabled={guardando} onClick={alternarPublicado}>
+            {producto.publicado ? 'Sacar de la web' : 'Publicar'}
+          </button>
+          <button type="button" className="btn" disabled={guardando} onClick={eliminarDefinitivo}>
+            Eliminar definitivamente
+          </button>
+        </>
+      )}
     </div>
   );
 }
