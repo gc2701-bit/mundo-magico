@@ -7,6 +7,7 @@ import { slugifyMundo } from '@/lib/catalogo-mundo';
 import { slugify } from '@/lib/slug';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -288,6 +289,7 @@ function ActivacionEspejo({ fila, onVolver, onActivado }: { fila: FilaEspejo; on
       const { error: err3 } = await sb.from('catalogo_buho_espejo').update({ publicado: true }).eq('codigo', fila.codigo);
       if (err3) throw err3;
 
+      await revalidarCatalogoAhora();
       onActivado();
     } catch (err) {
       setError((err as Error).message);

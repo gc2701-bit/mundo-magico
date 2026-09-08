@@ -17,6 +17,7 @@ import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PublicadoTab from '../../app/components/admin/PublicadoTab';
 import { STORAGE_PREFIX } from '../../lib/admin-catalogo';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 
 const { estado, sb, escrituras, storageRemovidas } = vi.hoisted(() => {
   const estado: any = { catalogo_productos: [], catalogo_mundos: [], catalogo_precios: [] };
@@ -84,6 +85,8 @@ vi.mock('@/lib/procesar-foto', () => ({
   subirFoto: vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/nueva.webp')
 }));
 
+vi.mock('@/app/actions/revalidar-catalogo', () => ({ revalidarCatalogoAhora: vi.fn() }));
+
 function producto(overrides: any) {
   return {
     id: 'p1', titulo: 'Producto', slug: 'producto', codigo: '001', variantes: null,
@@ -104,6 +107,7 @@ beforeEach(() => {
   estado.catalogo_precios = [];
   escrituras.length = 0;
   storageRemovidas.length = 0;
+  (revalidarCatalogoAhora as any).mockClear();
 });
 
 describe('PublicadoTab — tabla', () => {
@@ -419,6 +423,7 @@ describe('PublicadoTab — lote: ajustar precio', () => {
     expect(update).toBeTruthy();
     expect(update.campos).toEqual({ precio: 1100 });
     expect(update.eqs).toEqual([['codigo', '001']]);
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 
   it('un porcentaje negativo baja el precio, nunca a 0 o menos', async () => {
@@ -456,6 +461,7 @@ describe('PublicadoTab — lote: sacar de uso', () => {
     const update = escrituras.find((e: any) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
     expect(update.campos).toEqual({ publicado: false });
     expect(update.ins).toEqual([['id', ['p1', 'p2']]]);
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 });
 
@@ -492,6 +498,7 @@ describe('PublicadoTab — lote: eliminar', () => {
     expect(delPrecios.ins).toEqual([['codigo', ['001']]]);
     const delProductos = escrituras.find((e: any) => e.tabla === 'catalogo_productos' && e.tipo === 'delete');
     expect(delProductos.ins).toEqual([['id', ['p1']]]);
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 
   it('un código compartido con un producto FUERA del lote no se borra de catalogo_precios', async () => {

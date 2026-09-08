@@ -15,6 +15,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EspejoTab from '../../app/components/admin/EspejoTab';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 
 const { estado, sb, escrituras, subirFotoMock } = vi.hoisted(() => {
   const estado: any = { catalogo_buho_espejo: [], catalogo_mundos: [], catalogo_productos: [], _preciosExistentes: new Set<string>() };
@@ -69,6 +70,8 @@ vi.mock('@/lib/procesar-foto', () => ({
   subirFoto: subirFotoMock
 }));
 
+vi.mock('@/app/actions/revalidar-catalogo', () => ({ revalidarCatalogoAhora: vi.fn() }));
+
 function fila(overrides: any) {
   return {
     codigo: '001', nombre: 'Producto espejo', familia: 'RUIDO',
@@ -84,6 +87,7 @@ beforeEach(() => {
   estado._preciosExistentes = new Set<string>();
   escrituras.length = 0;
   subirFotoMock.mockClear();
+  (revalidarCatalogoAhora as any).mockClear();
 });
 
 async function activarHastaElFinal(user: ReturnType<typeof userEvent.setup>, nombreProducto: string, mundoSlug = 'cotillon') {
@@ -274,6 +278,7 @@ describe('ActivacionEspejo — guarda el precio aunque el worker de Búho ya hay
     });
     expect(insertPrecio.campos).toEqual({ codigo: '002', precio: 1200, stock: null, sin_stock: false });
     expect(escrituras.some((e) => e.tabla === 'catalogo_precios' && e.tipo === 'update')).toBe(false);
+    await vi.waitFor(() => expect(revalidarCatalogoAhora).toHaveBeenCalled());
   });
 });
 

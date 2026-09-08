@@ -18,6 +18,7 @@ import {
 import { procesarFoto, subirFoto } from '@/lib/procesar-foto';
 import { slugify } from '@/lib/slug';
 import { obtenerComposicionCombo, type ItemComboComposicion } from '@/lib/combo-composicion';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 
@@ -57,6 +58,7 @@ export async function borrarProductoYPrecios(
   }
   const { error } = await sb.from('catalogo_productos').delete().eq('id', producto.id);
   if (error) throw error;
+  await revalidarCatalogoAhora();
 }
 
 /**
@@ -394,6 +396,7 @@ function FormularioProducto({
     // de variante) que este guardado acaba de agregar — ver el comentario
     // grande de sincronizarPreciosDeCodigos más arriba.
     const sinSincronizar = await sincronizarPreciosDeCodigos(sb, codigosDe({ codigo: dbCampos.codigo, variantes: dbCampos.variantes }));
+    await revalidarCatalogoAhora();
     setGuardando(false);
 
     const camposFinales = {
@@ -426,6 +429,7 @@ function FormularioProducto({
       setError(err.message);
       return;
     }
+    await revalidarCatalogoAhora();
     onActualizado(producto.id, { publicado: nuevo });
     setMensaje(nuevo ? 'Publicado.' : 'Sacado de la web (reversible).');
   }

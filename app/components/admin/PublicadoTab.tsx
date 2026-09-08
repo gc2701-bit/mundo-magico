@@ -26,6 +26,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, ArrowDown, ArrowUpDown, Percent, Trash2, EyeOff, Loader2 } from 'lucide-react';
 import ProductoEditModal, { PRODUCTO_VACIO, type ProductoAdmin } from './ProductoEditModal';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
@@ -202,6 +203,7 @@ export default function PublicadoTab({
           sb.from('catalogo_precios').update({ precio: redondearPrecio(actual, pct) }).eq('codigo', codigo)
         )
       );
+      await revalidarCatalogoAhora();
       limpiarSeleccion();
       await cargar();
     } catch (err) {
@@ -221,6 +223,7 @@ export default function PublicadoTab({
         .update({ publicado: false })
         .in('id', Array.from(seleccionados));
       if (err) throw err;
+      await revalidarCatalogoAhora();
       limpiarSeleccion();
       await cargar();
     } catch (err) {
@@ -246,6 +249,7 @@ export default function PublicadoTab({
       }
       const { error: err } = await sb.from('catalogo_productos').delete().in('id', Array.from(seleccionados));
       if (err) throw err;
+      await revalidarCatalogoAhora();
       limpiarSeleccion();
       await cargar();
     } catch (err) {

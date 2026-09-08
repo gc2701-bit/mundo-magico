@@ -15,6 +15,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProductoEditModal from '../../app/components/admin/ProductoEditModal';
 import { subirFoto } from '@/lib/procesar-foto';
+import { revalidarCatalogoAhora } from '@/app/actions/revalidar-catalogo';
 
 const { sb, escrituras, storageRemovidas, composicionPorCodigo, filasPorTabla, estadoCreacion } = vi.hoisted(() => {
   const escrituras: any[] = [];
@@ -98,6 +99,12 @@ vi.mock('@/lib/procesar-foto', () => ({
   subirFoto: vi.fn().mockResolvedValue('https://kyuilrlewynqrzebouww.supabase.co/storage/v1/object/public/catalogo/variante.webp')
 }));
 
+// updateTag() (dentro de revalidarCatalogoAhora) sólo corre de verdad
+// dentro de la invocación real de un Server Action de Next — acá se
+// mockea como cualquier otro límite externo (mismo criterio que
+// procesar-foto), y se afirma que se llama después de cada escritura.
+vi.mock('@/app/actions/revalidar-catalogo', () => ({ revalidarCatalogoAhora: vi.fn() }));
+
 function producto(overrides: any) {
   return {
     id: 'p1', titulo: 'Anteojo estrella', slug: 'anteojo-estrella', codigo: '001',
@@ -165,6 +172,7 @@ beforeEach(() => {
   estadoCreacion.duplicadoSlug = false;
   estadoCreacion.idNuevo = 'p-nuevo';
   (subirFoto as any).mockClear();
+  (revalidarCatalogoAhora as any).mockClear();
 });
 
 describe('ProductoEditModal — layout', () => {
@@ -224,6 +232,7 @@ describe('ProductoEditModal — guardar', () => {
     expect(update.campos.titulo).toBe('Anteojo estrella nuevo');
     expect(update.eqs).toEqual([['id', 'p1']]);
     expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({ titulo: 'Anteojo estrella nuevo' }));
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 
   it('el toggle "Mostrar en el carrusel del home" arranca en destacadoHome del producto', () => {
@@ -243,6 +252,18 @@ describe('ProductoEditModal — guardar', () => {
     expect(update.campos.destacado_home).toBe(true);
     expect(update.campos).not.toHaveProperty('destacadoHome');
     expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({ destacadoHome: true }));
+  });
+});
+
+describe('ProductoEditModal — invalida el catálogo público al toque (bug real 2026-09-08)', () => {
+  it('"Sacar de la web"/"Publicar" avisa la invalidación inmediata después de guardar el cambio', async () => {
+    const user = userEvent.setup();
+    montar({ id: 'p1', publicado: true });
+
+    await user.click(screen.getByRole('button', { name: 'Sacar de la web' }));
+
+    expect(escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update')?.campos).toEqual({ publicado: false });
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 });
 
@@ -276,6 +297,7 @@ describe('ProductoEditModal — eliminar', () => {
     const delProducto = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'delete');
     expect(delProducto.eqs).toEqual([['id', 'p1']]);
     expect(eliminado).toHaveBeenCalledWith('p1');
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
 
     vi.restoreAllMocks();
   });
@@ -587,6 +609,7 @@ describe('ProductoEditModal — crear producto nuevo (esNuevo)', () => {
     });
     expect(escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update')).toBeUndefined();
     expect(onCreado).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-nuevo', titulo: 'Anteojo nuevo', codigo: 'COD1' }));
+    expect(revalidarCatalogoAhora).toHaveBeenCalled();
   });
 
   it('nombre ya usado en ese mundo: mensaje claro, no rompe con el error crudo de Postgres, no llama onCreado', async () => {
