@@ -140,6 +140,18 @@ export default async function Home() {
   return (
     <>
       <link rel="stylesheet" href="/assets/home.css" />
+      {/* Preload del video del hero (2026-09-09) — pedido explícito del
+          usuario: "que ese componente cargue primero que nada". Sólo en
+          esta página (no en app/layout.tsx, que es site-wide — precargar
+          el video en /explorar o una ficha de producto, donde nunca se
+          usa, sería ancho de banda tirado). React/Next hoistea este
+          <link> al <head> real solo, mismo mecanismo que ya usa el
+          <link rel="stylesheet"> de arriba. Con esto el navegador arranca
+          a bajar los bytes del video en paralelo con todo lo demás, sin
+          esperar a que el bundle de React hidrate y HeroAnimado.tsx
+          monte su propio <video> — la descarga ya viene adelantada para
+          cuando eso pasa. */}
+      <link rel="preload" href="/Logo/Logo-Animacion-2.mp4" as="video" type="video/mp4" fetchPriority="high" />
 
       <header
         className="hero"

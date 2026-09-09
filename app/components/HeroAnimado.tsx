@@ -45,10 +45,27 @@ export default function HeroAnimado() {
     // misma animación — sólo cambia CUÁNDO arranca la descarga. ---
     const v = videoRef.current;
     if (v) {
+      // 2026-09-09 — analizado a fondo tras un reporte real de "el video
+      // no arranca, queda una imagen estática" en producción. Confirmado
+      // con curl que `muted`/`autoplay` YA estaban en el HTML inicial (no
+      // dependían de este efecto para existir), y con Playwright que
+      // tanto local como mundomagico.ar reproducen sin problema — pero
+      // Playwright corre con el autoplay desbloqueado por default en la
+      // mayoría de los setups de automatización, así que esas pruebas NO
+      // son representativas de un navegador real con la política de
+      // autoplay activa de verdad (configuración del usuario, extensión
+      // de bloqueo, Safari viejo, etc. — variables que no se pueden
+      // reproducir ni forzar desde acá). No hay forma de GARANTIZAR
+      // reproducción automática al 100% en todo navegador real — ningún
+      // sitio puede (ver la política de Chrome/Safari) — así que el
+      // criterio cambia: hacer todo lo posible para que arranque rápido
+      // Y ARREGLAR que el peor caso (no arranca) se vea bien, no roto.
       v.muted = true;
       v.defaultMuted = true;
       v.playsInline = true;
       v.setAttribute('muted', '');
+      v.setAttribute('webkit-playsinline', ''); // iOS Safari viejo (pre-10), defensivo
+      v.load(); // fuerza a revalidar el <source>/estado del elemento antes de play()
 
       const play = () => {
         const p = v.play();
@@ -130,18 +147,21 @@ export default function HeroAnimado() {
           fetchPriority="high"
           src="/Logo/Logo-Animacion-2.mp4"
           poster="/Logo/Mundo-Magico%20Logo.jpg"
-          // onLoadedData en vez de onPlaying (2026-09-09) — el usuario
-          // reportó que en la primera visita (video sin cachear todavía)
-          // se quedaba "estático, con fondo blanco fijo" un buen rato
-          // antes de arrancar. `playing` sólo dispara cuando el video YA
-          // está reproduciéndose de verdad — con conexión lenta/primera
-          // visita eso puede tardar bastante. `loadeddata` dispara mucho
-          // antes (apenas hay un primer frame decodificado, sin esperar
-          // a que empiece a reproducir de verdad) — el fallback de abajo
-          // desaparece más rápido, dejando ver el propio <video poster>
-          // (misma imagen que el fallback) mientras termina de bufferear
-          // lo suficiente para animarse solo.
-          onLoadedData={() => setVideoListo(true)}
+          // onPlaying — vuelto de onLoadedData (2026-09-09, segunda
+          // vuelta): loadeddata dispara con sólo tener el primer frame
+          // decodificado, SIN garantía de que el video vaya a arrancar a
+          // reproducirse de verdad — en un navegador real donde
+          // play() termina bloqueado (política de autoplay, extensión,
+          // configuración del usuario — nada de esto se puede forzar ni
+          // reproducir desde acá, ver el comentario grande del useEffect
+          // de arriba), el fallback desaparecía igual y dejaba ver el
+          // <video> CONGELADO en el primer frame — más confuso que el
+          // logo estático de siempre ("ahora ni siquiera se ve la imagen
+          // vieja, es un video que no se mueve"). Con onPlaying, el peor
+          // caso (autoplay bloqueado) vuelve a ser el logo estático de
+          // estable (con el fondo ya corregido a --color-background-hero,
+          // no el blanco de antes) — se ve intencional, no roto.
+          onPlaying={() => setVideoListo(true)}
         />
         {!videoListo && (
           <img
