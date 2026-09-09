@@ -28,6 +28,7 @@
  * está bien sin preguntar.
  */
 import type { Metadata } from 'next';
+import HeroLogoVideo from './components/HeroLogoVideo';
 import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
@@ -158,27 +159,24 @@ export default async function Home() {
           className="hidden md:block pointer-events-none -left-6 top-[467px] h-[260px] w-[260px] rounded-full bg-[#FFE1AB]"
           style={{ position: 'absolute', zIndex: 0 }}
         />
-        {/* Logo estático decorativo (2026-09-09) — el usuario pidió llenar
-            el espacio vacío que quedó a la derecha del hero al sacar
-            HeroAnimado.tsx (el video forzaba el h1 a max-width:13ch para
-            no taparse; con una imagen estática NO hace falta ese límite,
-            así que el h1 se queda en los 720px reales del standalone).
-            Sólo desde `lg:` (1024px): a 1024-1279px el h1 de 720px + el
-            padding del hero (clamp 6vw) deja poco margen derecho — recién
-            a partir de 1280px hay aire cómodo para una imagen grande, así
-            que el tamaño también escala por breakpoint (h-40 en lg, h-72
-            desde xl) en vez de un tamaño fijo. z-index:1 (inline, por el
-            mismo motivo que los círculos de arriba) — entre los círculos
-            (0) y el texto (2, forzado por `.hero > *` de home.css). */}
-        <img
-          src="/Logo/mundo-magico-icono.webp"
-          alt=""
+        {/* Badge del logo (2026-09-09) — probando la versión con video
+            (HeroLogoVideo.tsx) en vez de la imagen estática: mismo
+            contenedor/tamaño/posición que tenía la imagen (esto es lo que
+            importa para que el h1 no se vuelva a angostar — el contenedor
+            es una caja FIJA, no un elemento absolute a media pantalla como
+            el `.hero-anim` viejo, así que agregar el video acá no reintroduce
+            el problema original). Sólo desde `lg:` (1024px), tamaño escala
+            por breakpoint (160px en lg, 288px desde xl) — a 1024-1279px el
+            h1 de 720px deja menos margen derecho. z-index:1 (inline, mismo
+            motivo que los círculos de arriba) — entre los círculos (0) y
+            el texto (2, forzado por `.hero > *` de home.css). */}
+        <div
           aria-hidden="true"
-          width={400}
-          height={400}
-          className="pointer-events-none right-4 top-1/2 hidden h-40 w-40 -translate-y-1/2 lg:block xl:right-12 xl:h-72 xl:w-72"
+          className="right-4 top-1/2 hidden h-40 w-40 -translate-y-1/2 lg:block xl:right-12 xl:h-72 xl:w-72"
           style={{ position: 'absolute', zIndex: 1 }}
-        />
+        >
+          <HeroLogoVideo />
+        </div>
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
           <span className="w">Todo</span> <span className="w">para</span> <span className="w">tu</span>{' '}
