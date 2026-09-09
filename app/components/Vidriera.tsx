@@ -43,9 +43,11 @@ import EmptyState from './EmptyState';
  * Playwright (touchscreen + mouse.wheel con deltaX/deltaY), ver el
  * commit de esa tarea.
  *
- * Navidad (hoy sin productos) todavía usa el EmptyState genérico de
- * abajo en este commit — el teaser especial (ícono rojo sobre fondo
- * verde, sin header) es la Task 6, que sigue en el próximo commit.
+ * Navidad (Task 6, mismo día): en vez del EmptyState genérico de
+ * arriba, usa un teaser especial sin header de ícono+"Ver todo" —
+ * ícono rojo de 56px centrado, título/párrafo/CTA en columna, medido
+ * literal contra `Home.dc.html` (data-screen-label="vidriera-navidad",
+ * incluido su padding vertical propio de 56px vs. 52px del resto).
  */
 export default function Vidriera({
   titulo,
@@ -64,7 +66,8 @@ export default function Vidriera({
    * ver el mapeo en app/page.tsx). Reemplaza el fondo crema alternado
    * de antes (`alterno`, ya no existe). */
   bg?: string;
-  /** Clase Tailwind del acento (círculo del ícono). El botón "Agregar"
+  /** Clase Tailwind del acento (círculo del ícono, y — sólo en el
+   * teaser de Navidad, Task 6 — el botón "Ver otros mundos"). El botón "Agregar"
    * de cada card NO recibe este accent: `AgregarControl`
    * (app/components/carrito/AccionesProducto.tsx) pinta `.pcard-add`
    * vía CSS legacy sin @layer, con estados propios de hover/active/
@@ -80,9 +83,14 @@ export default function Vidriera({
   accentText?: string;
 }) {
   const items = productos.filter((p) => p.mundo === mundoSlug).slice(0, 8);
+  const esNavidad = mundoSlug === 'navidad';
 
   return (
-    <section className={'py-[52px] ' + bg} aria-labelledby={`vidriera-${mundoSlug}`}>
+    <section
+      className={(esNavidad ? 'py-[56px] ' : 'py-[52px] ') + bg}
+      aria-labelledby={esNavidad ? undefined : `vidriera-${mundoSlug}`}
+      aria-label={esNavidad ? titulo : undefined}
+    >
       <div className="wrap">
         {items.length ? (
           <>
@@ -99,6 +107,30 @@ export default function Vidriera({
               ))}
             </div>
           </>
+        ) : esNavidad ? (
+          /* Teaser especial de Navidad (Task 6) — literal contra
+             `Home.dc.html` (data-screen-label="vidriera-navidad"): sin
+             header de ícono+"Ver todo", ícono rojo de 56px centrado,
+             título/párrafo/CTA en columna. */
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className={'flex h-14 w-14 items-center justify-center rounded-full text-fs2 text-white ' + accent} aria-hidden="true">
+              {icono}
+            </span>
+            {/* text-white! (con "!"): v2.css tiene `h1,h2,h3{color:var(--ink)}`
+                sin @layer (línea 81) — le gana a `text-white` sin
+                important, dejando el título negro sobre el fondo verde
+                (encontrado al comparar el screenshot contra
+                Home.dc.html). Mismo mecanismo ya documentado en
+                Nav.tsx/Footer.tsx, primera vez que aparece en un <h2>
+                en vez de un <a> en este archivo. */}
+            <h2 className="mt-1 font-display text-fs2 text-white! md:text-fs3">Navidad está por venir</h2>
+            <p className="max-w-[46ch] font-body text-fs0 text-green-100">
+              Todavía no cargamos productos acá. Volvé pronto — o mirá el resto de nuestros mundos mientras tanto.
+            </p>
+            <Link href="/explorar" className={'mt-2 rounded-brand px-s4 py-s2 font-body text-fs0 font-semibold text-white! ' + accent}>
+              Ver otros mundos →
+            </Link>
+          </div>
         ) : (
           <div>
             <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} />
