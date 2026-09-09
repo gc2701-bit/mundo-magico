@@ -112,19 +112,28 @@
 }
 
 /* ===================== BANDA DE CONFIANZA ===================== */
-.trust{background:var(--green-ink); color:#fff}
+/* Task 10 (plan modernización PC, 2026-09-08) — comparado pixel a pixel
+ * contra "7. Trust strip" de Home.dc.html a 1280px: NO es una franja
+ * sólida verde con texto blanco (como estaba), es una fila de 4 badges
+ * sobre el fondo normal de la página — el color de marca vive sólo en el
+ * círculo del ícono (green-100 de fondo, green-700 de trazo), igual que
+ * el resto de la fila de texto en --ink/--muted de siempre. Sólo se toca
+ * la regla base (>900px, desktop) — los dos breakpoints de abajo (900px/
+ * 480px) son comportamiento mobile/tablet ya existente y quedan intactos
+ * a propósito (Fase 1 de este plan es sólo desktop). */
+.trust{background:var(--bg)}
 .trust .wrap{
-  display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
-  padding-top:var(--s5); padding-bottom:var(--s5);
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--s3);
+  padding-top:0; padding-bottom:56px;
 }
-.trust-item{display:flex; align-items:center; gap:var(--s2)}
+.trust-item{display:flex; align-items:center; gap:12px}
 .trust-item .tic{
-  width:48px; height:48px; flex:none; border-radius:16px; display:grid; place-items:center;
+  width:44px; height:44px; flex:none; border-radius:999px; display:grid; place-items:center;
   background:var(--color-green-100); color:var(--color-green-700);
 }
-.trust-item .tic .ic{width:26px; height:26px}
-.trust-item b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.2}
-.trust-item small{display:block; font-size:var(--fs-1); opacity:.85; line-height:1.35}
+.trust-item .tic .ic{width:20px; height:20px}
+.trust-item b{display:block; font-family:var(--font-display); font-size:15px; font-weight:700; line-height:1.2; color:var(--ink)}
+.trust-item small{display:block; font-size:var(--fs-1); color:var(--muted); line-height:1.35}
 @media(max-width:900px){ .trust .wrap{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:480px){ .trust .wrap{grid-template-columns:1fr; gap:var(--s2)} }
 
