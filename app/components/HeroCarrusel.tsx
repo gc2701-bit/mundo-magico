@@ -88,7 +88,12 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
   const siguiente = () => irA((i + 1) % productos.length);
 
   return (
-    <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-surface">
+    // Fondo (2026-09-09): mismo tono que el hero (--color-background-hero,
+    // #F5EAD8 medido del HTML standalone) — el usuario pidió que ese fondo
+    // llegue "desde el nav hasta la primera sección de artículos, incluido
+    // el carrusel", antes esta sección tenía bg-surface (blanco), cortando
+    // la continuidad visual con el hero de arriba.
+    <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-[var(--color-background-hero)]">
       {productos.length > 1 && (
         <>
           <button
@@ -113,7 +118,16 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
       <Link
         href={p.mundo ? `/${p.mundo}/${p.slug}` : '/explorar'}
         className={
-          'mx-auto flex max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
+          // min-h fija (2026-09-09): el usuario reportó que el carrusel
+          // "cambiaba de tamaño" entre destacados — títulos de distinto
+          // largo (1 vs. 2-3 líneas) hacían variar el alto real del
+          // <Link>, y con eso el de toda la sección. h2 ahora tiene
+          // line-clamp-2 (ver abajo) para topear en 2 líneas siempre, y
+          // acá se reserva el alto máximo posible (foto 256px + py-s6
+          // 48px arriba/abajo = 352px en desktop, 192+48=240px en
+          // mobile) para que ningún destacado quede más chico/grande que
+          // otro.
+          'mx-auto flex min-h-[240px] max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:min-h-[352px] md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
           (visible ? 'opacity-100' : 'opacity-0')
         }
       >
@@ -139,7 +153,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
           <span className="font-body text-fs-1 font-semibold uppercase tracking-wide text-green-ink!">
             Destacado
           </span>
-          <h2 className="font-display text-fs3 text-ink">{p.titulo}</h2>
+          <h2 className="line-clamp-2 font-display text-fs3 text-ink">{p.titulo}</h2>
           <span className="pricetag mt-s1 block! static! rounded-none! bg-transparent! p-0! font-body! text-fs2! font-extrabold! text-ink! shadow-none! [&_.pricetag-antes]:mr-1.5 [&_.pricetag-antes]:font-normal [&_.pricetag-antes]:text-muted [&_.pricetag-antes]:line-through">
             {oferta.enOferta ? (
               <>
