@@ -53,6 +53,39 @@
      unidades") — muy por debajo del 4.5:1 AA. Encontrado con Lighthouse
      el 2026-08-24. */
   --color-orange-ink: #a15c00; /* ~5.2:1 sobre blanco */
+
+  /* Escala completa verde/rojo (Rediseño Home 2026-09-08) — superset de
+     --color-green/--color-green-ink/--color-red/--color-red-ink de
+     arriba, que quedan como alias de green-500/green-700/red-500/red-600
+     (mismos hex, no se duplican valores). Usada para el color-por-categoría
+     de las vidrieras (Task 5) y cualquier superficie que necesite un paso
+     más claro/oscuro que los dos tonos "de texto" ya definidos. */
+  --color-green-100: #e7f3ea;
+  --color-green-200: #c9e8d0;
+  --color-green-300: #9ddaa9;
+  --color-green-400: #5cc172;
+  --color-green-500: #1e8834;
+  --color-green-600: #1a7830;
+  --color-green-700: #14672a;
+  --color-green-800: #0f4f21;
+  --color-green-900: #0a3717;
+
+  --color-red-100: #fdeceb;
+  --color-red-200: #f8c9c5;
+  --color-red-300: #f19d95;
+  --color-red-400: #e96a5f;
+  --color-red-500: #e23b30;
+  --color-red-600: #cc3226;
+  --color-red-700: #a82a1f;
+  --color-red-800: #7a1f17;
+  --color-red-900: #4d130e;
+
+  /* Decoración (Home 2026-09-08) — hex confirmado por el usuario, medido
+     directamente en el canvas de Claude Design (no forma parte de la
+     escala verde/rojo, es propio de esta categoría). */
+  --color-decoracion-bg: #eee7db;
+  --color-decoracion-accent: #474238;
+
   --color-yellow: #ffd23e;
 
   --color-accent: var(--color-green);
