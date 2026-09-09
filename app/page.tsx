@@ -123,12 +123,12 @@ export default async function Home() {
             green-200, así que el resultado visual es idéntico. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-[#c9e8d0]/60 blur-3xl"
+          className="hidden md:block pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-[#c9e8d0]/60 blur-3xl"
           style={{ position: 'absolute', zIndex: 0 }}
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none -left-32 top-1/3 h-80 w-80 rounded-full bg-background-alt blur-3xl"
+          className="hidden md:block pointer-events-none -left-32 top-1/3 h-80 w-80 rounded-full bg-background-alt blur-3xl"
           style={{ position: 'absolute', zIndex: 0 }}
         />
         <HeroAnimado />
