@@ -120,14 +120,24 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
         className={
           // min-h fija (2026-09-09): el usuario reportó que el carrusel
           // "cambiaba de tamaño" entre destacados — títulos de distinto
-          // largo (1 vs. 2-3 líneas) hacían variar el alto real del
-          // <Link>, y con eso el de toda la sección. h2 ahora tiene
-          // line-clamp-2 (ver abajo) para topear en 2 líneas siempre, y
-          // acá se reserva el alto máximo posible (foto 256px + py-s6
-          // 48px arriba/abajo = 352px en desktop, 192+48=240px en
+          // largo hacían variar el alto real del <Link>, y con eso el de
+          // toda la sección. Reservado el alto máximo posible (foto 256px
+          // + py-s6 48px arriba/abajo = 352px en desktop, 192+48=240px en
           // mobile) para que ningún destacado quede más chico/grande que
           // otro.
-          'mx-auto flex min-h-[240px] max-w-3xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:min-h-[352px] md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
+          //
+          // max-w-3xl → max-w-5xl (2026-09-09, segunda vuelta): el usuario
+          // reportó que los títulos se cortaban ("nunca se leen
+          // completos") — con el contenedor angosto de antes (768px), la
+          // columna de texto (768 − 256 de foto − 48 de gap ≈ 464px)
+          // obligaba a wrappear casi cualquier título a 2-3 líneas, y
+          // `line-clamp-2` de abajo terminaba comiéndose parte del texto.
+          // Con 1024px de contenedor la columna de texto sube a ~720px,
+          // suficiente para que la gran mayoría de los títulos del
+          // catálogo entren en 1 sola línea sin agrandar el alto
+          // reservado — `line-clamp-3` queda sólo como red de seguridad
+          // para el caso extremo de un título realmente larguísimo.
+          'mx-auto flex min-h-[240px] max-w-5xl flex-col items-center gap-s3 px-s8 py-s6 text-center transition-opacity duration-200 motion-reduce:transition-none md:min-h-[352px] md:flex-row md:justify-center md:gap-s6 md:px-s10 md:text-left ' +
           (visible ? 'opacity-100' : 'opacity-0')
         }
       >
@@ -153,7 +163,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
           <span className="font-body text-fs-1 font-semibold uppercase tracking-wide text-green-ink!">
             Destacado
           </span>
-          <h2 className="line-clamp-2 font-display text-fs3 text-ink">{p.titulo}</h2>
+          <h2 className="line-clamp-3 font-display text-fs3 text-ink">{p.titulo}</h2>
           <span className="pricetag mt-s1 block! static! rounded-none! bg-transparent! p-0! font-body! text-fs2! font-extrabold! text-ink! shadow-none! [&_.pricetag-antes]:mr-1.5 [&_.pricetag-antes]:font-normal [&_.pricetag-antes]:text-muted [&_.pricetag-antes]:line-through">
             {oferta.enOferta ? (
               <>
