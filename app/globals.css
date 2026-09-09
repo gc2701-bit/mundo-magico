@@ -86,6 +86,12 @@
   --color-decoracion-bg: #eee7db;
   --color-decoracion-accent: #474238;
 
+  /* Fondo oscuro compartido por la franja de utilidad del nav (Task B2) y
+     el footer (Task B4), plan 2026-09-09 home-correccion-standalone —
+     medido literal contra "Mundo Magico - Home (standalone).html"
+     (rgb(46,43,37) en ambos elementos). */
+  --color-nav-oscuro: #2E2B25;
+
   --color-yellow: #ffd23e;
 
   --color-accent: var(--color-green);

@@ -52,6 +52,47 @@ const LINKS_UTILIDAD = [
   { href: "/#contacto", label: "Contacto" },
 ];
 
+/* Íconos de línea SVG inline — mismo patrón que CuentaNavButton/
+ * CarritoNavButton (viewBox 24x24, stroke=currentColor, strokeWidth 1.9,
+ * cabos/uniones redondeados): reemplazan los emojis 🎉/🔍/🏠 (Task B2,
+ * plan 2026-09-09 home-correccion-standalone). */
+function IconLupa({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.35-4.35" />
+    </svg>
+  );
+}
+
+function IconMundos({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
+      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+    </svg>
+  );
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function IconHome({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10v9.5a1 1 0 0 0 1 1H9.5v-6h5v6H17.5a1 1 0 0 0 1-1V10" />
+    </svg>
+  );
+}
+
 function MenuMundos({ mundos, onNavegar }: { mundos: Mundo[]; onNavegar: () => void }) {
   return (
     <>
@@ -129,14 +170,18 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           (conScroll ? "shadow-md" : "")
         }
       >
-        {/* Desktop — franja de utilidad */}
-        <div className="flex justify-center gap-s4 border-b border-line py-1 font-body text-fs-1 text-muted">
+        {/* Desktop — franja de utilidad. Fondo oscuro (#2E2B25, Task B2,
+            plan 2026-09-09 home-correccion-standalone) medido contra "Mundo
+            Magico - Home (standalone).html" — mismo tono que el footer
+            (Task B4), token compartido `--color-nav-oscuro`. Blanco/70%
+            sobre ese fondo da ~7.7:1 de contraste (calculado), sobra AA. */}
+        <div className="flex justify-center gap-s4 bg-nav-oscuro py-1 font-body text-fs-1 text-white/70">
           {LINKS_UTILIDAD.map((l) => (
             <a
               key={l.href}
               href={l.href}
               aria-current={pathname === l.href ? "page" : undefined}
-              className="hover:text-ink!"
+              className="hover:text-white!"
             >
               {l.label}
             </a>
@@ -184,7 +229,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
                 onFocus={() => setMundosDesktopAbierto(true)}
                 onClick={() => setMundosDesktopAbierto((v) => !v)}
               >
-                <span aria-hidden="true">🎉</span> Mundos ▾
+                Mundos <IconChevronDown className="h-3.5 w-3.5" />
               </button>
               {mundosDesktopAbierto && (
                 <div
@@ -203,10 +248,10 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
             ) : (
               <button
                 type="button"
-                className="font-body text-fs0 text-muted"
+                className="flex items-center gap-1 font-body text-fs0 text-muted"
                 onClick={() => setBuscarDesktopAbierto(true)}
               >
-                🔍 Buscar
+                <IconLupa className="h-4 w-4" /> Buscar
               </button>
             )}
 
@@ -273,7 +318,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
             (pathname === "/" ? "text-green-ink!" : "text-muted!")
           }
         >
-          <span aria-hidden="true">🏠</span>
+          <IconHome className="h-[22px] w-[22px]" />
           Home
         </Link>
         <button
@@ -283,7 +328,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           aria-expanded={mundosMobileAbierto}
           onClick={() => setMundosMobileAbierto(true)}
         >
-          <span aria-hidden="true">🎉</span>
+          <IconMundos className="h-[22px] w-[22px]" />
           Mundos
         </button>
         <button
@@ -291,7 +336,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           className="flex flex-col items-center gap-0.5 py-1 font-body text-fs-1 text-muted"
           onClick={() => setBuscarMobileAbierto(true)}
         >
-          <span aria-hidden="true">🔍</span>
+          <IconLupa className="h-[22px] w-[22px]" />
           Buscar
         </button>
         <div className="flex flex-col items-center justify-center">
