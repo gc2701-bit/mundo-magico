@@ -28,6 +28,7 @@
  * está bien sin preguntar.
  */
 import type { Metadata } from 'next';
+import HeroAnimado from './components/HeroAnimado';
 import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
@@ -145,42 +146,23 @@ export default async function Home() {
         id="inicio"
         style={{ minHeight: '58svh', backgroundColor: 'var(--color-background-hero)' }}
       >
-        {/* Círculos de fondo (Task B3, plan 2026-09-09
-            home-correccion-standalone) — colores/tamaños reales medidos
-            contra "Mundo Magico - Home (standalone).html" a 1440px
-            (sólidos, sin blur/opacidad reducida; los valores de ayer eran
-            aproximados). `.hero` ya trae position:relative +
-            overflow:hidden (home.css), así que estos blobs quedan
-            clippeados dentro del header sin generar scroll horizontal de
-            página. IMPORTANTE: `.hero > *{position:relative;z-index:2}`
-            en home.css no está en @layer, así que le gana a la utilidad
-            `absolute` de Tailwind (que sí vive en @layer utilities) —
-            position/z-index se fuerzan por style inline (máxima
-            prioridad de cascada) en vez de className para garantizar que
-            se posicionen absolute de verdad. */}
-        <div
-          aria-hidden="true"
-          className="hidden md:block pointer-events-none -right-6 -top-6 h-[340px] w-[340px] rounded-full bg-green-200"
-          style={{ position: 'absolute', zIndex: 0 }}
-        />
-        <div
-          aria-hidden="true"
-          className="hidden md:block pointer-events-none -left-6 top-[467px] h-[260px] w-[260px] rounded-full bg-[#FFE1AB]"
-          style={{ position: 'absolute', zIndex: 0 }}
-        />
-        {/* Sin logo/video en el hero (2026-09-09, tercera vuelta) — se
-            probaron dos versiones (imagen estática, después video, las
-            dos en una caja fija a la derecha) y ninguna convenció ("lo
-            centraría y agrandaría, o directamente lo sacaría" + "sigue
-            estando tirado a la derecha"); el video tampoco llegaba a
-            reproducirse en la prueba. El HTML standalone (fuente de
-            verdad de esta sección) tampoco tiene ningún logo/imagen en
-            el hero — sólo texto + los círculos de fondo — así que se
-            saca del todo en vez de seguir iterando la posición/tamaño.
-            `HeroLogoVideo.tsx`/`HeroAnimado.tsx` no se borraron del
-            repo, sólo se dejaron de montar acá, por si se retoma como
-            otra cosa (marca de agua grande centrada, por ejemplo) más
-            adelante. */}
+        {/* Video del castillo de vuelta (2026-09-09, cuarta vuelta) —
+            decisión final del usuario: "es nuestra identidad y ayuda al
+            branding". Los dos intentos anteriores (imagen estática y
+            video, ambos en un badge chico a la derecha) no convencieron;
+            confirmado explícitamente vía pregunta: restaurar el
+            tratamiento ORIGINAL completo (`.hero-anim`, absolute, ocupa
+            el 66% derecho de fondo — ver home.css) en vez de seguir
+            iterando una caja contenida. Los círculos decorativos de la
+            Task B3 (verde/durazno) se sacan: comparten el mismo
+            z-index:0 que `.hero-anim` y quedarían tapados por el video o
+            pisándolo, según el orden — no tiene sentido mantenerlos acá.
+            El fondo del header SIGUE siendo --color-background-hero
+            (tan, no blanco) — el usuario pidió explícitamente mantener
+            esa continuidad con el nav/carrusel de abajo; el mask del
+            video no depende de que el fondo sea blanco, funde igual de
+            bien contra cualquier color sólido de fondo. */}
+        <HeroAnimado />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
           <span className="w">Todo</span> <span className="w">para</span> <span className="w">tu</span>{' '}

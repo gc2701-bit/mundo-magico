@@ -73,16 +73,17 @@
 }
 
 .hero .eyebrow{margin-bottom:var(--s3); animation:riseIn .7s var(--ease) .25s both}
-/* max-width: 720px literal, medido contra el h1 real de "Mundo Magico -
- * Home (standalone).html" a 1440px (2026-09-09) — el límite angosto de
- * 13ch que tenía antes existía sólo para no superponerse con el video de
- * fondo del hero animado, que ya no se monta acá (ver el comentario
- * grande de app/page.tsx). font-size subido de clamp(39,4.4vw,61) a
- * clamp(39,5vw,68) para acercarse al tamaño real medido (68px a 1440px)
- * sin perder el clamp responsivo que ya tenía. */
+/* max-width: 13ch de vuelta (2026-09-09, cuarta vuelta) — el video del
+ * hero (HeroAnimado.tsx) volvió a montarse en app/page.tsx a pedido
+ * explícito del usuario ("es nuestra identidad y ayuda al branding");
+ * ese video ocupa de fondo el 66% derecho del hero (`.hero-anim`, más
+ * abajo), así que el h1 necesita volver a quedar angosto para no
+ * superponerse — el max-width:720px que se probó un rato (medido del
+ * HTML standalone, que no tiene video en el hero) sólo tenía sentido
+ * sin el video de fondo. font-size también vuelve al clamp original. */
 .hero h1{
-  font-size:clamp(39px, 5vw, 68px); line-height:1.04; letter-spacing:-.015em;
-  max-width:720px; margin:0 0 var(--s3);
+  font-size:clamp(39px, 4.4vw, 61px); line-height:1.04; letter-spacing:-.015em;
+  max-width:13ch; margin:0 0 var(--s3);
 }
 .hero h1 em{font-style:italic; font-weight:500; color:var(--green-ink)}
 .hero h1 .w{display:inline-block; animation:wordUp .7s var(--ease) both}
@@ -116,10 +117,16 @@
   .hero{align-items:center; text-align:center; padding-bottom:var(--s9)}
   .hero-anim{position:relative; inset:auto; width:100vw; margin:0 0 var(--s2)}
   .hero-anim video{aspect-ratio:4/3; object-fit:cover; object-position:50% 50%; transform:none}
-  /* fundido arriba y abajo para que el video se disuelva en el blanco */
+  /* Fundido arriba y abajo del video en mobile — colores actualizados
+   * (2026-09-09, cuarta vuelta) de #fff al tan nuevo
+   * (--color-background-hero): con el video de vuelta pero el fondo del
+   * hero en tan (no blanco, pedido explícito para la continuidad con
+   * nav/carrusel), estos dos fundidos en blanco puro dejaban un
+   * recuadro blanco bien visible alrededor del video en mobile, cortado
+   * contra el tan de alrededor. */
   .hero-anim::before, .hero-anim::after{content:''; position:absolute; left:0; right:0; height:56px; z-index:1; pointer-events:none}
-  .hero-anim::before{top:0; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0))}
-  .hero-anim::after{bottom:0; background:linear-gradient(to top, #fff, rgba(255,255,255,0))}
+  .hero-anim::before{top:0; background:linear-gradient(to bottom, var(--color-background-hero), rgba(245,234,216,0))}
+  .hero-anim::after{bottom:0; background:linear-gradient(to top, var(--color-background-hero), rgba(245,234,216,0))}
   .hero h1{font-size:clamp(31px, 9.5vw, 39px); max-width:16ch}
   .hero-lead{font-size:var(--fs1); margin-bottom:var(--s4); max-width:44ch}
   .hero-cta{width:100%; flex-direction:column; align-items:stretch; max-width:360px; justify-content:center}
