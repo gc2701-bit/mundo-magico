@@ -115,15 +115,10 @@ export default async function Home() {
             gana a la utilidad `absolute` de Tailwind (que sí vive en
             @layer utilities) — position/z-index se fuerzan por style
             inline (máxima prioridad de cascada) en vez de className para
-            garantizar que se posicionen absolute de verdad. Color del
-            primer blob: hex literal (no `bg-green-200`) porque la escala
-            verde/rojo de Task 1 de este mismo plan todavía no está en
-            app/globals.css y ese archivo queda fuera del scope de esta
-            tarea — #c9e8d0 es el valor exacto que Task 1 define para
-            green-200, así que el resultado visual es idéntico. */}
+            garantizar que se posicionen absolute de verdad. */}
         <div
           aria-hidden="true"
-          className="hidden md:block pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-[#c9e8d0]/60 blur-3xl"
+          className="hidden md:block pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-green-200/60 blur-3xl"
           style={{ position: 'absolute', zIndex: 0 }}
         />
         <div
