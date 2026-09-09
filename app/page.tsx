@@ -24,7 +24,6 @@ import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
 import { obtenerCatalogoPublico } from '@/lib/catalogo-server';
-import { COLOR_MUNDO, COLOR_MUNDO_DEFAULT } from '@/lib/catalogo-mundo';
 
 export const revalidate = false;
 
@@ -81,14 +80,11 @@ const SUCURSALES = [
   { nombre: 'Solano Vera 510', sub: 'Yerba Buena · línea propia', query: 'Mundo+Magico+Solano+Vera+510+Yerba+Buena+Tucuman' },
 ];
 
-// Task 9 Step 1 (plan PC 2026-09-08) — avatares alternando sólo verde/rojo
-// de marca en vez de 4 colores random (naranja/azul incluidos) que no
-// pertenecían a la paleta nueva.
 const RESENAS = [
-  { texto: 'Siempre encontrás lo que buscás. Buena atención y precios.', autor: 'Belén Reynoso', hace: 'Hace 5 años', color: 'var(--color-green-600)', inicial: 'B' },
-  { texto: 'Excelentes precios, variedad y atención.', autor: 'Sil Iraidini Taboada', hace: 'Hace 1 año', color: 'var(--color-red-600)', inicial: 'S' },
-  { texto: 'Muy buena atención.', autor: 'Valeria Roxana Sánchez', hace: 'Hace 2 años', color: 'var(--color-green-600)', inicial: 'V' },
-  { texto: 'Muy buena atención, asesoramiento y amabilidad. Los precios accesibles.', autor: 'Laura Paola Hidalgo', hace: 'Hace 4 años', color: 'var(--color-red-600)', inicial: 'L' },
+  { texto: 'Siempre encontrás lo que buscás. Buena atención y precios.', autor: 'Belén Reynoso', hace: 'Hace 5 años', color: '#ef5c4d', inicial: 'B' },
+  { texto: 'Excelentes precios, variedad y atención.', autor: 'Sil Iraidini Taboada', hace: 'Hace 1 año', color: '#2f63cf', inicial: 'S' },
+  { texto: 'Muy buena atención.', autor: 'Valeria Roxana Sánchez', hace: 'Hace 2 años', color: '#6f9e5b', inicial: 'V' },
+  { texto: 'Muy buena atención, asesoramiento y amabilidad. Los precios accesibles.', autor: 'Laura Paola Hidalgo', hace: 'Hace 4 años', color: '#f0913a', inicial: 'L' },
 ];
 
 function EstrellasGoogle({ n = 5 }: { n?: number }) {
@@ -198,20 +194,7 @@ export default async function Home() {
                     <img className="tile-img" src={m.img} alt="" width={600} height={432} loading="lazy" />
                   </div>
                   <div className="body">
-                    {/* Punto de color por mundo (Task 7, plan PC 2026-09-08) —
-                        reusa el mapeo del mega-menú del nav (lib/catalogo-mundo.ts).
-                        Medido literal contra Home.dc.html línea 350 (sección
-                        "Nuestros mundos"): el dot va INLINE junto al título, no
-                        apilado arriba (9px, gap 8px), no el "mb-1 inline-block"
-                        del borrador original del plan. */}
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="h-[9px] w-[9px] shrink-0 rounded-full"
-                        style={{ background: COLOR_MUNDO[m.href.slice(1)] || COLOR_MUNDO_DEFAULT }}
-                        aria-hidden="true"
-                      />
-                      <h3>{m.titulo}</h3>
-                    </div>
+                    <h3>{m.titulo}</h3>
                     <p className="desc">{m.desc}</p>
                     <span className="go">Entrar al mundo →</span>
                   </div>
@@ -360,14 +343,10 @@ export default async function Home() {
             </div>
 
             <div className="hist-foot">
-              {/* Task 9 Step 3 (plan PC 2026-09-08) — los 3 stat numbers
-                  alternan verde/rojo/verde (antes los 3 en verde vía
-                  ".hchip b" de home.css). Color inline porque cada chip
-                  necesita un tono distinto, no uno fijo por clase. */}
               <div className="hist-chips">
-                <div className="hchip"><b style={{ color: 'var(--color-green-700)' }}>+30</b><span>Años</span></div>
-                <div className="hchip"><b style={{ color: 'var(--color-red-600)' }}>+1.000</b><span>Productos</span></div>
-                <div className="hchip"><b style={{ color: 'var(--color-green-700)' }}>Nº&nbsp;1</b><span>En cotillón</span></div>
+                <div className="hchip"><b>+30</b><span>Años</span></div>
+                <div className="hchip"><b>+1.000</b><span>Productos</span></div>
+                <div className="hchip"><b>Nº&nbsp;1</b><span>En cotillón</span></div>
               </div>
               <a className="btn btn-ghost" href="/historia">Ver toda nuestra historia →</a>
             </div>
