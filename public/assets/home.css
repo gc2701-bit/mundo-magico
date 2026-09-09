@@ -18,10 +18,17 @@
   background:#fff;
 }
 .hero > *{position:relative; z-index:2}
-/* velo inferior: transición suave del blanco del video al crema de la página */
+/* Velo inferior — ya no hace falta desde que se sacó el video del hero
+ * (2026-09-09, ver app/page.tsx): existía para fundir el blanco del video
+ * con el crema de la página. Ahora el hero es un color sólido nuevo
+ * (--color-background-hero) igual que el carrusel de abajo, así que se
+ * actualiza el color de destino del degradé para no dejar una franja del
+ * crema viejo (--bg) justo en el borde inferior — con los dos extremos
+ * en el mismo tono, el degradé queda inerte a propósito (no molesta
+ * dejarlo, por si se vuelve a sumar algo con blanco de fondo ahí). */
 .hero::after{
   content:''; position:absolute; inset:auto 0 0 0; height:120px; z-index:1; pointer-events:none;
-  background:linear-gradient(to bottom, rgba(253,251,245,0), var(--bg));
+  background:linear-gradient(to bottom, rgba(245,234,216,0), var(--color-background-hero));
 }
 
 /* Campo de estrellas de la marca · 3 capas de profundidad con drift + twinkle */
@@ -66,9 +73,16 @@
 }
 
 .hero .eyebrow{margin-bottom:var(--s3); animation:riseIn .7s var(--ease) .25s both}
+/* max-width: 720px literal, medido contra el h1 real de "Mundo Magico -
+ * Home (standalone).html" a 1440px (2026-09-09) — el límite angosto de
+ * 13ch que tenía antes existía sólo para no superponerse con el video de
+ * fondo del hero animado, que ya no se monta acá (ver el comentario
+ * grande de app/page.tsx). font-size subido de clamp(39,4.4vw,61) a
+ * clamp(39,5vw,68) para acercarse al tamaño real medido (68px a 1440px)
+ * sin perder el clamp responsivo que ya tenía. */
 .hero h1{
-  font-size:clamp(39px, 4.4vw, 61px); line-height:1.04; letter-spacing:-.015em;
-  max-width:13ch; margin:0 0 var(--s3);
+  font-size:clamp(39px, 5vw, 68px); line-height:1.04; letter-spacing:-.015em;
+  max-width:720px; margin:0 0 var(--s3);
 }
 .hero h1 em{font-style:italic; font-weight:500; color:var(--green-ink)}
 .hero h1 .w{display:inline-block; animation:wordUp .7s var(--ease) both}
