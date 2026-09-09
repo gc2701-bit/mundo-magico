@@ -146,7 +146,7 @@ export default function HeroAnimado() {
           // @ts-expect-error -- fetchPriority es válido en HTML/React 19, los tipos todavía no lo reconocen en <video>
           fetchPriority="high"
           src="/Logo/Logo-Animacion-2.mp4"
-          poster="/Logo/Mundo-Magico%20Logo.jpg"
+          poster="/Logo/Mundo-Magico-Logo-3D-final-frame.jpg"
           // onPlaying — vuelto de onLoadedData (2026-09-09, segunda
           // vuelta): loadeddata dispara con sólo tener el primer frame
           // decodificado, SIN garantía de que el video vaya a arrancar a
@@ -165,7 +165,18 @@ export default function HeroAnimado() {
         />
         {!videoListo && (
           <img
-            src="/Logo/Mundo-Magico%20Logo.jpg"
+            // Frame real del video en vez del logo plano/2D (2026-09-09)
+            // — extraído del propio Logo-Animacion-2.mp4 (00:00:05.00,
+            // ya asentado, sin motion blur) y recortado con sharp igual
+            // que el ícono del nav. Antes acá vivía el logo plano viejo
+            // (Mundo-Magico Logo.jpg) mientras que el video renderiza una
+            // versión 3D con brillo del mismo diseño — el usuario notó
+            // el salto de estilo al arrancar el video ("no es ni
+            // parecida"). Con este frame, si el video nunca llega a
+            // reproducirse la transición es invisible (es literalmente
+            // el mismo cuadro), y si sí reproduce, no hay ningún salto
+            // de estilo plano→3D al arrancar.
+            src="/Logo/Mundo-Magico-Logo-3D-final-frame.jpg"
             alt=""
             width={600}
             height={600}
