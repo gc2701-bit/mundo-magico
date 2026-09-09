@@ -58,9 +58,13 @@ type Props = {
   nuevo?: boolean;
   /** Ver el comentario grande de arriba — modo 2 (resuelto por React) cuando se pasa. */
   precios?: PreciosPublico;
+  /** Clase Tailwind de fondo (ej. "bg-red-600") para el botón "Agregar" —
+   * Task A3, sólo la pasa Vidriera.tsx (home). Ver el comentario grande
+   * de AgregarControl en carrito/AccionesProducto.tsx para el mecanismo. */
+  accent?: string;
 };
 
-export default function ProductoCard({ producto, precioOferta, nuevo, precios }: Props) {
+export default function ProductoCard({ producto, precioOferta, nuevo, precios, accent }: Props) {
   const fotos = producto.fotos || [];
   // Sólo variantes activas ("a la venta") cuentan — una sacada de uso
   // desde el panel admin no debe seguir marcando el producto como "de
@@ -222,7 +226,7 @@ export default function ProductoCard({ producto, precioOferta, nuevo, precios }:
           >
             Quedan pocas unidades
           </span>
-          <AgregarControl producto={producto} />
+          <AgregarControl producto={producto} accent={accent} />
         </div>
       </div>
     </Link>

@@ -67,16 +67,19 @@ export default function Vidriera({
    * de antes (`alterno`, ya no existe). */
   bg?: string;
   /** Clase Tailwind del acento (círculo del ícono, y — sólo en el
-   * teaser de Navidad, Task 6 — el botón "Ver otros mundos"). El botón "Agregar"
-   * de cada card NO recibe este accent: `AgregarControl`
-   * (app/components/carrito/AccionesProducto.tsx) pinta `.pcard-add`
-   * vía CSS legacy sin @layer, con estados propios de hover/active/
-   * "is-added" que ya pelean con la cascada (ver el comentario grande
-   * de Nav.tsx/Footer.tsx) — forzar un color distinto por instancia ahí
-   * significaría reescribir esos tres estados por cada card en vez de
-   * un simple prop pass-through, y el spec de este plan no especifica
-   * ese diseño (ver README). Se deja como deviación documentada en el
-   * commit en vez de adivinar. */
+   * teaser de Navidad, Task 6 — el botón "Ver otros mundos").
+   *
+   * CORREGIDO (Task A3, plan 2026-09-09 home-correccion-standalone):
+   * confirmado contra el HTML standalone que el botón "Agregar" de cada
+   * card SÍ lleva este acento (rojo en Cotillón, naranja en Halloween,
+   * etc.) — ya no se deja siempre verde como quedó documentado ayer (ver
+   * `AgregarControl` en carrito/AccionesProducto.tsx para el mecanismo
+   * de override vía `!` de Tailwind). Ver `ACCENT_BOTON_SEGURO` abajo:
+   * dos acentos (Halloween/Navidad) no alcanzan 4.5:1 de contraste con
+   * texto blanco tal cual están definidos en app/page.tsx (2.2:1 y
+   * 4.28:1 calculados) — para el botón puntualmente se usa un tono más
+   * oscuro de la misma categoría en esos dos casos, mismo criterio que
+   * ya usa `accentText` frente a `accent` para el link "Ver todo". */
   accent?: string;
   /** Clase de color de texto para el link "Ver todo →", con "!" porque
    * es un <Link> (ver Global Constraints de este plan). */
@@ -84,6 +87,35 @@ export default function Vidriera({
 }) {
   const items = productos.filter((p) => p.mundo === mundoSlug).slice(0, 8);
   const esNavidad = mundoSlug === 'navidad';
+
+  // Acento del botón "Agregar" (Task A3): mismo `accent` que el ícono de
+  // la sección para Cumpleaños/Cotillón/Decoración, salvo Halloween y
+  // Navidad, donde ese tono no llega a 4.5:1 de contraste con el texto
+  // blanco del botón (2.2:1 y 4.28:1 calculados) — ahí se usa el tono
+  // "ink"/oscuro de esa misma categoría, mismo criterio que ya usa
+  // `accentText` frente a `accent` para el link "Ver todo".
+  //
+  // Los 5 valores están escritos LITERALES acá a propósito (no armados
+  // con `accent + '!'` en runtime): Tailwind v4 genera CSS sólo para las
+  // clases que puede ENCONTRAR COMO TEXTO en los archivos fuente que
+  // escanea — un string construido en runtime nunca aparece como texto
+  // en ningún archivo, así que Tailwind no genera esa clase y el botón
+  // queda verde en silencio (bug real, encontrado probando en el
+  // navegador — ver el comentario de `accent` en AgregarControl,
+  // carrito/AccionesProducto.tsx). Los 5 valores de `accent` que existen
+  // hoy están hardcodeados en el array VIDRIERAS de app/page.tsx (fuera
+  // de alcance de este archivo) — si el día de mañana se suma una
+  // categoría nueva con un `accent` que no está en este mapa, el botón
+  // se queda verde por default (rama de abajo) en vez de fallar en
+  // silencio con una clase sin CSS.
+  const ACCENT_BOTON: Record<string, string> = {
+    'bg-green-600': 'bg-green-600!', // Cumpleaños: ya pasa AA (~5.57:1), sin cambio de tono
+    'bg-red-600': 'bg-red-600!', // Cotillón: ya pasa AA (~5.2:1), sin cambio de tono
+    'bg-decoracion-accent': 'bg-decoracion-accent!', // Decoración #474238: ~10:1, sin cambio
+    'bg-orange': 'bg-orange-ink!', // Halloween: accent plano da 2.2:1 → orange-ink da ~5.2:1
+    'bg-red-500': 'bg-red-600!', // Navidad (por si algún día tiene productos reales): 4.28:1 → ~5.2:1
+  };
+  const accentBoton = ACCENT_BOTON[accent];
 
   return (
     <section
@@ -102,7 +134,7 @@ export default function Vidriera({
             >
               {items.map((p) => (
                 <div key={p.id} className="w-[210px] shrink-0" style={{ scrollSnapAlign: 'start' }}>
-                  <ProductoCard producto={p} />
+                  <ProductoCard producto={p} accent={accentBoton} />
                 </div>
               ))}
             </div>

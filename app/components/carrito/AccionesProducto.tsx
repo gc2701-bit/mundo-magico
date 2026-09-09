@@ -141,11 +141,48 @@ function usePrecioDeCodigo(codigo: string | null) {
 export function AgregarControl({
   producto,
   variante = 'card',
-  onCambiarImagen
+  onCambiarImagen,
+  accent
 }: {
   producto: ProductoPublico;
   variante?: 'card' | 'pagina';
   onCambiarImagen?: (url: string | null) => void;
+  /**
+   * Clase Tailwind de fondo YA con el modificador "!" incluido (ej.
+   * "bg-red-600!", no "bg-red-600") para pintar el botón "Agregar" con el
+   * acento de la categoría en vez del verde de siempre — Task A3, plan
+   * 2026-09-09 home-correccion-standalone, confirmado contra "Mundo
+   * Magico - Home (standalone).html". Sólo lo usan las cards dentro de
+   * una Vidriera del home (ver Vidriera.tsx, que arma el string completo
+   * a mano); en cualquier otro lugar (Explorar, /[mundo]) queda sin
+   * pasar y el botón sigue verde, sin cambios.
+   *
+   * IMPORTANTE — por qué tiene que venir con el "!" ya puesto (no
+   * concatenado acá): Tailwind v4 escanea el TEXTO LITERAL de los
+   * archivos fuente para decidir qué utilidades generar — un string
+   * armado en runtime (`accent + '!'`) nunca aparece como texto en
+   * ningún archivo, así que Tailwind jamás genera el CSS de esa clase y
+   * el override queda sin efecto en silencio (encontrado probando en el
+   * navegador: los 4 botones seguían verdes). Por eso el literal completo
+   * ("bg-red-600!", etc.) tiene que existir tal cual en el código fuente
+   * de Vidriera.tsx — ver el comentario de `ACCENT_BOTON` ahí.
+   *
+   * `.pcard-add` (carrito.css) define su propio `background` SIN @layer
+   * — le gana a cualquier utilidad de Tailwind (que compila dentro de
+   * @layer utilities) sin el modificador `!` (mismo mecanismo ya
+   * documentado en Nav.tsx/Footer.tsx).
+   *
+   * Deviación consciente: como ese "!" también le gana a
+   * `.pcard-add:hover`/`.pcard-add.is-added` (ninguna de las dos tiene
+   * `!important` tampoco, y `!important` le gana a cualquier regla sin
+   * `!important` sin importar especificidad/capa), el botón con accent
+   * queda de un solo color fijo — no oscurece al hacer hover ni al
+   * agregar (la animación `cart-latido`, que es un `transform`, no un
+   * `background`, sigue jugando igual). El spec de este plan sólo pide
+   * el color de reposo por categoría, no reescribir esos tres estados
+   * por cada card (mismo límite que dejó documentado Vidriera.tsx ayer).
+   */
+  accent?: string;
 }) {
   const { agregar, cantidadDe, cantidadTotalDe, setCantidad, abrirPanel } = useCarrito();
   const [eligiendo, setEligiendo] = useState(false);
@@ -301,7 +338,7 @@ export function AgregarControl({
 
   return (
     <div className="cart-add" onClick={(ev) => ev.stopPropagation()}>
-      <button type="button" className="pcard-add" aria-label={ariaLabel} onClick={alTocarAgregar}>Agregar</button>
+      <button type="button" className={'pcard-add' + (accent ? ' ' + accent : '')} aria-label={ariaLabel} onClick={alTocarAgregar}>Agregar</button>
 
       {!tieneVariantes ? (
         cantidadDe(simple) > 0 && <PasoDeCantidad n={cantidadDe(simple)} onCambiar={cambiarSimple} />
