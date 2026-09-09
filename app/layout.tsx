@@ -9,7 +9,7 @@ import CuentaOverlays from "./components/cuenta/CuentaOverlays";
 import { CarritoProvider } from "./components/carrito/CarritoProvider";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import "./globals.css";
-import { nunitoSans, caprasimo } from "./fonts";
+import { nunitoSans } from "./fonts";
 import { cn } from "@/lib/utils";
 
 // shadcn init agrega Geist (Google Fonts) acá por default — lo
@@ -34,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     .sort((a, b) => a.orden - b.orden);
 
   return (
-    <html lang="es" className={cn("font-sans", nunitoSans.variable, caprasimo.variable)}>
+    <html lang="es" className={cn("font-sans", nunitoSans.variable)}>
       <head>
         {/* Preload de las fuentes autoalojadas (Fraunces/Nunito Sans) — cada
             página del sitio viejo lo tenía en el <head>. v2.css las carga
@@ -46,12 +46,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             producción real, 2026-08-21. */}
         <link rel="preload" href="/assets/fonts/Fraunces-500.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/assets/fonts/NunitoSans-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        {/* Caprasimo reemplaza a Fraunces como --font-display (Rediseño Home
-            2026-09-08, Task 0) — mismo motivo de preload que las dos de
-            arriba: display:optional corta al fallback si no llega a tiempo,
-            sin este preload el navegador la descubre recién al parsear el
-            CSS. */}
-        <link rel="preload" href="/assets/fonts/Caprasimo-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* v2.css vive ahora en public/assets (Sprint 2, ver plan) — mismo
             hoja de estilos que ya usa el sitio viejo, servida en la misma
             URL. No se reescribe el diseño de cero para esta migración. */}

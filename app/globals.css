@@ -104,7 +104,12 @@
   --color-accent-contrast: #ffffff;
 
   /* Tipografía · escala 1.25 (16 base) */
-  --font-display: 'Caprasimo', Georgia, serif;
+  /* Regresión a Fraunces (2026-09-09) — Caprasimo (Task 0, plan PC
+     2026-09-08) quedó "demasiado grande" en la práctica, viéndolo en
+     vivo; Fraunces era "más fina". El archivo de Caprasimo y el export
+     en app/fonts.ts NO se borraron, sólo se dejó de referenciar acá —
+     mismo criterio que HeroAnimado.tsx/HeroLogoVideo.tsx esta sesión. */
+  --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Nunito Sans', system-ui, -apple-system, sans-serif;
 
   --text-fs-1: 13px;
@@ -199,30 +204,6 @@
 
 body {
   margin: 0;
-}
-
-/* Necesario para Task 0 del plan de modernización Home PC (Caprasimo) —
- * no estaba en el plan original, encontrado al probar en el navegador,
- * 2026-09-09. `v2.css` (public/assets/v2.css:49) define su PROPIO
- * `:root{--font-display:'Fraunces', Georgia, serif}`, sin `@layer`. El
- * `--font-display` de `@theme` de arriba compila dentro de
- * `@layer theme` — y por CSS Cascade Layers, una declaración SIN capa le
- * gana SIEMPRE a una CON capa, sin importar el orden de los <link> en el
- * <head>, salvo que la de la capa sea `!important` (ahí se invierte el
- * orden de prioridad entre capas). Antes esto era invisible porque las
- * dos declaraciones tenían el mismo string literal ('Fraunces'); al
- * cambiar sólo el token de `@theme` a Caprasimo, los headings seguían
- * renderizando en Fraunces (verificado con Playwright). Tailwind además
- * descarta cualquier `!important` escrito directamente dentro de
- * `@theme` (probado, no queda en el CSS compilado) — por eso esta regla
- * vive afuera, como CSS plano normal (mismo patrón que `body{margin:0}`
- * de arriba), no dentro del bloque de tokens. Mismo mecanismo que ya
- * documentan los comentarios grandes de Nav.tsx/Footer.tsx para
- * `a{color:inherit}` de v2.css, pero vía cascade layers en vez de
- * especificidad — aplica el mismo criterio del modificador `!` de
- * Tailwind, a nivel de custom property en vez de utility class. */
-:root {
-  --font-display: 'Caprasimo', Georgia, serif !important;
 }
 
 @theme inline {
