@@ -103,6 +103,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
   const [buscarMobileAbierto, setBuscarMobileAbierto] = useState(false);
   const pathname = usePathname();
   const mundosWrapRef = useRef<HTMLDivElement | null>(null);
+  const [conScroll, setConScroll] = useState(false);
 
   useEffect(() => {
     if (!mundosDesktopAbierto) return;
@@ -113,81 +114,118 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [mundosDesktopAbierto]);
 
+  // Nav sticky + shrink al scrollear (Task 2, plan de modernización PC
+  // 2026-09-08) — sólo aplica al bloque desktop de abajo, el bloque
+  // mobile (logo arriba + barra inferior) no se toca.
+  useEffect(() => {
+    function onScroll() {
+      setConScroll(window.scrollY > 12);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <>
-      {/* Desktop — franja de utilidad */}
-      <div className="hidden justify-center gap-s4 border-b border-line bg-background py-1 font-body text-fs-1 text-muted md:flex">
-        {LINKS_UTILIDAD.map((l) => (
-          <a
-            key={l.href}
-            href={l.href}
-            aria-current={pathname === l.href ? "page" : undefined}
-            className="hover:text-ink!"
-          >
-            {l.label}
-          </a>
-        ))}
-      </div>
-
-      {/* Desktop — fila principal. Los 4 controles (Mundos/Buscar/Cuenta/
-          Carrito) van juntos a la derecha, a pedido explícito del
-          usuario (2026-08-24) — el primer intento los separaba (Mundos a
-          la izquierda, buscador centrado). */}
-      <nav
-        className="hidden items-center justify-between gap-s3 border-b border-line bg-background px-s3 py-s2 md:flex"
-        id="nav-desktop"
-        aria-label="Navegación principal"
+      {/* Desktop — sticky, se achica al scrollear (Task 2, plan de
+          modernización PC 2026-09-08). backdrop-blur + sombra sólo con
+          scroll para no competir visualmente con el hero cuando está
+          arriba de todo. Franja de utilidad + fila principal comparten
+          este wrapper sticky para que se peguen arriba como una sola
+          unidad visual. */}
+      <div
+        className={
+          "sticky top-0 z-30 hidden md:block bg-background/90 backdrop-blur-sm transition-shadow duration-[250ms] " +
+          (conScroll ? "shadow-md" : "")
+        }
       >
-        <Link href="/" aria-label="Inicio · Mundo Mágico" className="shrink-0">
-          <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={44} height={44} className="rounded-full" />
-        </Link>
-
-        <div className="flex items-center gap-s4">
-          <div
-            ref={mundosWrapRef}
-            className="relative"
-            onMouseEnter={() => setMundosDesktopAbierto(true)}
-            onMouseLeave={() => setMundosDesktopAbierto(false)}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1 font-body text-fs0 text-ink"
-              aria-haspopup="true"
-              aria-expanded={mundosDesktopAbierto}
-              aria-controls="mundos-menu-desktop"
-              onFocus={() => setMundosDesktopAbierto(true)}
-              onClick={() => setMundosDesktopAbierto((v) => !v)}
+        {/* Desktop — franja de utilidad */}
+        <div className="flex justify-center gap-s4 border-b border-line py-1 font-body text-fs-1 text-muted">
+          {LINKS_UTILIDAD.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              aria-current={pathname === l.href ? "page" : undefined}
+              className="hover:text-ink!"
             >
-              <span aria-hidden="true">🎉</span> Mundos ▾
-            </button>
-            {mundosDesktopAbierto && (
-              <div
-                id="mundos-menu-desktop"
-                role="menu"
-                aria-label="Nuestros mundos"
-                className="absolute right-0 top-full z-20 w-72 rounded-brand border border-line bg-surface p-s3 shadow-lg"
-              >
-                <MenuMundos mundos={mundos} onNavegar={() => setMundosDesktopAbierto(false)} />
-              </div>
-            )}
-          </div>
-
-          {buscarDesktopAbierto ? (
-            <BuscadorPredictivo variante="desktop" onCerrar={() => setBuscarDesktopAbierto(false)} />
-          ) : (
-            <button
-              type="button"
-              className="font-body text-fs0 text-muted"
-              onClick={() => setBuscarDesktopAbierto(true)}
-            >
-              🔍 Buscar
-            </button>
-          )}
-
-          <CuentaNavButton />
-          <CarritoNavButton />
+              {l.label}
+            </a>
+          ))}
         </div>
-      </nav>
+
+        {/* Desktop — fila principal. Los 4 controles (Mundos/Buscar/Cuenta/
+            Carrito) van juntos a la derecha, a pedido explícito del
+            usuario (2026-08-24) — el primer intento los separaba (Mundos a
+            la izquierda, buscador centrado). */}
+        <nav
+          className={
+            "flex items-center justify-between gap-s3 border-b border-line px-s3 transition-[padding] duration-[250ms] " +
+            (conScroll ? "py-1" : "py-2")
+          }
+          id="nav-desktop"
+          aria-label="Navegación principal"
+        >
+          <Link href="/" aria-label="Inicio · Mundo Mágico" className="shrink-0">
+            <img
+              src="/Logo/Mundo-Magico%20Logo.jpg"
+              alt="Logo de Mundo Mágico"
+              width={44}
+              height={44}
+              className={
+                "rounded-full transition-[width,height] duration-[250ms] " +
+                (conScroll ? "h-9 w-9" : "h-11 w-11")
+              }
+            />
+          </Link>
+
+          <div className="flex items-center gap-s4">
+            <div
+              ref={mundosWrapRef}
+              className="relative"
+              onMouseEnter={() => setMundosDesktopAbierto(true)}
+              onMouseLeave={() => setMundosDesktopAbierto(false)}
+            >
+              <button
+                type="button"
+                className="flex items-center gap-1 font-body text-fs0 text-ink"
+                aria-haspopup="true"
+                aria-expanded={mundosDesktopAbierto}
+                aria-controls="mundos-menu-desktop"
+                onFocus={() => setMundosDesktopAbierto(true)}
+                onClick={() => setMundosDesktopAbierto((v) => !v)}
+              >
+                <span aria-hidden="true">🎉</span> Mundos ▾
+              </button>
+              {mundosDesktopAbierto && (
+                <div
+                  id="mundos-menu-desktop"
+                  role="menu"
+                  aria-label="Nuestros mundos"
+                  className="absolute right-0 top-full z-20 w-72 rounded-brand border border-line bg-surface p-s3 shadow-lg"
+                >
+                  <MenuMundos mundos={mundos} onNavegar={() => setMundosDesktopAbierto(false)} />
+                </div>
+              )}
+            </div>
+
+            {buscarDesktopAbierto ? (
+              <BuscadorPredictivo variante="desktop" onCerrar={() => setBuscarDesktopAbierto(false)} />
+            ) : (
+              <button
+                type="button"
+                className="font-body text-fs0 text-muted"
+                onClick={() => setBuscarDesktopAbierto(true)}
+              >
+                🔍 Buscar
+              </button>
+            )}
+
+            <CuentaNavButton />
+            <CarritoNavButton />
+          </div>
+        </nav>
+      </div>
 
       {/* Mobile — sólo el logo arriba, todo lo demás en la barra inferior */}
       <div className="flex items-center justify-center border-b border-line bg-background py-2 md:hidden">
