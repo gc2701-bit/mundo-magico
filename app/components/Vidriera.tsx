@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ProductoPublico } from '@/lib/catalogo-familia';
 import ProductoCard from './ProductoCard';
 import EmptyState from './EmptyState';
+import VidrieraFila from './VidrieraFila';
 
 /**
  * Vidriera de un mundo en el home (Sprint 4, ver
@@ -48,6 +49,12 @@ import EmptyState from './EmptyState';
  * ícono rojo de 56px centrado, título/párrafo/CTA en columna, medido
  * literal contra `Home.dc.html` (data-screen-label="vidriera-navidad",
  * incluido su padding vertical propio de 56px vs. 52px del resto).
+ *
+ * Flechas prev/next (2026-09-09): la fila de productos con scroll-snap
+ * vive ahora en `VidrieraFila.tsx` (client component aparte, sólo para
+ * los botones + el ref del scroll) — este archivo sigue siendo un
+ * server component, sin `'use client'`, sólo le pasa el `.map()` de
+ * `ProductoCard` ya armado como children.
  */
 export default function Vidriera({
   titulo,
@@ -128,16 +135,13 @@ export default function Vidriera({
           <>
             <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} accentText={accentText} verTodo />
 
-            <div
-              className="flex gap-s2 overflow-x-auto pb-s1 [&::-webkit-scrollbar]:hidden"
-              style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
-            >
+            <VidrieraFila>
               {items.map((p) => (
                 <div key={p.id} className="w-[210px] shrink-0" style={{ scrollSnapAlign: 'start' }}>
                   <ProductoCard producto={p} accent={accentBoton} />
                 </div>
               ))}
-            </div>
+            </VidrieraFila>
           </>
         ) : esNavidad ? (
           /* Teaser especial de Navidad (Task 6) — literal contra
