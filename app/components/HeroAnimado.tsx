@@ -130,7 +130,18 @@ export default function HeroAnimado() {
           fetchPriority="high"
           src="/Logo/Logo-Animacion-2.mp4"
           poster="/Logo/Mundo-Magico%20Logo.jpg"
-          onPlaying={() => setVideoListo(true)}
+          // onLoadedData en vez de onPlaying (2026-09-09) — el usuario
+          // reportó que en la primera visita (video sin cachear todavía)
+          // se quedaba "estático, con fondo blanco fijo" un buen rato
+          // antes de arrancar. `playing` sólo dispara cuando el video YA
+          // está reproduciéndose de verdad — con conexión lenta/primera
+          // visita eso puede tardar bastante. `loadeddata` dispara mucho
+          // antes (apenas hay un primer frame decodificado, sin esperar
+          // a que empiece a reproducir de verdad) — el fallback de abajo
+          // desaparece más rápido, dejando ver el propio <video poster>
+          // (misma imagen que el fallback) mientras termina de bufferear
+          // lo suficiente para animarse solo.
+          onLoadedData={() => setVideoListo(true)}
         />
         {!videoListo && (
           <img
@@ -146,7 +157,13 @@ export default function HeroAnimado() {
               height: '100%',
               objectFit: 'contain',
               objectPosition: '60% 50%',
-              background: '#fff',
+              // background (2026-09-09): era #fff hardcodeado — con el
+              // fondo del hero ahora en --color-background-hero (tan),
+              // ese blanco fijo era justo el "fondo blanco fijo" que
+              // reportó el usuario en la primera carga, antes de que el
+              // video/su mask terminaran de fundirse con el tan de
+              // alrededor.
+              background: 'var(--color-background-hero)',
             }}
           />
         )}
