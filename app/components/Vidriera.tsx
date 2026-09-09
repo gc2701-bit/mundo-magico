@@ -69,7 +69,12 @@ export default function Vidriera({
   titulo: string;
   mundoSlug: string;
   productos: ProductoPublico[];
-  icono?: string;
+  /** Ícono del badge — desde 2026-09-09 es un componente SVG de línea
+   * (ver app/components/iconos/IconoVidriera.tsx), no un emoji: el
+   * usuario pidió siluetas monocromáticas en vez de emojis coloridos,
+   * "que no se pierdan con el fondo" — con `stroke="currentColor"` en
+   * cada ícono, heredan el `text-white` del badge automáticamente. */
+  icono?: React.ReactNode;
   /** Clase Tailwind de fondo de la sección (color de marca por categoría,
    * ver el mapeo en app/page.tsx). Reemplaza el fondo crema alternado
    * de antes (`alterno`, ya no existe). */
@@ -203,7 +208,7 @@ function VidrieraHeader({
 }: {
   mundoSlug: string;
   titulo: string;
-  icono: string;
+  icono: React.ReactNode;
   accent: string;
   accentText?: string;
   /** Color del `<h2>` del título de la sección (2026-09-09) — default

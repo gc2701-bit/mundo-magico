@@ -8,7 +8,11 @@ import Link from 'next/link';
  * blanco sin texto ni salida, siempre hay un mensaje claro y una acción.
  */
 export type EmptyStateProps = {
-  icono?: string;
+  /** String (emoji, uso original) o un ícono SVG (ver
+   * app/components/iconos/IconoVidriera.tsx) — ensanchado 2026-09-09
+   * para que Vidriera.tsx pueda pasarle el mismo ícono de línea que usa
+   * en su propio header, sin dos props/dos componentes distintos. */
+  icono?: React.ReactNode;
   titulo: string;
   descripcion?: string;
   accion?: { label: string; href: string };

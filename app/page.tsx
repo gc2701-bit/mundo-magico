@@ -31,6 +31,7 @@ import type { Metadata } from 'next';
 import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
+import { IconoCumpleanos, IconoCotillon, IconoDecoracion, IconoHalloween, IconoNavidad } from './components/iconos/IconoVidriera';
 import { obtenerCatalogoPublico } from '@/lib/catalogo-server';
 
 export const revalidate = false;
@@ -57,16 +58,21 @@ export const metadata: Metadata = {
  * ícono vs. link, así que ambos reusan el mismo token (deviación menor,
  * documentada en el commit).
  */
+// Íconos de línea (2026-09-09) — reemplazan los emojis coloridos
+// (🎂🎈🎀🎃🎄) por siluetas monocromáticas, pedido explícito del usuario.
+// JSX como valor de un array de módulo: está bien acá porque este
+// archivo es 100% Server Component (nunca cruza al cliente serializado),
+// no es el mismo caso que pasar JSX como prop a un client component.
 const VIDRIERAS = [
-  { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: '🎂', bg: 'bg-green-100', accent: 'bg-green-600', accentText: 'text-green-700!' },
-  { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: '🎈', bg: 'bg-red-100', accent: 'bg-red-600', accentText: 'text-red-700!' },
-  { mundoSlug: 'decoracion', titulo: 'Decoración', icono: '🎀', bg: 'bg-decoracion-bg', accent: 'bg-decoracion-accent', accentText: 'text-decoracion-accent!' },
+  { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: <IconoCumpleanos />, bg: 'bg-green-100', accent: 'bg-green-600', accentText: 'text-green-700!' },
+  { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: <IconoCotillon />, bg: 'bg-red-100', accent: 'bg-red-600', accentText: 'text-red-700!' },
+  { mundoSlug: 'decoracion', titulo: 'Decoración', icono: <IconoDecoracion />, bg: 'bg-decoracion-bg', accent: 'bg-decoracion-accent', accentText: 'text-decoracion-accent!' },
   // tituloColor #F9F4ED (2026-09-09): medido exacto contra el <h2>
   // "Halloween" del HTML standalone — sin esto el título se queda con el
   // text-ink (oscuro) default de VidrieraHeader, invisible contra el
   // fondo casi negro (bg-ink) de esta sección.
-  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃', bg: 'bg-ink', accent: 'bg-orange', accentText: 'text-orange!', tituloColor: 'text-[#F9F4ED]!' },
-  { mundoSlug: 'navidad', titulo: 'Navidad', icono: '🎄', bg: 'bg-green-700', accent: 'bg-red-500', accentText: 'text-white!' },
+  { mundoSlug: 'halloween', titulo: 'Halloween', icono: <IconoHalloween />, bg: 'bg-ink', accent: 'bg-orange', accentText: 'text-orange!', tituloColor: 'text-[#F9F4ED]!' },
+  { mundoSlug: 'navidad', titulo: 'Navidad', icono: <IconoNavidad />, bg: 'bg-green-700', accent: 'bg-red-500', accentText: 'text-white!' },
 ];
 
 const MUNDOS_HOME = [
