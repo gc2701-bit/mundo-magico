@@ -33,12 +33,28 @@ export const metadata: Metadata = {
     '+30 años haciendo magia en Tucumán. Cotillón, decoración, línea de cumpleaños, repostería y disfraces, más de 1.000 productos en un solo lugar. Vos ponés la ocasión, nosotros todo lo demás.',
 };
 
+/**
+ * Vidrieras de categoría (Task 5/6, plan
+ * docs/superpowers/plans/2026-09-08-home-pc-modernizacion-plan.md):
+ * color de marca por categoría, medido literal contra
+ * `Home.dc.html` (data-screen-label="vidriera-*") a ≥1280px —
+ * `accentText` es el color del link "Ver todo", que en el diseño real
+ * es un paso más oscuro que el accent del ícono/botón (ej. cumpleaños:
+ * ícono green-600, link green-700) — no son el mismo tono. Todas
+ * llevan el sufijo "!" porque son <Link> y v2.css define `a{color:
+ * inherit}` sin @layer (ver el comentario grande de Nav.tsx/Footer.tsx).
+ * Halloween es la única excepción a la paleta verde/rojo (spec, "kept
+ * as-is") — el proyecto sólo tiene un tono de naranja (`--color-orange`),
+ * no la escala 400/500 completa que usa el diseño para distinguir
+ * ícono vs. link, así que ambos reusan el mismo token (deviación menor,
+ * documentada en el commit).
+ */
 const VIDRIERAS = [
-  { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: '🎂' },
-  { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: '🎈' },
-  { mundoSlug: 'decoracion', titulo: 'Decoración', icono: '🎀' },
-  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃' },
-  { mundoSlug: 'navidad', titulo: 'Navidad', icono: '🎄' },
+  { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: '🎂', bg: 'bg-green-100', accent: 'bg-green-600', accentText: 'text-green-700!' },
+  { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: '🎈', bg: 'bg-red-100', accent: 'bg-red-600', accentText: 'text-red-700!' },
+  { mundoSlug: 'decoracion', titulo: 'Decoración', icono: '🎀', bg: 'bg-decoracion-bg', accent: 'bg-decoracion-accent', accentText: 'text-decoracion-accent!' },
+  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃', bg: 'bg-ink', accent: 'bg-orange', accentText: 'text-orange!' },
+  { mundoSlug: 'navidad', titulo: 'Navidad', icono: '🎄', bg: 'bg-green-700', accent: 'bg-red-500', accentText: 'text-white!' },
 ];
 
 const MUNDOS_HOME = [
@@ -151,14 +167,16 @@ export default async function Home() {
       <HeroCarrusel productos={heroItems} />
 
       <main>
-        {VIDRIERAS.map((v, i) => (
+        {VIDRIERAS.map((v) => (
           <Vidriera
             key={v.mundoSlug}
             titulo={v.titulo}
             mundoSlug={v.mundoSlug}
             icono={v.icono}
             productos={catalogo.productos}
-            alterno={i % 2 === 1}
+            bg={v.bg}
+            accent={v.accent}
+            accentText={v.accentText}
           />
         ))}
 
