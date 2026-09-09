@@ -157,7 +157,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
         >
           <Link href="/" aria-label="Inicio · Mundo Mágico" className="shrink-0">
             <img
-              src="/Logo/Mundo-Magico%20Logo.jpg"
+              src="/Logo/mundo-magico-icono.webp"
               alt="Logo de Mundo Mágico"
               width={44}
               height={44}
@@ -219,7 +219,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
       {/* Mobile — sólo el logo arriba, todo lo demás en la barra inferior */}
       <div className="flex items-center justify-center border-b border-line bg-background py-2 md:hidden">
         <Link href="/" aria-label="Inicio · Mundo Mágico">
-          <img src="/Logo/Mundo-Magico%20Logo.jpg" alt="Logo de Mundo Mágico" width={36} height={36} className="rounded-full" />
+          <img src="/Logo/mundo-magico-icono.webp" alt="Logo de Mundo Mágico" width={36} height={36} className="rounded-full" />
         </Link>
       </div>
 
