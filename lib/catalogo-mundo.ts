@@ -34,3 +34,20 @@ export function mundosDisponibles(productos: ProductoPublico[]): string[] {
 export function productosDeMundo(productos: ProductoPublico[], mundoSlug: string): ProductoPublico[] {
   return productos.filter((p) => p.mundo === mundoSlug);
 }
+
+// Color de marca por mundo (Task 7, plan de modernización PC 2026-09-08) —
+// vivía sólo en Nav.tsx (mega-menú de "Mundos"), se movió acá para que
+// tanto el nav como el grid "Nuestros mundos" de app/page.tsx puedan
+// pintar el mismo punto de color junto al título sin duplicar el mapeo.
+// Hex calcados de Home.dc.html (una entrada por slug de catalogo_mundos).
+export const COLOR_MUNDO: Record<string, string> = {
+  "globos-fiesta": "#2f63cf",
+  cumpleanos: "#e23b30",
+  disfraces: "#a23e8c",
+  reposteria: "#ec6a9c",
+  decoracion: "#6f9e5b",
+  combos: "#f0913a",
+  halloween: "#b6531f",
+  navidad: "#166534",
+};
+export const COLOR_MUNDO_DEFAULT = "#9a938a";

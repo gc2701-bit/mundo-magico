@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { Mundo } from "@/lib/catalogo-server";
+import { COLOR_MUNDO, COLOR_MUNDO_DEFAULT } from "@/lib/catalogo-mundo";
 import CuentaNavButton from "./cuenta/CuentaNavButton";
 import CarritoNavButton from "./carrito/CarritoNavButton";
 import BuscadorPredictivo from "./BuscadorPredictivo";
@@ -44,18 +45,6 @@ import BuscadorPredictivo from "./BuscadorPredictivo";
  * (Sprint 9) - hasta entonces, todo <a> con color propio en componentes
  * nuevos necesita "!".
  */
-const COLOR_MUNDO: Record<string, string> = {
-  "globos-fiesta": "#2f63cf",
-  cumpleanos: "#e23b30",
-  disfraces: "#a23e8c",
-  reposteria: "#ec6a9c",
-  decoracion: "#6f9e5b",
-  combos: "#f0913a",
-  halloween: "#b6531f",
-  navidad: "#166534",
-};
-const COLOR_MUNDO_DEFAULT = "#9a938a";
-
 const LINKS_UTILIDAD = [
   { href: "/historia", label: "Historia" },
   { href: "/eventos", label: "Eventos a medida" },
