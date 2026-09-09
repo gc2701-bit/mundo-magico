@@ -13,13 +13,21 @@
  * (hardcodeadas) — el usuario lo detectó y pidió dejarlas así por ahora,
  * ver la spec.
  *
- * El hero animado (video del logo + campo de estrellas, HeroAnimado.tsx)
- * tampoco se toca — se le baja la altura mínima por fuera (inline style,
- * gana sin pelear con la cascada de home.css) para que dexe de ser
- * protagonista único de la pantalla, sin tocar su animación interna.
+ * Hero animado (video del logo + campo de estrellas, HeroAnimado.tsx) —
+ * SACADO del hero (2026-09-09, pedido explícito del usuario tras comparar
+ * contra "Mundo Magico - Home (standalone).html": el h1 real mide
+ * max-width:720px, nada que ver con los 13ch que tenía antes acá — ese
+ * límite angosto existía sólo para no taparse con el video, que ocupaba
+ * el 66% derecho del hero de fondo). El componente en sí NO se borró
+ * (`HeroAnimado.tsx` sigue en el repo intacto) por si se quiere volver a
+ * usar en otro lado — sólo se dejó de montar acá. Importante: este mismo
+ * componente se había restaurado a pedido explícito del usuario el
+ * 2026-08-21 después de haberse simplificado por error a un logo
+ * estático — si en algún momento se extraña la animación, ese es el
+ * contexto para tenerlo en cuenta antes de asumir que sacarlo de nuevo
+ * está bien sin preguntar.
  */
 import type { Metadata } from 'next';
-import HeroAnimado from './components/HeroAnimado';
 import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
@@ -150,7 +158,27 @@ export default async function Home() {
           className="hidden md:block pointer-events-none -left-6 top-[467px] h-[260px] w-[260px] rounded-full bg-[#FFE1AB]"
           style={{ position: 'absolute', zIndex: 0 }}
         />
-        <HeroAnimado />
+        {/* Logo estático decorativo (2026-09-09) — el usuario pidió llenar
+            el espacio vacío que quedó a la derecha del hero al sacar
+            HeroAnimado.tsx (el video forzaba el h1 a max-width:13ch para
+            no taparse; con una imagen estática NO hace falta ese límite,
+            así que el h1 se queda en los 720px reales del standalone).
+            Sólo desde `lg:` (1024px): a 1024-1279px el h1 de 720px + el
+            padding del hero (clamp 6vw) deja poco margen derecho — recién
+            a partir de 1280px hay aire cómodo para una imagen grande, así
+            que el tamaño también escala por breakpoint (h-40 en lg, h-72
+            desde xl) en vez de un tamaño fijo. z-index:1 (inline, por el
+            mismo motivo que los círculos de arriba) — entre los círculos
+            (0) y el texto (2, forzado por `.hero > *` de home.css). */}
+        <img
+          src="/Logo/mundo-magico-icono.webp"
+          alt=""
+          aria-hidden="true"
+          width={400}
+          height={400}
+          className="pointer-events-none right-4 top-1/2 hidden h-40 w-40 -translate-y-1/2 lg:block xl:right-12 xl:h-72 xl:w-72"
+          style={{ position: 'absolute', zIndex: 1 }}
+        />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
           <span className="w">Todo</span> <span className="w">para</span> <span className="w">tu</span>{' '}
