@@ -107,6 +107,30 @@ export default async function Home() {
       <link rel="stylesheet" href="/assets/home.css" />
 
       <header className="hero" id="inicio" style={{ minHeight: '58svh' }}>
+        {/* Círculos de fondo suaves (Task 3, plan PC 2026-09-08). `.hero`
+            ya trae position:relative + overflow:hidden (home.css), así que
+            estos blobs quedan clippeados dentro del header sin generar
+            scroll horizontal de página. IMPORTANTE: `.hero > *{position:
+            relative;z-index:2}` en home.css no está en @layer, así que le
+            gana a la utilidad `absolute` de Tailwind (que sí vive en
+            @layer utilities) — position/z-index se fuerzan por style
+            inline (máxima prioridad de cascada) en vez de className para
+            garantizar que se posicionen absolute de verdad. Color del
+            primer blob: hex literal (no `bg-green-200`) porque la escala
+            verde/rojo de Task 1 de este mismo plan todavía no está en
+            app/globals.css y ese archivo queda fuera del scope de esta
+            tarea — #c9e8d0 es el valor exacto que Task 1 define para
+            green-200, así que el resultado visual es idéntico. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-[#c9e8d0]/60 blur-3xl"
+          style={{ position: 'absolute', zIndex: 0 }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none -left-32 top-1/3 h-80 w-80 rounded-full bg-background-alt blur-3xl"
+          style={{ position: 'absolute', zIndex: 0 }}
+        />
         <HeroAnimado />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
