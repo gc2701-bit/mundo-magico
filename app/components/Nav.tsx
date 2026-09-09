@@ -166,16 +166,17 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           unidad visual. */}
       <div
         className={
-          "sticky top-0 z-30 hidden md:block bg-[var(--color-background-hero)]/90 backdrop-blur-sm transition-shadow duration-[250ms] " +
+          "sticky top-0 z-30 hidden md:block bg-background/90 backdrop-blur-sm transition-shadow duration-[250ms] " +
           (conScroll ? "shadow-md" : "")
         }
       >
-        {/* Desktop — franja de utilidad. Fondo oscuro (#2E2B25, Task B2,
-            plan 2026-09-09 home-correccion-standalone) medido contra "Mundo
-            Magico - Home (standalone).html" — mismo tono que el footer
-            (Task B4), token compartido `--color-nav-oscuro`. Blanco/70%
-            sobre ese fondo da ~7.7:1 de contraste (calculado), sobra AA. */}
-        <div className="flex justify-center gap-s4 bg-nav-oscuro py-1 font-body text-fs-1 text-white/70">
+        {/* Desktop — franja de utilidad. Verde de marca (--color-green,
+            2026-09-09, segunda vuelta) — el usuario pidió que use el mismo
+            verde del wordmark "Mundo Mágico" en vez del fondo oscuro
+            (#2E2B25, `--color-nav-oscuro`) que sigue usando el footer sin
+            cambios. Blanco/70% sobre este verde ya es un patrón probado
+            en el sitio (mismo par que el pill "Ver más →" del carrusel). */}
+        <div className="flex justify-center gap-s4 bg-green py-1 font-body text-fs-1 text-white/70">
           {LINKS_UTILIDAD.map((l) => (
             <a
               key={l.href}
@@ -268,7 +269,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
       </div>
 
       {/* Mobile — logo + wordmark arriba, todo lo demás en la barra inferior */}
-      <div className="flex items-center justify-center border-b border-line bg-[var(--color-background-hero)] py-2 md:hidden">
+      <div className="flex items-center justify-center border-b border-line bg-background py-2 md:hidden">
         <Link href="/" aria-label="Inicio · Mundo Mágico" className="flex items-center gap-2">
           <img src="/Logo/mundo-magico-icono.webp" alt="Logo de Mundo Mágico" width={36} height={36} className="rounded-full" />
           <span className="font-display text-[18px] font-semibold text-green!">Mundo Mágico</span>

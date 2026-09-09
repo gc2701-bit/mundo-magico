@@ -153,11 +153,7 @@ export default async function Home() {
           cuando eso pasa. */}
       <link rel="preload" href="/Logo/Logo-Animacion-2.mp4" as="video" type="video/mp4" fetchPriority="high" />
 
-      <header
-        className="hero"
-        id="inicio"
-        style={{ minHeight: '58svh', backgroundColor: 'var(--color-background-hero)' }}
-      >
+      <header className="hero" id="inicio" style={{ minHeight: '58svh' }}>
         {/* Video del castillo de vuelta (2026-09-09, cuarta vuelta) —
             decisión final del usuario: "es nuestra identidad y ayuda al
             branding". Los dos intentos anteriores (imagen estática y
@@ -169,11 +165,12 @@ export default async function Home() {
             Task B3 (verde/durazno) se sacan: comparten el mismo
             z-index:0 que `.hero-anim` y quedarían tapados por el video o
             pisándolo, según el orden — no tiene sentido mantenerlos acá.
-            El fondo del header SIGUE siendo --color-background-hero
-            (tan, no blanco) — el usuario pidió explícitamente mantener
-            esa continuidad con el nav/carrusel de abajo; el mask del
-            video no depende de que el fondo sea blanco, funde igual de
-            bien contra cualquier color sólido de fondo. */}
+            El fondo del header vuelve a ser blanco (2026-09-09, segunda
+            vuelta) — el usuario decidió que el tan (--color-background-hero)
+            no lo convencía ni acá ni en el nav/carrusel, revertido a como
+            estaba antes de esa continuidad; el mask del video no depende
+            de que el fondo sea blanco, funde igual de bien contra
+            cualquier color sólido de fondo. */}
         <HeroAnimado />
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>

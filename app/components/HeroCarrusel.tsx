@@ -88,12 +88,11 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
   const siguiente = () => irA((i + 1) % productos.length);
 
   return (
-    // Fondo (2026-09-09): mismo tono que el hero (--color-background-hero,
-    // #F5EAD8 medido del HTML standalone) — el usuario pidió que ese fondo
-    // llegue "desde el nav hasta la primera sección de artículos, incluido
-    // el carrusel", antes esta sección tenía bg-surface (blanco), cortando
-    // la continuidad visual con el hero de arriba.
-    <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-[var(--color-background-hero)]">
+    // Fondo (2026-09-09, segunda vuelta): vuelve a bg-surface (blanco) —
+    // el tono tostado compartido con el hero (--color-background-hero) no
+    // convenció al usuario, revertido a como estaba antes de esa
+    // continuidad visual.
+    <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-surface">
       {/* Título de sección (2026-09-09) — mismo tratamiento tipográfico
           que el resto de los headers del home (Vidriera.tsx: font-display
           = Caprasimo, text-fs2 mobile / text-fs3 desktop, text-ink).

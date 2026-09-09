@@ -159,8 +159,8 @@ export default function HeroAnimado() {
           // logo estático de siempre ("ahora ni siquiera se ve la imagen
           // vieja, es un video que no se mueve"). Con onPlaying, el peor
           // caso (autoplay bloqueado) vuelve a ser el logo estático de
-          // estable (con el fondo ya corregido a --color-background-hero,
-          // no el blanco de antes) — se ve intencional, no roto.
+          // siempre, fundido contra el mismo fondo del hero (blanco) —
+          // se ve intencional, no roto.
           onPlaying={() => setVideoListo(true)}
         />
         {!videoListo && (
@@ -188,13 +188,11 @@ export default function HeroAnimado() {
               height: '100%',
               objectFit: 'contain',
               objectPosition: '60% 50%',
-              // background (2026-09-09): era #fff hardcodeado — con el
-              // fondo del hero ahora en --color-background-hero (tan),
-              // ese blanco fijo era justo el "fondo blanco fijo" que
-              // reportó el usuario en la primera carga, antes de que el
-              // video/su mask terminaran de fundirse con el tan de
-              // alrededor.
-              background: 'var(--color-background-hero)',
+              // background: vuelve a #fff (2026-09-09, segunda vuelta) —
+              // el fondo del hero volvió a blanco (el tan no convenció),
+              // así que este fallback vuelve a fundirse contra el mismo
+              // blanco de siempre.
+              background: '#fff',
             }}
           />
         )}

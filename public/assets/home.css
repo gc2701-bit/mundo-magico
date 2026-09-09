@@ -18,17 +18,15 @@
   background:#fff;
 }
 .hero > *{position:relative; z-index:2}
-/* Velo inferior — ya no hace falta desde que se sacó el video del hero
- * (2026-09-09, ver app/page.tsx): existía para fundir el blanco del video
- * con el crema de la página. Ahora el hero es un color sólido nuevo
- * (--color-background-hero) igual que el carrusel de abajo, así que se
- * actualiza el color de destino del degradé para no dejar una franja del
- * crema viejo (--bg) justo en el borde inferior — con los dos extremos
- * en el mismo tono, el degradé queda inerte a propósito (no molesta
+/* Velo inferior — vuelve a fundir hacia #fff (2026-09-09, segunda vuelta):
+ * el fondo tostado (--color-background-hero) que compartía con el
+ * carrusel se revirtió, el hero es blanco de nuevo (arriba), así que el
+ * degradé fundía hacia un tostado que ya no existe en ningún extremo —
+ * con los dos extremos en blanco, queda inerte a propósito (no molesta
  * dejarlo, por si se vuelve a sumar algo con blanco de fondo ahí). */
 .hero::after{
   content:''; position:absolute; inset:auto 0 0 0; height:120px; z-index:1; pointer-events:none;
-  background:linear-gradient(to bottom, rgba(245,234,216,0), var(--color-background-hero));
+  background:linear-gradient(to bottom, rgba(255,255,255,0), #fff);
 }
 
 /* Campo de estrellas de la marca · 3 capas de profundidad con drift + twinkle */
@@ -117,16 +115,13 @@
   .hero{align-items:center; text-align:center; padding-bottom:var(--s9)}
   .hero-anim{position:relative; inset:auto; width:100vw; margin:0 0 var(--s2)}
   .hero-anim video{aspect-ratio:4/3; object-fit:cover; object-position:50% 50%; transform:none}
-  /* Fundido arriba y abajo del video en mobile — colores actualizados
-   * (2026-09-09, cuarta vuelta) de #fff al tan nuevo
-   * (--color-background-hero): con el video de vuelta pero el fondo del
-   * hero en tan (no blanco, pedido explícito para la continuidad con
-   * nav/carrusel), estos dos fundidos en blanco puro dejaban un
-   * recuadro blanco bien visible alrededor del video en mobile, cortado
-   * contra el tan de alrededor. */
+  /* Fundido arriba y abajo del video en mobile — vuelven a #fff
+   * (2026-09-09, segunda vuelta): el fondo del hero volvió a blanco, así
+   * que estos fundidos vuelven al mismo tono para no dejar un recuadro
+   * tostado visible alrededor del video. */
   .hero-anim::before, .hero-anim::after{content:''; position:absolute; left:0; right:0; height:56px; z-index:1; pointer-events:none}
-  .hero-anim::before{top:0; background:linear-gradient(to bottom, var(--color-background-hero), rgba(245,234,216,0))}
-  .hero-anim::after{bottom:0; background:linear-gradient(to top, var(--color-background-hero), rgba(245,234,216,0))}
+  .hero-anim::before{top:0; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0))}
+  .hero-anim::after{bottom:0; background:linear-gradient(to top, #fff, rgba(255,255,255,0))}
   .hero h1{font-size:clamp(31px, 9.5vw, 39px); max-width:16ch}
   .hero-lead{font-size:var(--fs1); margin-bottom:var(--s4); max-width:44ch}
   .hero-cta{width:100%; flex-direction:column; align-items:stretch; max-width:360px; justify-content:center}
