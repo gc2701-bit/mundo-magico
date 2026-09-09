@@ -96,15 +96,21 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
     <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-[var(--color-background-hero)]">
       {/* Título de sección (2026-09-09) — mismo tratamiento tipográfico
           que el resto de los headers del home (Vidriera.tsx: font-display
-          = Caprasimo, text-fs2 mobile / text-fs3 desktop, text-ink). Va en
-          su propio `.wrap` (el mismo contenedor centrado que usa el resto
-          del sitio) y AFUERA del `div.relative` de abajo a propósito: las
-          flechas de ahí usan `top-1/2` para centrarse verticalmente
-          contra el slide — si el título viviera adentro del mismo
-          contenedor relative, ese `top-1/2` se correría hacia abajo cada
-          vez que cambia de alto (mismo tipo de problema que ya se
-          resolvió para el alto del carrusel). */}
-      <div className="wrap pt-s5">
+          = Caprasimo, text-fs2 mobile / text-fs3 desktop, text-ink).
+          AFUERA del `div.relative` de abajo a propósito: las flechas de
+          ahí usan `top-1/2` para centrarse verticalmente contra el slide
+          — si el título viviera adentro del mismo contenedor relative,
+          ese `top-1/2` se correría hacia abajo cada vez que cambia de
+          alto (mismo tipo de problema que ya se resolvió para el alto
+          del carrusel).
+          Padding horizontal (2026-09-09, segunda vuelta): NO usa `.wrap`
+          (padding fijo de 24px, `--s3`) — el usuario pidió que en desktop
+          quede alineado con el texto del hero, que usa
+          `clamp(var(--s3), 6vw, var(--s10))` = clamp(24px, 6vw, 128px)
+          como padding lateral (`.hero` en home.css). Mismo clamp acá,
+          via inline style porque Tailwind no genera una utilidad de
+          padding con un clamp() arbitrario que lea variables CSS. */}
+      <div className="pt-s5" style={{ paddingLeft: 'clamp(var(--s3), 6vw, var(--s10))', paddingRight: 'clamp(var(--s3), 6vw, var(--s10))' }}>
         <h2 className="text-center font-display text-fs2 text-ink md:text-left md:text-fs3">
           Productos Destacados
         </h2>
