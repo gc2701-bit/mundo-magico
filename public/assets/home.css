@@ -228,35 +228,49 @@
 }
 
 /* ===================== VISITANOS ===================== */
-.visitanos{padding:90px 0; background:#f6f2e8; border-top:1px solid var(--line)}
-.visitanos .head{text-align:center; max-width:640px; margin:0 auto var(--s6)}
-.visitanos .head h2{font-size:clamp(35px,3.6vw,44px)}
-.visitanos .head .sub{margin:0 auto; font-size:18px}
-.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s4); align-items:stretch}
+/* Task 10 (plan modernización PC, 2026-09-08) — comparado pixel a pixel
+ * contra "Sucursales" de Home.dc.html (línea 407-433) a 1280px, mismo
+ * criterio que ya se aplicó a Trust (ver el comentario de esa sección):
+ * NO es un panel con fondo propio (antes #f6f2e8 + border-top, calcado
+ * del viejo .mundos) — en el diseño real vive sobre el fondo normal de
+ * la página, sin separador ni padding superior (el aire de arriba lo da
+ * el padding-bottom del bloque anterior, banda-especial/trust). El
+ * bloque de título tampoco está centrado como en Mundos/Reseñas/Historia
+ * (que no son parte de esta tarea, quedan igual) — acá va alineado a la
+ * izquierda, max-width 560px, calcado literal del inline style del html.
+ * suc-grid/suc-card/hours-pill: spacing y tamaños de fuente bajados a los
+ * valores exactos del diseño (12px/16px en vez de 16/24, ver cada regla). */
+.visitanos{padding:0 0 64px}
+.visitanos .head{max-width:560px; margin:0 0 28px}
+.visitanos .head .eyebrow{margin-bottom:8px}
+.visitanos .head h2{font-size:32px}
+.visitanos .head .sub{margin:0; font-size:16px}
+.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px; align-items:start}
 .vis-panel{grid-column:1; min-width:0; display:flex; flex-direction:column; gap:var(--s2)}
-.vis-photo{grid-column:2; align-self:stretch; position:relative; overflow:hidden; aspect-ratio:1536/1024;
-  border-radius:var(--radius); border:1px solid var(--line);
-  background:#f3ecdf; box-shadow:var(--shadow-lg)}
+.vis-photo{grid-column:2; position:relative; overflow:hidden; aspect-ratio:4/3;
+  /* 28px literal (spec) — no coincide con ningún token --radius-* del
+     tema (radius-lg=24px, radius-xl=33.6px), se deja explícito. */
+  border-radius:28px; box-shadow:var(--shadow-lg)}
 .vis-photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
 @media(max-width:900px){
   .vis-split{grid-template-columns:1fr}
   .vis-photo{grid-column:1}
 }
-.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); flex:1 1 auto; grid-auto-rows:1fr}
+.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1 1 auto; grid-auto-rows:1fr}
 @media(max-width:900px){ .suc-grid{flex:0 1 auto; grid-auto-rows:auto} }
 @media(max-width:480px){ .suc-grid{grid-template-columns:1fr} }
-.suc-card{display:flex; flex-direction:column; gap:2px; padding:var(--s3); background:#fff;
-  border:1px solid var(--line); border-radius:20px; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
-  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
-.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow); border-color:transparent}
-.suc-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
-.suc-card small{color:var(--muted); font-size:14px}
-.suc-card .go{margin-top:var(--s1); font-size:13px; font-weight:700; color:var(--green-ink);
+.suc-card{display:flex; flex-direction:column; gap:2px; padding:16px; background:#fff;
+  border-radius:var(--radius-md); text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease)}
+.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+.suc-card b{font-family:var(--font-display); font-weight:700; font-size:14px; line-height:1.3}
+.suc-card small{color:var(--muted); font-size:12px}
+.suc-card .go{margin-top:6px; font-size:12px; font-weight:600; color:var(--green-ink);
   display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
 .suc-card:hover .go{gap:9px}
-.hours-pill{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
-  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:14px;
-  padding:12px 22px; border-radius:999px}
+.hours-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
+  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:13px;
+  padding:12px 16px; border-radius:999px}
 .hours-pill .ic{width:18px; height:18px}
 @media(prefers-reduced-motion:reduce){ .suc-card:hover{transform:none} }
 
