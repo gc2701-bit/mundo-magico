@@ -66,7 +66,7 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
 
   useEffect(() => {
     if (productos.length < 2) return;
-    const t = setInterval(() => irA((i + 1) % productos.length), 6000);
+    const t = setInterval(() => irA((i + 1) % productos.length), 5000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productos.length, i]);
@@ -170,7 +170,19 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
               onClick={() => irA(idx)}
               className="flex h-6 w-6 items-center justify-center"
             >
-              <span className={'block h-2 w-2 rounded-full ' + (idx === i ? 'bg-green' : 'bg-line')} />
+              {/* Dot activo = pill ancho (22px), inactivo = punto (8px) —
+                  Task 4, plan PC 2026-09-08. Colores en hex literal
+                  (bg-[#1a7830], no bg-green-600) porque la escala verde/rojo
+                  de Task 1 de ese plan todavía no está en app/globals.css y
+                  ese archivo queda fuera del scope de esta tarea; inactivo
+                  usa bg-line (token ya existente) — el propio plan lo deja
+                  como alternativa válida a un neutral-300 sin hex confirmado. */}
+              <span
+                className={
+                  'block h-2 rounded-full transition-[width] duration-200 ' +
+                  (idx === i ? 'w-[22px] bg-[#1a7830]' : 'w-2 bg-line')
+                }
+              />
             </button>
           ))}
         </div>
