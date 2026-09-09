@@ -200,7 +200,7 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
           id="nav-desktop"
           aria-label="Navegación principal"
         >
-          <Link href="/" aria-label="Inicio · Mundo Mágico" className="shrink-0">
+          <Link href="/" aria-label="Inicio · Mundo Mágico" className="flex shrink-0 items-center gap-s2">
             <img
               src="/Logo/mundo-magico-icono.webp"
               alt="Logo de Mundo Mágico"
@@ -211,6 +211,12 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
                 (conScroll ? "h-9 w-9" : "h-11 w-11")
               }
             />
+            {/* Wordmark del nav (2026-09-09) — color/tamaño medidos directo
+                del HTML standalone (span "Mundo Mágico", 20px, rgb(30,136,52)
+                = #1E8834, que ya es el token --color-green existente, no
+                hace falta uno nuevo). Mismo <Link> que el logo: clickear el
+                texto también lleva al home. */}
+            <span className="font-display text-[20px] font-semibold text-green!">Mundo Mágico</span>
           </Link>
 
           <div className="flex items-center gap-s4">
@@ -261,10 +267,11 @@ export default function Nav({ mundos }: { mundos: Mundo[] }) {
         </nav>
       </div>
 
-      {/* Mobile — sólo el logo arriba, todo lo demás en la barra inferior */}
+      {/* Mobile — logo + wordmark arriba, todo lo demás en la barra inferior */}
       <div className="flex items-center justify-center border-b border-line bg-background py-2 md:hidden">
-        <Link href="/" aria-label="Inicio · Mundo Mágico">
+        <Link href="/" aria-label="Inicio · Mundo Mágico" className="flex items-center gap-2">
           <img src="/Logo/mundo-magico-icono.webp" alt="Logo de Mundo Mágico" width={36} height={36} className="rounded-full" />
+          <span className="font-display text-[18px] font-semibold text-green!">Mundo Mágico</span>
         </Link>
       </div>
 
