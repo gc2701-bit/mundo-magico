@@ -122,24 +122,32 @@ export default async function Home() {
     <>
       <link rel="stylesheet" href="/assets/home.css" />
 
-      <header className="hero" id="inicio" style={{ minHeight: '58svh' }}>
-        {/* Círculos de fondo suaves (Task 3, plan PC 2026-09-08). `.hero`
-            ya trae position:relative + overflow:hidden (home.css), así que
-            estos blobs quedan clippeados dentro del header sin generar
-            scroll horizontal de página. IMPORTANTE: `.hero > *{position:
-            relative;z-index:2}` en home.css no está en @layer, así que le
-            gana a la utilidad `absolute` de Tailwind (que sí vive en
-            @layer utilities) — position/z-index se fuerzan por style
-            inline (máxima prioridad de cascada) en vez de className para
-            garantizar que se posicionen absolute de verdad. */}
+      <header
+        className="hero"
+        id="inicio"
+        style={{ minHeight: '58svh', backgroundColor: 'var(--color-background-hero)' }}
+      >
+        {/* Círculos de fondo (Task B3, plan 2026-09-09
+            home-correccion-standalone) — colores/tamaños reales medidos
+            contra "Mundo Magico - Home (standalone).html" a 1440px
+            (sólidos, sin blur/opacidad reducida; los valores de ayer eran
+            aproximados). `.hero` ya trae position:relative +
+            overflow:hidden (home.css), así que estos blobs quedan
+            clippeados dentro del header sin generar scroll horizontal de
+            página. IMPORTANTE: `.hero > *{position:relative;z-index:2}`
+            en home.css no está en @layer, así que le gana a la utilidad
+            `absolute` de Tailwind (que sí vive en @layer utilities) —
+            position/z-index se fuerzan por style inline (máxima
+            prioridad de cascada) en vez de className para garantizar que
+            se posicionen absolute de verdad. */}
         <div
           aria-hidden="true"
-          className="hidden md:block pointer-events-none -right-24 -top-24 h-96 w-96 rounded-full bg-green-200/60 blur-3xl"
+          className="hidden md:block pointer-events-none -right-6 -top-6 h-[340px] w-[340px] rounded-full bg-green-200"
           style={{ position: 'absolute', zIndex: 0 }}
         />
         <div
           aria-hidden="true"
-          className="hidden md:block pointer-events-none -left-32 top-1/3 h-80 w-80 rounded-full bg-background-alt blur-3xl"
+          className="hidden md:block pointer-events-none -left-6 top-[467px] h-[260px] w-[260px] rounded-full bg-[#FFE1AB]"
           style={{ position: 'absolute', zIndex: 0 }}
         />
         <HeroAnimado />

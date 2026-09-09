@@ -29,6 +29,11 @@
      secciones consecutivas del home (vidrierias) sin sumar un elemento
      nuevo. Elegido con el usuario vía companion visual, 2026-08-24. */
   --color-background-alt: #f3efe4;
+  /* Fondo del hero y las secciones que lo siguen hasta el final de la
+     vidriera de Navidad (Task B3, plan 2026-09-09 home-correccion-
+     standalone) — medido literal contra "Mundo Magico - Home
+     (standalone).html", más cálido que --color-background. */
+  --color-background-hero: #F5EAD8;
   --color-surface: #ffffff;
   --color-ink: #1c1a16;
   --color-muted: #615c53; /* 6.3:1 sobre --color-background */
