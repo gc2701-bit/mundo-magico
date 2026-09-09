@@ -109,9 +109,14 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
           `clamp(var(--s3), 6vw, var(--s10))` = clamp(24px, 6vw, 128px)
           como padding lateral (`.hero` en home.css). Mismo clamp acá,
           via inline style porque Tailwind no genera una utilidad de
-          padding con un clamp() arbitrario que lea variables CSS. */}
+          padding con un clamp() arbitrario que lea variables CSS.
+          "!" en text-fs2/md:text-fs3 (2026-09-09, encontrado viendo el
+          desalineado ícono/título de las vidrieras): v2.css tiene un
+          `h2{font-size:clamp(var(--fs4),4vw,var(--fs5))}` genérico sin
+          @layer que le gana a estas dos utilidades sin el modificador
+          important — a 1440px daba 49px en vez de los 31px de fs3. */}
       <div className="pt-s5" style={{ paddingLeft: 'clamp(var(--s3), 6vw, var(--s10))', paddingRight: 'clamp(var(--s3), 6vw, var(--s10))' }}>
-        <h2 className="text-center font-display text-fs2 text-ink md:text-left md:text-fs3">
+        <h2 className="text-center font-display text-fs2! text-ink md:text-left md:text-fs3!">
           Productos Destacados
         </h2>
       </div>
@@ -186,7 +191,12 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
           <span className="font-body text-fs-1 font-semibold uppercase tracking-wide text-green-ink!">
             Destacado
           </span>
-          <h2 className="line-clamp-3 font-display text-fs3 text-ink">{p.titulo}</h2>
+          {/* text-fs3! (2026-09-09): mismo v2.css h2{font-size:...}
+              genérico sin @layer que afecta a todos los <h2> del sitio,
+              ver el comentario grande más arriba en este archivo — sin
+              el "!" este título salía en 49px en vez de los 31px de
+              fs3, mucho más grande de lo pensado. */}
+          <h2 className="line-clamp-3 font-display text-fs3! text-ink">{p.titulo}</h2>
           <span className="pricetag mt-s1 block! static! rounded-none! bg-transparent! p-0! font-body! text-fs2! font-extrabold! text-ink! shadow-none! [&_.pricetag-antes]:mr-1.5 [&_.pricetag-antes]:font-normal [&_.pricetag-antes]:text-muted [&_.pricetag-antes]:line-through">
             {oferta.enOferta ? (
               <>

@@ -169,7 +169,11 @@ export default function Vidriera({
                 Home.dc.html). Mismo mecanismo ya documentado en
                 Nav.tsx/Footer.tsx, primera vez que aparece en un <h2>
                 en vez de un <a> en este archivo. */}
-            <h2 className="mt-1 font-display text-fs2 text-white! md:text-fs3">Navidad está por venir</h2>
+            {/* text-fs2!/md:text-fs3! (2026-09-09): mismo bug que
+                VidrieraHeader más arriba en este archivo — v2.css tiene
+                un h2{font-size:...} genérico sin @layer que le ganaba a
+                estas dos utilidades sin el modificador important. */}
+            <h2 className="mt-1 font-display text-fs2! text-white! md:text-fs3!">Navidad está por venir</h2>
             <p className="max-w-[46ch] font-body text-fs0 text-green-100">
               Todavía no cargamos productos acá. Volvé pronto — o mirá el resto de nuestros mundos mientras tanto.
             </p>
@@ -235,8 +239,18 @@ function VidrieraHeader({
             sin el modificador important, mismo mecanismo ya documentado
             en el teaser de Navidad más abajo en este archivo (y en
             Nav.tsx/Footer.tsx). Sin el "!", Halloween se quedaba con el
-            texto oscuro de siempre sin importar qué clase se le pasara. */}
-        <h2 id={`vidriera-${mundoSlug}`} className={'font-display text-fs2 md:text-fs3 ' + tituloColor}>
+            texto oscuro de siempre sin importar qué clase se le pasara.
+            "!" en text-fs2/md:text-fs3 (encontrado 2026-09-09 recién
+            ahora, viendo el desalineado ícono/título en vivo): v2.css
+            TAMBIÉN tiene un `h2{font-size:clamp(var(--fs4),4vw,
+            var(--fs5))}` genérico sin @layer (línea 82) — a 1440px eso
+            da 49px, no los 31px de text-fs3, así que el título salía
+            mucho más grande de lo pensado y ya no coincidía en altura
+            con el badge de 44px de al lado (centrados con
+            align-items:center, pero centrando cajas de tamaño muy
+            distinto al esperado). Mismo bug, mismo mecanismo, un lugar
+            más donde no se había notado hasta ahora. */}
+        <h2 id={`vidriera-${mundoSlug}`} className={'font-display text-fs2! md:text-fs3! ' + tituloColor}>
           {titulo}
         </h2>
       </div>
