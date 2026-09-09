@@ -112,28 +112,19 @@
 }
 
 /* ===================== BANDA DE CONFIANZA ===================== */
-/* Task 10 (plan modernización PC, 2026-09-08) — comparado pixel a pixel
- * contra "7. Trust strip" de Home.dc.html a 1280px: NO es una franja
- * sólida verde con texto blanco (como estaba), es una fila de 4 badges
- * sobre el fondo normal de la página — el color de marca vive sólo en el
- * círculo del ícono (green-100 de fondo, green-700 de trazo), igual que
- * el resto de la fila de texto en --ink/--muted de siempre. Sólo se toca
- * la regla base (>900px, desktop) — los dos breakpoints de abajo (900px/
- * 480px) son comportamiento mobile/tablet ya existente y quedan intactos
- * a propósito (Fase 1 de este plan es sólo desktop). */
-.trust{background:var(--bg)}
+.trust{background:var(--green-ink); color:#fff}
 .trust .wrap{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:var(--s3);
-  padding-top:0; padding-bottom:56px;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3);
+  padding-top:var(--s5); padding-bottom:var(--s5);
 }
-.trust-item{display:flex; align-items:center; gap:12px}
+.trust-item{display:flex; align-items:center; gap:var(--s2)}
 .trust-item .tic{
-  width:44px; height:44px; flex:none; border-radius:999px; display:grid; place-items:center;
-  background:var(--color-green-100); color:var(--color-green-700);
+  width:48px; height:48px; flex:none; border-radius:16px; display:grid; place-items:center;
+  background:rgba(255,255,255,.12);
 }
-.trust-item .tic .ic{width:20px; height:20px}
-.trust-item b{display:block; font-family:var(--font-display); font-size:15px; font-weight:700; line-height:1.2; color:var(--ink)}
-.trust-item small{display:block; font-size:var(--fs-1); color:var(--muted); line-height:1.35}
+.trust-item .tic .ic{width:26px; height:26px}
+.trust-item b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.2}
+.trust-item small{display:block; font-size:var(--fs-1); opacity:.85; line-height:1.35}
 @media(max-width:900px){ .trust .wrap{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:480px){ .trust .wrap{grid-template-columns:1fr; gap:var(--s2)} }
 
@@ -228,49 +219,35 @@
 }
 
 /* ===================== VISITANOS ===================== */
-/* Task 10 (plan modernización PC, 2026-09-08) — comparado pixel a pixel
- * contra "Sucursales" de Home.dc.html (línea 407-433) a 1280px, mismo
- * criterio que ya se aplicó a Trust (ver el comentario de esa sección):
- * NO es un panel con fondo propio (antes #f6f2e8 + border-top, calcado
- * del viejo .mundos) — en el diseño real vive sobre el fondo normal de
- * la página, sin separador ni padding superior (el aire de arriba lo da
- * el padding-bottom del bloque anterior, banda-especial/trust). El
- * bloque de título tampoco está centrado como en Mundos/Reseñas/Historia
- * (que no son parte de esta tarea, quedan igual) — acá va alineado a la
- * izquierda, max-width 560px, calcado literal del inline style del html.
- * suc-grid/suc-card/hours-pill: spacing y tamaños de fuente bajados a los
- * valores exactos del diseño (12px/16px en vez de 16/24, ver cada regla). */
-.visitanos{padding:0 0 64px}
-.visitanos .head{max-width:560px; margin:0 0 28px}
-.visitanos .head .eyebrow{margin-bottom:8px}
-.visitanos .head h2{font-size:32px}
-.visitanos .head .sub{margin:0; font-size:16px}
-.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px; align-items:start}
+.visitanos{padding:90px 0; background:#f6f2e8; border-top:1px solid var(--line)}
+.visitanos .head{text-align:center; max-width:640px; margin:0 auto var(--s6)}
+.visitanos .head h2{font-size:clamp(35px,3.6vw,44px)}
+.visitanos .head .sub{margin:0 auto; font-size:18px}
+.vis-split{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s4); align-items:stretch}
 .vis-panel{grid-column:1; min-width:0; display:flex; flex-direction:column; gap:var(--s2)}
-.vis-photo{grid-column:2; position:relative; overflow:hidden; aspect-ratio:4/3;
-  /* 28px literal (spec) — no coincide con ningún token --radius-* del
-     tema (radius-lg=24px, radius-xl=33.6px), se deja explícito. */
-  border-radius:28px; box-shadow:var(--shadow-lg)}
+.vis-photo{grid-column:2; align-self:stretch; position:relative; overflow:hidden; aspect-ratio:1536/1024;
+  border-radius:var(--radius); border:1px solid var(--line);
+  background:#f3ecdf; box-shadow:var(--shadow-lg)}
 .vis-photo img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
 @media(max-width:900px){
   .vis-split{grid-template-columns:1fr}
   .vis-photo{grid-column:1}
 }
-.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1 1 auto; grid-auto-rows:1fr}
+.suc-grid{display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); flex:1 1 auto; grid-auto-rows:1fr}
 @media(max-width:900px){ .suc-grid{flex:0 1 auto; grid-auto-rows:auto} }
 @media(max-width:480px){ .suc-grid{grid-template-columns:1fr} }
-.suc-card{display:flex; flex-direction:column; gap:2px; padding:16px; background:#fff;
-  border-radius:var(--radius-md); text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
-  transition:transform .25s var(--ease), box-shadow .25s var(--ease)}
-.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
-.suc-card b{font-family:var(--font-display); font-weight:700; font-size:14px; line-height:1.3}
-.suc-card small{color:var(--muted); font-size:12px}
-.suc-card .go{margin-top:6px; font-size:12px; font-weight:600; color:var(--green-ink);
+.suc-card{display:flex; flex-direction:column; gap:2px; padding:var(--s3); background:#fff;
+  border:1px solid var(--line); border-radius:20px; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease)}
+.suc-card:hover{transform:translateY(-3px); box-shadow:var(--shadow); border-color:transparent}
+.suc-card b{font-weight:800; font-size:var(--fs0); line-height:1.3}
+.suc-card small{color:var(--muted); font-size:14px}
+.suc-card .go{margin-top:var(--s1); font-size:13px; font-weight:700; color:var(--green-ink);
   display:inline-flex; align-items:center; gap:5px; transition:gap .2s var(--ease)}
 .suc-card:hover .go{gap:9px}
-.hours-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
-  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:13px;
-  padding:12px 16px; border-radius:999px}
+.hours-pill{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
+  background:var(--green-soft); color:var(--green-ink); font-weight:700; font-size:14px;
+  padding:12px 22px; border-radius:999px}
 .hours-pill .ic{width:18px; height:18px}
 @media(prefers-reduced-motion:reduce){ .suc-card:hover{transform:none} }
 
@@ -287,10 +264,10 @@
 .gsum-logo svg{width:19px; height:19px; flex:none}
 .gsum-logo b{font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--ink)}
 .gsum-score{display:flex; align-items:baseline; gap:7px}
-.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:18px; line-height:1; color:var(--color-green-700)}
+.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:18px; line-height:1; color:var(--ink)}
 .gsum-score small{font-size:13px; color:var(--muted)}
 .stars{display:inline-flex; gap:1px}
-.stars svg{width:13px; height:13px; fill:var(--color-green-500)}
+.stars svg{width:13px; height:13px; fill:#fbbc05}
 .gsum .btn{white-space:nowrap; padding:7px 17px; font-size:14px}
 
 .res-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
@@ -316,15 +293,15 @@
  * no este bloque de CSS) — encontrado por el usuario en producción: sin
  * esto, el ícono de anillos (dos <circle> del SVG) renderiza al tamaño
  * por default del navegador, con fill sólido en vez de sólo el trazo. */
-.banda-especial{padding:var(--s4) 0; background:var(--green-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.banda-especial{padding:var(--s4) 0; background:linear-gradient(100deg,#c39b3f 0%,#e6cf8f 26%,#faf5e6 50%,#e6cf8f 74%,#c39b3f 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
 .banda-inner{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
-.banda-ic{width:56px; height:56px; flex:none; border-radius:999px; background:var(--color-green-600); display:grid; place-items:center; box-shadow:var(--shadow-sm)}
-.banda-ic svg{width:30px; height:30px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.banda-ic{width:56px; height:56px; flex:none; border-radius:18px; background:#fff; display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.banda-ic svg{width:30px; height:30px; stroke:#9a7524; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
 .banda-txt{flex:1 1 320px; min-width:0}
-.banda-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:var(--ink)}
-.banda-txt small{display:block; font-size:15px; color:var(--muted); margin-top:2px}
-.banda-btn{background:var(--color-green-600); color:#fff; box-shadow:0 12px 24px -10px rgba(26,120,48,.5)}
-.banda-btn:hover{background:var(--green-ink); color:#fff; transform:translateY(-2px)}
+.banda-txt b{display:block; font-family:var(--font-display); font-weight:600; font-size:var(--fs2); line-height:1.15; color:#5f4a12}
+.banda-txt small{display:block; font-size:15px; color:#7a621f; margin-top:2px}
+.banda-btn{background:#5f4a12; color:#fff; box-shadow:0 12px 24px -10px rgba(95,74,18,.5)}
+.banda-btn:hover{background:#9a7524; color:#fff; transform:translateY(-2px)}
 @media(max-width:640px){ .banda-inner{flex-direction:column; align-items:flex-start} .banda-txt{flex:0 1 auto} }
 
 /* ===================== CONTACTO ===================== */
