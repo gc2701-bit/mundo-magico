@@ -40,3 +40,19 @@ export const nunitoSans = localFont({
   variable: "--font-body",
   display: "optional",
 });
+
+/**
+ * Reemplaza a Fraunces como `--font-display` (Rediseño Home 2026-09-08,
+ * Task 0 — decisión del usuario: seguir el spec de `Home.dc.html` de forma
+ * literal, no aproximada). Caprasimo sólo tiene un peso (400, Regular) en
+ * Google Fonts — a diferencia de Fraunces no hay variable de peso.
+ * Autoalojada igual que el resto (ver comentario de arriba): el .woff2 se
+ * bajó una sola vez desde el mismo archivo que sirve la CSS API de Google
+ * Fonts (fonts.gstatic.com), no se linkea a fonts.googleapis.com en
+ * runtime.
+ */
+export const caprasimo = localFont({
+  src: "../public/assets/fonts/Caprasimo-Regular.woff2",
+  variable: "--font-caprasimo",
+  display: "optional",
+});
