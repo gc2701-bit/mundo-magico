@@ -28,7 +28,6 @@
  * está bien sin preguntar.
  */
 import type { Metadata } from 'next';
-import HeroLogoVideo from './components/HeroLogoVideo';
 import HeroCarrusel from './components/HeroCarrusel';
 import Vidriera from './components/Vidriera';
 import CatalogoPrecios from './components/CatalogoPrecios';
@@ -159,24 +158,19 @@ export default async function Home() {
           className="hidden md:block pointer-events-none -left-6 top-[467px] h-[260px] w-[260px] rounded-full bg-[#FFE1AB]"
           style={{ position: 'absolute', zIndex: 0 }}
         />
-        {/* Badge del logo (2026-09-09) — probando la versión con video
-            (HeroLogoVideo.tsx) en vez de la imagen estática: mismo
-            contenedor/tamaño/posición que tenía la imagen (esto es lo que
-            importa para que el h1 no se vuelva a angostar — el contenedor
-            es una caja FIJA, no un elemento absolute a media pantalla como
-            el `.hero-anim` viejo, así que agregar el video acá no reintroduce
-            el problema original). Sólo desde `lg:` (1024px), tamaño escala
-            por breakpoint (160px en lg, 288px desde xl) — a 1024-1279px el
-            h1 de 720px deja menos margen derecho. z-index:1 (inline, mismo
-            motivo que los círculos de arriba) — entre los círculos (0) y
-            el texto (2, forzado por `.hero > *` de home.css). */}
-        <div
-          aria-hidden="true"
-          className="right-4 top-1/2 hidden h-40 w-40 -translate-y-1/2 lg:block xl:right-12 xl:h-72 xl:w-72"
-          style={{ position: 'absolute', zIndex: 1 }}
-        >
-          <HeroLogoVideo />
-        </div>
+        {/* Sin logo/video en el hero (2026-09-09, tercera vuelta) — se
+            probaron dos versiones (imagen estática, después video, las
+            dos en una caja fija a la derecha) y ninguna convenció ("lo
+            centraría y agrandaría, o directamente lo sacaría" + "sigue
+            estando tirado a la derecha"); el video tampoco llegaba a
+            reproducirse en la prueba. El HTML standalone (fuente de
+            verdad de esta sección) tampoco tiene ningún logo/imagen en
+            el hero — sólo texto + los círculos de fondo — así que se
+            saca del todo en vez de seguir iterando la posición/tamaño.
+            `HeroLogoVideo.tsx`/`HeroAnimado.tsx` no se borraron del
+            repo, sólo se dejaron de montar acá, por si se retoma como
+            otra cosa (marca de agua grande centrada, por ejemplo) más
+            adelante. */}
         <div className="eyebrow">Cotillón · Tucumán · desde 1994</div>
         <h1>
           <span className="w">Todo</span> <span className="w">para</span> <span className="w">tu</span>{' '}
