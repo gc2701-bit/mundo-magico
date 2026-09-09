@@ -120,7 +120,7 @@
 .trust-item{display:flex; align-items:center; gap:var(--s2)}
 .trust-item .tic{
   width:48px; height:48px; flex:none; border-radius:16px; display:grid; place-items:center;
-  background:rgba(255,255,255,.12);
+  background:var(--color-green-100); color:var(--color-green-700);
 }
 .trust-item .tic .ic{width:26px; height:26px}
 .trust-item b{display:block; font-size:var(--fs0); font-weight:800; line-height:1.2}
@@ -264,10 +264,10 @@
 .gsum-logo svg{width:19px; height:19px; flex:none}
 .gsum-logo b{font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--ink)}
 .gsum-score{display:flex; align-items:baseline; gap:7px}
-.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:18px; line-height:1; color:var(--ink)}
+.gsum-score .num{font-family:var(--font-display); font-weight:600; font-size:18px; line-height:1; color:var(--color-green-700)}
 .gsum-score small{font-size:13px; color:var(--muted)}
 .stars{display:inline-flex; gap:1px}
-.stars svg{width:13px; height:13px; fill:#fbbc05}
+.stars svg{width:13px; height:13px; fill:var(--color-green-500)}
 .gsum .btn{white-space:nowrap; padding:7px 17px; font-size:14px}
 
 .res-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
