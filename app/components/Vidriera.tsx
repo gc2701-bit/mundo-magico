@@ -64,6 +64,7 @@ export default function Vidriera({
   bg = 'bg-background',
   accent = 'bg-green-600',
   accentText = 'text-green-600!',
+  tituloColor = 'text-ink!',
 }: {
   titulo: string;
   mundoSlug: string;
@@ -73,6 +74,10 @@ export default function Vidriera({
    * ver el mapeo en app/page.tsx). Reemplaza el fondo crema alternado
    * de antes (`alterno`, ya no existe). */
   bg?: string;
+  /** Color del `<h2>` del título — ver el comentario grande en
+   * `VidrieraHeader` más abajo (fondo oscuro de Halloween necesita texto
+   * claro, el resto usa el default). */
+  tituloColor?: string;
   /** Clase Tailwind del acento (círculo del ícono, y — sólo en el
    * teaser de Navidad, Task 6 — el botón "Ver otros mundos").
    *
@@ -133,7 +138,7 @@ export default function Vidriera({
       <div className="wrap">
         {items.length ? (
           <>
-            <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} accentText={accentText} verTodo />
+            <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} accentText={accentText} tituloColor={tituloColor} verTodo />
 
             <VidrieraFila>
               {items.map((p) => (
@@ -169,7 +174,7 @@ export default function Vidriera({
           </div>
         ) : (
           <div>
-            <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} />
+            <VidrieraHeader mundoSlug={mundoSlug} titulo={titulo} icono={icono} accent={accent} tituloColor={tituloColor} />
             <EmptyState
               icono={icono}
               titulo={`${titulo} está por venir`}
@@ -193,6 +198,7 @@ function VidrieraHeader({
   icono,
   accent,
   accentText,
+  tituloColor = 'text-ink!',
   verTodo = false,
 }: {
   mundoSlug: string;
@@ -200,6 +206,14 @@ function VidrieraHeader({
   icono: string;
   accent: string;
   accentText?: string;
+  /** Color del `<h2>` del título de la sección (2026-09-09) — default
+   * `text-ink!` (con "!", mismo motivo que abajo). Todas las categorías
+   * de fondo claro andan bien con el default; Halloween (fondo casi
+   * negro, `bg-ink`) necesitaba un color claro — antes se quedaba
+   * siempre en `text-ink` (oscuro) hardcodeado, invisible contra su
+   * propio fondo. Valor exacto para Halloween pasado desde `page.tsx`
+   * (medido del standalone: `#F9F4ED`). */
+  tituloColor?: string;
   verTodo?: boolean;
 }) {
   return (
@@ -211,7 +225,13 @@ function VidrieraHeader({
         >
           {icono}
         </span>
-        <h2 id={`vidriera-${mundoSlug}`} className="font-display text-fs2 text-ink md:text-fs3">
+        {/* "!" en tituloColor: v2.css tiene `h1,h2,h3{color:var(--ink)}`
+            sin @layer — le gana a cualquier utilidad de color de Tailwind
+            sin el modificador important, mismo mecanismo ya documentado
+            en el teaser de Navidad más abajo en este archivo (y en
+            Nav.tsx/Footer.tsx). Sin el "!", Halloween se quedaba con el
+            texto oscuro de siempre sin importar qué clase se le pasara. */}
+        <h2 id={`vidriera-${mundoSlug}`} className={'font-display text-fs2 md:text-fs3 ' + tituloColor}>
           {titulo}
         </h2>
       </div>

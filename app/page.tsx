@@ -61,7 +61,11 @@ const VIDRIERAS = [
   { mundoSlug: 'cumpleanos', titulo: 'Cumpleaños', icono: '🎂', bg: 'bg-green-100', accent: 'bg-green-600', accentText: 'text-green-700!' },
   { mundoSlug: 'globos-fiesta', titulo: 'Cotillón', icono: '🎈', bg: 'bg-red-100', accent: 'bg-red-600', accentText: 'text-red-700!' },
   { mundoSlug: 'decoracion', titulo: 'Decoración', icono: '🎀', bg: 'bg-decoracion-bg', accent: 'bg-decoracion-accent', accentText: 'text-decoracion-accent!' },
-  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃', bg: 'bg-ink', accent: 'bg-orange', accentText: 'text-orange!' },
+  // tituloColor #F9F4ED (2026-09-09): medido exacto contra el <h2>
+  // "Halloween" del HTML standalone — sin esto el título se queda con el
+  // text-ink (oscuro) default de VidrieraHeader, invisible contra el
+  // fondo casi negro (bg-ink) de esta sección.
+  { mundoSlug: 'halloween', titulo: 'Halloween', icono: '🎃', bg: 'bg-ink', accent: 'bg-orange', accentText: 'text-orange!', tituloColor: 'text-[#F9F4ED]!' },
   { mundoSlug: 'navidad', titulo: 'Navidad', icono: '🎄', bg: 'bg-green-700', accent: 'bg-red-500', accentText: 'text-white!' },
 ];
 
@@ -200,6 +204,7 @@ export default async function Home() {
             bg={v.bg}
             accent={v.accent}
             accentText={v.accentText}
+            tituloColor={v.tituloColor}
           />
         ))}
 
