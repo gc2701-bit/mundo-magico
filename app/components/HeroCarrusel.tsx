@@ -94,28 +94,45 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
     // el carrusel", antes esta sección tenía bg-surface (blanco), cortando
     // la continuidad visual con el hero de arriba.
     <section aria-label="Ofertas y destacados" className="relative border-b border-line bg-[var(--color-background-hero)]">
-      {productos.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={anterior}
-            aria-label="Destacado anterior"
-            className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/90 text-fs1 text-ink shadow-sm hover:bg-surface md:left-4"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={siguiente}
-            aria-label="Destacado siguiente"
-            className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/90 text-fs1 text-ink shadow-sm hover:bg-surface md:right-4"
-          >
-            ›
-          </button>
-        </>
-      )}
+      {/* Título de sección (2026-09-09) — mismo tratamiento tipográfico
+          que el resto de los headers del home (Vidriera.tsx: font-display
+          = Caprasimo, text-fs2 mobile / text-fs3 desktop, text-ink). Va en
+          su propio `.wrap` (el mismo contenedor centrado que usa el resto
+          del sitio) y AFUERA del `div.relative` de abajo a propósito: las
+          flechas de ahí usan `top-1/2` para centrarse verticalmente
+          contra el slide — si el título viviera adentro del mismo
+          contenedor relative, ese `top-1/2` se correría hacia abajo cada
+          vez que cambia de alto (mismo tipo de problema que ya se
+          resolvió para el alto del carrusel). */}
+      <div className="wrap pt-s5">
+        <h2 className="text-center font-display text-fs2 text-ink md:text-left md:text-fs3">
+          Productos Destacados
+        </h2>
+      </div>
 
-      <Link
+      <div className="relative">
+        {productos.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={anterior}
+              aria-label="Destacado anterior"
+              className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/90 text-fs1 text-ink shadow-sm hover:bg-surface md:left-4"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={siguiente}
+              aria-label="Destacado siguiente"
+              className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/90 text-fs1 text-ink shadow-sm hover:bg-surface md:right-4"
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        <Link
         href={p.mundo ? `/${p.mundo}/${p.slug}` : '/explorar'}
         className={
           // min-h fija (2026-09-09): el usuario reportó que el carrusel
@@ -207,7 +224,8 @@ export default function HeroCarrusel({ productos }: { productos: ProductoPublico
             </button>
           ))}
         </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
