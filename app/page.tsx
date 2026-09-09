@@ -185,11 +185,6 @@ export default async function Home() {
           <a className="btn btn-primary" href="#mundos">Armá tu pedido</a>
           <a className="btn btn-ghost" href="/explorar">Explorar</a>
         </div>
-
-        <a className="hero-cue" href="#historia">
-          <span>Conocé la historia</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
-        </a>
       </header>
 
       <HeroCarrusel productos={heroItems} />
