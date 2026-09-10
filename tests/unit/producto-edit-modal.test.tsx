@@ -253,6 +253,37 @@ describe('ProductoEditModal — guardar', () => {
     expect(update.campos).not.toHaveProperty('destacadoHome');
     expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({ destacadoHome: true }));
   });
+
+  it('el toggle "Mostrar en la vidriera de su mundo" arranca en enVidriera del producto', () => {
+    montar({ enVidriera: true });
+    const toggle = screen.getByRole('switch', { name: /vidriera de su mundo/ });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('prender el toggle de vidriera y guardar manda en_vidriera:true (nombre de columna, no enVidriera)', async () => {
+    const user = userEvent.setup();
+    const { actualizado } = montar({ enVidriera: false, id: 'p1' });
+
+    await user.click(screen.getByRole('switch', { name: /vidriera de su mundo/ }));
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.en_vidriera).toBe(true);
+    expect(update.campos).not.toHaveProperty('enVidriera');
+    expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({ enVidriera: true }));
+  });
+
+  it('apagar el toggle de un producto que HOY está en la vidriera manda en_vidriera:false (debe salir de ahí)', async () => {
+    const user = userEvent.setup();
+    const { actualizado } = montar({ enVidriera: true, id: 'p1' });
+
+    await user.click(screen.getByRole('switch', { name: /vidriera de su mundo/ }));
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    const update = escrituras.find((e) => e.tabla === 'catalogo_productos' && e.tipo === 'update');
+    expect(update.campos.en_vidriera).toBe(false);
+    expect(actualizado).toHaveBeenCalledWith('p1', expect.objectContaining({ enVidriera: false }));
+  });
 });
 
 describe('ProductoEditModal — invalida el catálogo público al toque (bug real 2026-09-08)', () => {

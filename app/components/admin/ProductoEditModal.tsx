@@ -33,7 +33,7 @@ export const PRODUCTO_VACIO: ProductoAdmin = {
   id: '', titulo: '', slug: '', codigo: '', subcategoriaId: null,
   specs: null, descripcion: null, tags: null, variantes: null, fotos: [],
   orden: 0, familia: null, mundo: '', destacadoHome: false, precioOferta: null,
-  publicado: false
+  enVidriera: false, publicado: false
 };
 
 /**
@@ -118,7 +118,16 @@ export async function sincronizarPreciosDeCodigos(
  * PublicadoTab.tsx); ahora es un Dialog que se superpone a la tabla, que
  * sigue montada detrás. Reordenado respecto a la pantalla vieja: Código ·
  * Nombre · Mundo · Familia arriba, editor de variantes, Descripción,
- * toggle de carrusel del home, fotos generales al fondo.
+ * toggles de carrusel del home y vidriera de su mundo, fotos generales al
+ * fondo.
+ *
+ * Toggle de vidriera (2026-09-10, catalogo_22_en_vidriera.sql): mismo
+ * mecanismo que "carrusel del home" (destacadoHome) pero para
+ * Vidriera.tsx — antes esa sección mostraba automáticamente los primeros 8
+ * publicados de cada mundo, ahora es 100% curación manual del admin (sin
+ * tope de cantidad, a pedido del usuario). El backfill de la migración
+ * dejó activados los que hoy se ven en producción, así que este toggle
+ * nunca vacía una vidriera sin que el admin lo pida explícitamente.
  *
  * Editor de variantes (Sprint 4): agregar/quitar filas de talle y/o
  * tipo/color, cada una con su propio código, imagen e "a la venta"
@@ -212,6 +221,7 @@ function FormularioProducto({
   const [mundo, setMundo] = useState(producto.mundo);
   const [mundoNuevo, setMundoNuevo] = useState('');
   const [destacadoHome, setDestacadoHome] = useState(!!producto.destacadoHome);
+  const [enVidriera, setEnVidriera] = useState(!!producto.enVidriera);
   const [variantes, setVariantes] = useState<Variante[]>(producto.variantes || []);
   const [errorVariantes, setErrorVariantes] = useState<string | null>(null);
   const [subiendoVarianteIdx, setSubiendoVarianteIdx] = useState<number | null>(null);
@@ -361,7 +371,8 @@ function FormularioProducto({
       familia: familiaFinal,
       mundo: mundoFinal,
       fotos,
-      destacado_home: destacadoHome
+      destacado_home: destacadoHome,
+      en_vidriera: enVidriera
     };
     let idFinal = producto.id;
     if (esNuevo) {
@@ -407,7 +418,8 @@ function FormularioProducto({
       familia: dbCampos.familia,
       mundo: dbCampos.mundo,
       fotos: dbCampos.fotos,
-      destacadoHome
+      destacadoHome,
+      enVidriera
     };
     if (esNuevo) {
       onCreado?.({ ...PRODUCTO_VACIO, ...camposFinales, id: idFinal, slug: slugify(dbCampos.titulo), publicado: true });
@@ -593,6 +605,10 @@ function FormularioProducto({
         <div className="adm-detalle-campo flex items-center gap-2">
           <Switch id="destacado-home" checked={destacadoHome} onCheckedChange={setDestacadoHome} />
           <label htmlFor="destacado-home">Mostrar en el carrusel del home</label>
+        </div>
+        <div className="adm-detalle-campo flex items-center gap-2">
+          <Switch id="en-vidriera" checked={enVidriera} onCheckedChange={setEnVidriera} />
+          <label htmlFor="en-vidriera">Mostrar en la vidriera de su mundo (home)</label>
         </div>
 
         {composicion.length > 0 && (

@@ -7,7 +7,16 @@ import VidrieraFila from './VidrieraFila';
 /**
  * Vidriera de un mundo en el home (Sprint 4, ver
  * docs/superpowers/plans/2026-08-24-frontend-cliente-rediseno-plan.md) —
- * hasta 8 productos de ese mundo + "Ver todo".
+ * productos de ese mundo + "Ver todo".
+ *
+ * Selección de productos (2026-09-10, catalogo_22_en_vidriera.sql, pedido
+ * explícito del usuario): ya NO es "los primeros 8 por orden" automático —
+ * es 100% curación manual del admin vía el toggle "Mostrar en la vidriera
+ * de su mundo" de ProductoEditModal.tsx (`producto.enVidriera`), SIN tope
+ * de cantidad (decisión explícita del usuario al aprobar el diseño — la
+ * fila de abajo ya tiene scroll horizontal + flechas, pensada para poder
+ * crecer). El backfill de esa migración activó los que ya se veían en
+ * producción para no vaciar ninguna vidriera de golpe.
  *
  * Rediseño 2026-09-08 (Task 5 de
  * docs/superpowers/plans/2026-09-08-home-pc-modernizacion-plan.md, más
@@ -102,7 +111,7 @@ export default function Vidriera({
    * es un <Link> (ver Global Constraints de este plan). */
   accentText?: string;
 }) {
-  const items = productos.filter((p) => p.mundo === mundoSlug).slice(0, 8);
+  const items = productos.filter((p) => p.mundo === mundoSlug && p.enVidriera);
   const esNavidad = mundoSlug === 'navidad';
 
   // Acento del botón "Agregar" (Task A3): mismo `accent` que el ícono de

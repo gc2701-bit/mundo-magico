@@ -42,6 +42,10 @@ export type ProductoPublico = {
   // curación fuera de alcance de este proyecto, ver la spec).
   destacadoHome?: boolean;
   precioOferta?: number | null;
+  // Sumado 2026-09-10 (catalogo_22_en_vidriera.sql) — curación manual de la
+  // vidriera de cada mundo en el home (Vidriera.tsx), mismo mecanismo que
+  // destacadoHome pero para esa sección en vez del carrusel.
+  enVidriera?: boolean;
 };
 
 // Buscador de Explorar (Task 2.5) — sin acentos ni mayúsculas de por

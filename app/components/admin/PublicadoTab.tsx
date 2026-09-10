@@ -87,7 +87,7 @@ export default function PublicadoTab({
     const sb = supabaseBrowser();
     const { data, error } = await sb
       .from('catalogo_productos')
-      .select('id, titulo, slug, codigo, specs, descripcion, tags, variantes, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden, destacadoHome:destacado_home')
+      .select('id, titulo, slug, codigo, specs, descripcion, tags, variantes, fotos, familia, publicado, mundo, subcategoriaId:subcategoria_id, orden, destacadoHome:destacado_home, enVidriera:en_vidriera')
       .order('titulo');
     if (!error && data) {
       const lista = data as ProductoAdmin[];
