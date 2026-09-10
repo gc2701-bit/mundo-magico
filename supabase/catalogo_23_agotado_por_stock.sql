@@ -1,4 +1,4 @@
--- Catálogo 21 — un código con stock real <= 0 (el que sincroniza el
+-- Catálogo 23 — un código con stock real <= 0 (el que sincroniza el
 -- worker de Búho, ver buho-stock-sync-worker) ahora cuenta como "sin
 -- stock" aunque nadie haya tildado el flag manual `sin_stock` desde el
 -- panel admin.
