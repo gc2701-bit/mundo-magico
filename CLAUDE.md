@@ -243,6 +243,29 @@ node .claude/static-server.js
 abierto directo — sobre todo para cualquier cosa que dependa del buscador,
 Explorar, o de que varias páginas se lean entre sí.
 
+## Cuidado al correr migraciones de `supabase/` a mano en el SQL Editor
+
+Incidente real (2026-09-10/11): `catalogo_22_en_vidriera.sql` sumó
+`'enVidriera', en_vidriera` a `catalogo_publico()`. Una hora después se
+corrió a mano en el SQL Editor de Supabase `catalogo_23_agotado_por_stock.sql`
+(el fix de "stock real ≤0 = sin stock") — ese archivo se había escrito ANTES
+de traer los commits que agregaban `en_vidriera`, así que su versión de
+`catalogo_publico()` partía de una base vieja, sin ese campo. Como es
+`CREATE OR REPLACE FUNCTION`, Postgres reemplaza el cuerpo ENTERO de la
+función, no lo fusiona — correr ese SQL pisó en silencio la versión con
+`enVidriera` por una sin ese campo. El home dejó de mostrar productos en
+las vidrieras (el filtro de `Vidriera.tsx` depende de `enVidriera`), pero
+el panel admin no lo notó porque lee `en_vidriera` con un `select()` directo
+a la tabla, no por este RPC — nada avisó del pisado hasta que se vio en el
+home. Fix en `catalogo_24_restaurar_envidriera.sql`.
+
+**Regla:** antes de pegar el cuerpo de una función (`catalogo_publico()`,
+`catalogo_listar()`, o cualquier otra `CREATE OR REPLACE FUNCTION`) en el
+SQL Editor, copiarlo del `.sql` más reciente del repo en ese momento — nunca
+de un archivo guardado aparte o escrito antes de un `git pull`. Si dos
+migraciones que tocan la misma función se escriben en paralelo (como acá),
+la que se corre última en producción pisa a la anterior sin aviso.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
